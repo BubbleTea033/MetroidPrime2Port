@@ -154,7 +154,7 @@ constexpr PromptAsset kAssets[] = {
     {0xDFC47FA2, PAD_BUTTON_A},
     {0xE2F4B915, PROMPT_DPAD}, // Trilogy only: "hold and point" to pick a Visor (GameCube: D-pad)
     {0xE43966EC, PROMPT_CSTICK},
-    {0xE6835669, PAD_BUTTON_START}, // the scan box's grey Start disc (a lore scan's "Press START for Logbook" page)
+    {0xE6835669, PAD_BUTTON_START, kDisc}, // the scan box's grey Start disc (a lore scan's "Press START for Logbook" page)
     {0xE72B1419, PAD_BUTTON_A},
     {0xF1328253, PAD_BUTTON_A}, // multiplayer front end
     {0xF1FA8D68, PAD_BUTTON_X}, {0xF237E982, PAD_TRIGGER_R}, {0xF43C48EF, PROMPT_STICK_LEFT},
