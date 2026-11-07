@@ -3,6 +3,65 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-07: AGENTS.md Status snapshot (moved here when it was trimmed)
+
+
+- Latest release 0.12.0 (tag v0.12.0 = 36dd3dc52, published 2026-11-06, 12 assets, soak 96/96 ok; notes commit
+  5252270a3 pushed; PRs #90 #91 merged + pushed d8ebc5777, #88 #89 merged + 9ec12fe36 (RGBA-mask check) pushed, no PR comments; APK not installed on the Poco; winbuild laptop not updated). No GitHub issue
+  replies posted (#36 #44 #46 #50-#52 #54 #58-#61 #64 #65 #67 #68 #72 fixed; #67 = ae822d752, #68 = 6d90dfc2f, #72 = 7f540a0d3): post only when the user asks.
+- Pushed e6a30090c (2026-11-04): 5732abbcd restores #44's per-pixel-lighting call (b28e27b38 dropped it), d2b98e021 Android
+  data-folder move continues after the All-files grant, e6a30090c seed 1560 rows (24 fight/boss spots, `record --jobs`;
+  no Chykka/Boost/Emperor Ing). APK with all three installed on the Poco, not yet run. Then pushed 6311d2d8a: MP1
+  package 32 (docs/MP1_SYNC.md; beam switch speed, target next/prev, arm cannon FOV, toggle-L; build only).
+- Pushed 37339ec66: 8d74762c6 seed 1584 rows (Chykka/Boost/Emperor Ing + combos/PB/seekers/screw), 37339ec66 data-folder
+  panel compares folders with fs::equivalent (/data/user/0 vs /data/data showed "Move back"); APK installed on the Poco, not yet run.
+- Pushed c9c201bb9: 18e87df43 merges PR #75 (heap lock vs DVD-thread music buffer, GitHub shows merged) + c9c201bb9
+  follow-up (TARGET_PC includes, OOM callback only on its own thread); no PR comment posted.
+- #76 reopened by reporter on 0.11.0: b28e27b38's default-disc check compared /data/user/0 vs /data/data as text; fixed
+  a78f3663d (fs::equivalent) + e00cd5f6d (F1 disc version line, next-start line only on change); pushed e00cd5f6d, APK
+  with a78f3663d installed on the Poco but not run, e00cd5f6d APK built not installed, no reply posted. ca17fd0a8 #44 pipeline-cache per-pixel lighting.
+- 2026-11-05 #76 follow-up (reporter on Trilogy lost GC progress): c99964646 G2ME<->R3ME card conversion
+  (import/`gci restore`/boot offer; verified 100% save identical in game) + 8c5de9433 F1 card import no longer
+  greyed out on title/file select; pushed 8c5de9433, APK zip on the Poco's Download (not installed), no reply. Boot offer won't re-show (0.11.0 marker): user's call.
+  efaedaf80 (pushed; zip on the Poco's Download + /tmp/opencode/issue-apk, not installed, no reply): reporter is PAL (G2MP -> R3MP); R3MP tables = R3ME's, conversion enabled, verified in game
+  on the PAL rvz (114/114). Reporter has .restore-offered-R3MP: use F1 Restore (or gci restore).
+  8ccdeea23 (pushed): GC title screen + title music on Trilogy (docs/TRILOGY.md), verified on Xvfb USA + PAL; 6d81ae426 + cfd8ad731 (pushed) fix the music being held after a multiplayer-menu return.
+- 2026-11-06 #76 comment (Trilogy MP match end closes the game): 728709f53 SetSelection on unbuilt menu list; verified USA+PAL Trilogy on Xvfb; pushed fae347e15 (on PR #85 merge bc5f3fc1f), no reply; Poco has fae347e15's APK (not run).
+- 2026-11-05 #84 cde146255 (pushed, no reply): savestates keep CScriptSequenceTimer state + restore waits for the load's skip; mid-cutscene load plays on (Xvfb).
+  3c644dcbd (pushed): kTagFields now saves every script object (denylist in SavedField); `statecheck --gaps --cinematics`.
+- 2026-11-05 #80 Exit Game on the main menu (hold Z or a finger on it 1.5 s; `menu_exit`, default on everywhere):
+  7dd061324 + a9e7d4800 pushed; Poco has a9e7d4800's APK (not run); no reply (docs/STATUS.md top). #74 (2c69718c0) pushed earlier, no reply posted.
+- 2026-11-05 #78 lagoon water flicker: fluid dead alpha (8b961cf59) + Aurora keys dstAlpha as off/0/0xFF and the
+  Poco's 327 missing configs merged (seed 1744 rows; a re-record must `merge` the old seed); pushed 8455db08e (+ F1 System help texts dropped), no reply.
+  Poco has 08747c842's APK (not run); 8455db08e APK at /tmp/opencode/issue-apk for the user to attach.
+  1adb46776 pushed: key audit, `gx::pipeline_unused_inputs`. 0569c2d54 (pushed) fog on/off out of the key; 7e7a65de5 (pushed with PR #82/#83 merges, 4167a6858; #83 include fix 564b4f452 pushed; PR #79 skip polish merged + follow-up b7de2648b pushed, no PR comments)
+  texgen matrix via uniform + dstAlpha 0 as on, seed 1233 GX rows; left vs phone: alphaUpdate (write mask), lighting variants (~19 rows). Tried and dropped 2026-11-06: drawing each area's models under every
+  model-flag combo (Temple Grounds: 0 of 42 phone rows, +1288 unused rows); phone gaps need real-play recording.
+- 2026-11-06 third-person camera (MP1 package 33, docs/STATUS.md top): 9038a8f6a + 9c4f563de (morph handoff, body charge/muzzle fx, pointer aim, console saves) pushed with fae347e15 (ctest 505/505).
+  Pushed 480c4ecfe: 91c2e3b89 (body animates), 18fcb4b79 (jump arc + double-jump flip: MP body FSM and anims borrowed from character 0),
+  480c4ecfe (dash/grapple/knockback borrowing, third-person grapple crash fix). Poco has 480c4ecfe's APK (not run).
+  Pushed 957a06d64 (Poco has its APK, not run): exact-match borrow rule + locomotion changes enabled in third person (user: anims stuck/missing); single player has no flinch/knockback state, only hurled (retail; MP chars have all).
+- 2026-11-06 MP1 package 34 (docs/MP1_SYNC.md, reviewed through MP1 b601be339), pushed: 1e44f03e3 texture pressure +
+  user_textures, 4b6f85f3e damage sliders, 71f3fbe28 Shoot in Scan Visor, 7efb40368 movement cheats + freecam here, 48f1014a4 doc.
+  Open: 59e55a8ad beam colours (maybe). Winbuild laptop unreachable (ssh timeout), not updated.
+- 2026-11-07 #97 helmet distortion: 2cdc78666 (pushed with #98's f8a5ade03, no reply) stretches the helmet frame evenly
+  (SetSpreadSplit negative cut, every model, also vertically in portrait); checked 16:9 vs emulator, 21:9, portrait.
+  PR #92 (Steam Input gyro/back buttons) merged d6a734fe9 + a2eb3060b + 4c5184355, then 25726963f (pushed): SDL no longer opens Sony/Nintendo pads (LED clash); PortSteamTriton reads DualSense/Edge/DS4/Switch Pro/Joy-Cons via hidraw (only write: Switch IMU-on). No PR comment; untested on hardware.
+- 2026-11-07 cleanup (pushed through 75cec32b2): old-tree files, 67 dead functions, shared byte/CRC/bitstream,
+  strings + UTF-8 paths, settings accessors in platform/port_overlay_accessors.inc. Local, not pushed: 93e5100f4
+  settings FN_BOOL_KEY/RANGE_KEY rows, af0385d95 console Usage() from help rows + ArgFloat/ArgInt, 330f61aee
+  MP_BOOT_STUBS chain retired. Not done: debug_ui checkbox/slider helpers (needs a visual check).
+- Retail-vs-port audits: geometry done except CStateManager ~1493; asm done for DOL call targets, texture binds,
+  literal state-setter args. Not done: field-offset checks. #65 bug 2 (white bomb-slot smoke, Windows/D3D12?)
+  not reproduced on Linux.
+- Unmerged: `gfx/remaster-render` (wt-mp2-remaster; Poco MSAA fix 068261f04, APK built, not installed: ask).
+  #44 remaining: TEV alphaPass content variants only the pipeline seed covers (ubershader declined).
+- Open: per-player Spider toggle/aim lock-on/hand-on-cannon are global; retail Puffer has no engaged state;
+  `build-port` (headers-only) fails on SDL3 headers, use build-port-link. Lane slots free.
+  Rando terrain (tools/rando_terrain.py) models water/GB/Spider/Boost/bombs/Screw (PBs don't bomb-jump); next: Grapple,
+  platform motion (docs/STATUS.md top entry has the per-item loop).
+- Ask before removing wt-mp2-sc-harness, wt-mp2-sc-los or any `wt-mp2-*` worktree.
+
 ## 2026-11-06: third-person camera (MP1 package 33)
 
 - `platform/port_third_person.cpp` (MP1's camera minus its body module; Echoes draws the real
