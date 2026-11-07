@@ -290,7 +290,6 @@ void AddStickAim(float x, float y, float dt, int player = 0);
 // layout) and calls SetTouchEnabled; like twin-stick it works with or without mouse aim. The
 // Java UI thread calls AddTouchAim/SetTouchAimDown/SpringSwipe, so those are safe from either
 // thread and the game thread only ever sees a whole tick's travel.
-bool TouchEnabled();
 void SetTouchEnabled(bool enabled);
 // Finger travel in density-independent pixels (right/down positive), scaled here by
 // TouchAimSpeed() because the UI thread has no view of the aim's units.
@@ -307,11 +306,9 @@ void SpringSwipe();
 bool TouchAimActive();
 // Aim pixels per dp, the Prime port's `touch_aim_speed` (2.25 by default). Clamped to
 // 0.25..10; MP2_TOUCH_AIM_SPEED overrides it the lazy way MP2_MOUSE_SENS does.
-float TouchAimSpeed();
 void SetTouchAimSpeed(float pixelsPerDp);
-// The vertical drag's speed (PortTouch's "Separate vertical speed"; the same as TouchAimSpeed
+// The vertical drag's speed (PortTouch's "Separate vertical speed"; the same as the above
 // with the split off), same clamp.
-float TouchAimSpeedY();
 void SetTouchAimSpeedY(float pixelsPerDp);
 // The debug overlay owns the cursor while it is open: no capture, no aim applied.
 void SetUiActive(bool active);

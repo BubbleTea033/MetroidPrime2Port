@@ -570,11 +570,6 @@ void AddStickAim(float x, float y, float dt, int player) {
   s.stickPendingY += dy;
 }
 
-bool TouchEnabled() {
-  ReadEnv();
-  return sTouchEnabled.load();
-}
-
 void SetTouchEnabled(bool enabled) {
   ReadEnv();
   sTouchEnabled = enabled;
@@ -615,21 +610,11 @@ bool TouchAimActive() {
          (sTouchAimDown.load() || SDL_GetTicksNS() < sTouchHoldUntilNs.load());
 }
 
-float TouchAimSpeed() {
-  ReadEnv();
-  return sTouchAimSpeed;
-}
-
 void SetTouchAimSpeed(float pixelsPerDp) {
   ReadEnv();
   if (std::isfinite(pixelsPerDp)) {
     sTouchAimSpeed = ClampTouchAimSpeed(pixelsPerDp);
   }
-}
-
-float TouchAimSpeedY() {
-  ReadEnv();
-  return sTouchAimSpeedY;
 }
 
 void SetTouchAimSpeedY(float pixelsPerDp) {

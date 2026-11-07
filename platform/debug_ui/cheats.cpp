@@ -573,8 +573,4 @@ void DrawCheatsSection() {
   }
 }
 
-void DrawCheatsTab() {
-  DrawCheatsSection();
-}
-
 } // namespace PortDebug

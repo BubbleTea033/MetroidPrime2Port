@@ -193,7 +193,6 @@ bool OverlayVisible();
 
 // The overlay has just been used, and in which layout (for the prompt icons, not built yet).
 void NoteDevice(bool xboxLayout);
-bool DeviceIsXbox();
 // True only while touch was last used, in a touch build and outside F1.
 bool Active();
 

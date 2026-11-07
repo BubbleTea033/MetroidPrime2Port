@@ -162,22 +162,18 @@ void SetFastMorph(bool enabled);
 bool PointerMenus();
 void SetPointerMenus(bool enabled);
 bool MapSwapFingers();
-void SetMapSwapFingers(bool swap);
 // Exit Game on the main menu (`MP2_MENU_EXIT`, issue #80; default on): the main menu shows an
 // "Exit Game" legend in its bottom-left corner with the Z button's prompt (its binding: RB by
 // default, View on the Remastered preset), and holding Z there, or a finger or mouse button on the
 // legend, for kMenuExitHoldSeconds quits as F1 > Game > Exit game does.
 const float kMenuExitHoldSeconds = 1.5f;
 bool MenuExit();
-void SetMenuExit(bool enabled);
 // Saves the settings and asks the main loop to shut down, as closing the window does.
 void RequestQuit();
 // Map rotate flips (Controls > Options > Map, `MP2_MAP_INVERT_X`/`_Y`): the game turns the map
 // opposite to the stick, so flipping both gives camera-style rotation (CAutoMapper).
 bool MapInvertX();
-void SetMapInvertX(bool invert);
 bool MapInvertY();
-void SetMapInvertY(bool invert);
 // Morph Ball camera control (`ball_cam`, env `MP2_BALL_CAM`, off by default and under Original
 // experience; issue #54): the mouse, the right stick and touch aim swipes orbit the Morph Ball
 // camera around the ball and raise or lower it (the stick only turns it while Spring Ball is on).
@@ -237,9 +233,7 @@ const int kVolumeBoostMin = 100;
 const int kVolumeBoostMax = 200;
 const int kVolumeBoostDefault = 100;
 int MusicBoost();
-void SetMusicBoost(int percent);
 int SfxBoost();
-void SetSfxBoost(int percent);
 // Glyph set the on-screen prompts are forced to (`MP2_PROMPT_GLYPHS`: 0 follow the input in use,
 // 1 Xbox, 2 PlayStation, 3 Switch, 4 GameCube, 5 keyboard, 6 Steam Deck); PromptGlyphs() is the
 // device name or nullptr to follow the input. Original experience shows the GameCube art.
@@ -474,7 +468,6 @@ bool ResetAimBoth();
 // page's Menu rows instead of the gameplay layout. Off while the touch controls are in use.
 bool MenuStandardButtons();
 void SetMenuStandardButtons(bool enabled);
-void SetGyroAim(bool enabled);
 int GyroSource();
 // Under Steam Input, read the back buttons (SDL's paddles) of the physical controller behind Player
 // 1's virtual pad, which has none (`MP2_STEAM_INPUT_BACK_BUTTONS`, default on; Linux only).
@@ -506,8 +499,6 @@ enum PlayerSetting {
 };
 const int kSettingPlayers = 4;
 bool PlayerSettingSet(int player, PlayerSetting key);
-// Player 0 sets Player 1's own setting; players 1-3 set their override. Both persist.
-void SetPlayerSetting(int player, PlayerSetting key, float value);
 // Player 1-3 follows Player 1 again for `key`, or for all of them.
 void ClearPlayerSetting(int player, PlayerSetting key);
 void ClearPlayerSettings(int player);
@@ -701,7 +692,6 @@ float PresentOverrideValue();
 bool TickHold();
 void SetTickHold(bool held);
 void StepTicks(unsigned count);
-unsigned PendingHeldTicks();
 unsigned TakeHeldTicks();
 // MP1's pose interpolation (`MP2_POSE_INTERPOLATION=0|1`, F1 > Video > Frame rate); off by default.
 // With smooth frames on and the cap off, skinned models draw a blend of their last two tick poses
@@ -822,11 +812,5 @@ bool PerPixelLighting();
 // storage clamp (-1 auto; Aurora reads `MP2_STORAGE_CLAMP` itself), the Dawn driver workarounds
 // (`MP2_DRIVER_WORKAROUNDS`) and the low-power adapter (Aurora reads `MP2_GPU_POWER=low`).
 bool OpenGles();
-// The renderer choice (`graphics_backend`, `MP2_GRAPHICS_BACKEND` overrides it for one run;
-// see port_graphics_backend.h). Stored on every platform, used on Windows and desktop Linux.
-PortGraphicsBackend::EGraphicsBackend GraphicsBackend();
-int StorageClamp();
-unsigned DriverWorkarounds();
-bool LowPowerGpu();
 
 } // namespace PortOverlay

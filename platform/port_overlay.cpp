@@ -1227,12 +1227,6 @@ bool MenuExit() {
   return EnvBool("MP2_MENU_EXIT", sMenuExit);
 }
 
-void SetMenuExit(bool enabled) {
-  ReadEnv();
-  sMenuExit = enabled;
-  Persist();
-}
-
 void RequestQuit() {
   PortOverlaySettings::SaveSettings();
   SDL_Event quit{};
@@ -1245,32 +1239,14 @@ bool MapSwapFingers() {
   return EnvBool("MP2_MAP_SWAP_FINGERS", sMapSwapFingers);
 }
 
-void SetMapSwapFingers(bool swap) {
-  ReadEnv();
-  sMapSwapFingers = swap;
-  Persist();
-}
-
 bool MapInvertX() {
   ReadEnv();
   return EnvBool("MP2_MAP_INVERT_X", sMapInvertX);
 }
 
-void SetMapInvertX(bool invert) {
-  ReadEnv();
-  sMapInvertX = invert;
-  Persist();
-}
-
 bool MapInvertY() {
   ReadEnv();
   return EnvBool("MP2_MAP_INVERT_Y", sMapInvertY);
-}
-
-void SetMapInvertY(bool invert) {
-  ReadEnv();
-  sMapInvertY = invert;
-  Persist();
 }
 
 bool BallCamControl() {
@@ -1509,12 +1485,6 @@ bool GyroAim() {
   return EnvBool("MP2_GYRO_AIM", sGyroAim);
 }
 
-void SetGyroAim(bool enabled) {
-  ReadEnv();
-  sGyroAim = enabled;
-  Persist();
-}
-
 int GyroSource() {
   ReadEnv();
   return EnvIntIn("MP2_GYRO_SOURCE", sGyroSource, 0, 2);
@@ -1639,40 +1609,6 @@ float PlayerFloat(int player, PlayerSetting key, float p1) {
 } // namespace
 
 bool PlayerSettingSet(int player, PlayerSetting key) { return Override(player, key) != nullptr; }
-
-void SetPlayerSetting(int player, PlayerSetting key, float value) {
-  ReadEnv();
-  if (key < 0 || key >= kPlayerSettingCount || !std::isfinite(value)) {
-    return;
-  }
-  if (key == kPlayer_GyroMode) {
-    value = std::clamp(std::round(value), float(kGyroModeMin), float(kGyroModeMax));
-  } else if (key == kPlayer_GyroSensitivity || key == kPlayer_GyroSensitivityY) {
-    value = std::clamp(value, kGyroSensitivityMin, kGyroSensitivityMax);
-  } else {
-    value = value != 0.f ? 1.f : 0.f;
-  }
-  if (player <= 0) {
-    switch (key) {
-    case kPlayer_LockOnToggle: sLockOnToggle = value != 0.f; break;
-    case kPlayer_StickyCharge: sStickyCharge = value != 0.f; break;
-    case kPlayer_RapidCharge: sRapidCharge = value != 0.f; break;
-    case kPlayer_AutoAim: sAutoAim = value != 0.f; break;
-    case kPlayer_LockOnFreeAim: sLockOnFreeAim = value != 0.f; break;
-    case kPlayer_GyroAim: sGyroAim = value != 0.f; break;
-    case kPlayer_GyroMode: sGyroMode = int(value); break;
-    case kPlayer_GyroSensitivity: sGyroSensitivity = value; break;
-    case kPlayer_GyroSplit: sGyroSplit = value != 0.f; break;
-    case kPlayer_GyroSensitivityY: sGyroSensitivityY = value; break;
-    case kPlayerSettingCount: return;
-    }
-  } else if (player < kSettingPlayers) {
-    sPlayerSettings[player][key] = {value, true};
-  } else {
-    return;
-  }
-  Persist();
-}
 
 void ClearPlayerSetting(int player, PlayerSetting key) {
   if (Override(player, key) == nullptr) {
@@ -1863,8 +1799,6 @@ void SetTickHold(bool held) {
 }
 
 void StepTicks(unsigned count) { sHeldTicks += count; }
-
-unsigned PendingHeldTicks() { return sHeldTicks; }
 
 unsigned TakeHeldTicks() {
   // One tick per loop, as MP1 does, so each step is one drawn frame.
@@ -2277,26 +2211,6 @@ bool OpenGles() {
   return EnvBool("MP2_OPENGLES", sOpenGles);
 }
 
-PortGraphicsBackend::EGraphicsBackend GraphicsBackend() {
-  ReadEnv();
-  return sGraphicsBackend;
-}
-
-int StorageClamp() {
-  ReadEnv();
-  return sStorageClamp;
-}
-
-unsigned DriverWorkarounds() {
-  ReadEnv();
-  return sDriverWorkarounds;
-}
-
-bool LowPowerGpu() {
-  ReadEnv();
-  return sLowPowerGpu;
-}
-
 int ScanSpeed() {
   ReadEnv();
   if (OriginalExperience()) {
@@ -2331,23 +2245,9 @@ int MusicBoost() {
   return EnvIntIn("MP2_MUSIC_BOOST", sMusicBoost, kVolumeBoostMin, kVolumeBoostMax);
 }
 
-void SetMusicBoost(int percent) {
-  ReadEnv();
-  sMusicBoost = std::clamp(percent, kVolumeBoostMin, kVolumeBoostMax);
-  ApplyVolumeBoosts();
-  Persist();
-}
-
 int SfxBoost() {
   ReadEnv();
   return EnvIntIn("MP2_SFX_BOOST", sSfxBoost, kVolumeBoostMin, kVolumeBoostMax);
-}
-
-void SetSfxBoost(int percent) {
-  ReadEnv();
-  sSfxBoost = std::clamp(percent, kVolumeBoostMin, kVolumeBoostMax);
-  ApplyVolumeBoosts();
-  Persist();
 }
 
 int Language() {

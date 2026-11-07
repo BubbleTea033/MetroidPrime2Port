@@ -1461,8 +1461,6 @@ void Poll() {
   }
 }
 
-bool IsPromptAsset(uint32_t id) { return FindAsset(id) != nullptr; }
-
 bool IsBoxRing(const void* texture) {
   const auto it = sBound.find(texture);
   return it != sBound.end() && it->second.style == kRing;
@@ -1530,7 +1528,6 @@ void UnbindTexture(const void* owner) {
   sBound.erase(it);
   sDrawnRingStale = true;
 }
-bool KeyboardActive() { return sActiveInput.load(std::memory_order_relaxed) == ActiveInput::Keyboard; }
 
 bool PadActive() {
   return sActiveInput.load(std::memory_order_relaxed) == ActiveInput::Pad && PADGetIndexForPort(PAD_CHAN0) >= 0;

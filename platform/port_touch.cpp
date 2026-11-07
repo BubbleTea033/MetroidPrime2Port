@@ -91,7 +91,6 @@ std::atomic< bool > sEditRequested{false};
 std::atomic< bool > sPhysicalInput{false};
 PortTouch::Activity sActivity;
 std::atomic< bool > sRealPad{false};
-std::atomic< bool > sDeviceXbox{false};
 
 // What the UI thread asks of the game; BeginFrame applies it on the game thread.
 std::atomic< int > sWheelState{0};
@@ -1008,11 +1007,8 @@ bool OverlayVisible() { return PortOverlay::Visible() || PortPhoto::Active(); }
 void NoteDevice(bool xboxLayout) {
   sActivity.Touch();
   // The prompt icons follow the on-screen layout while touch is the active input.
-  sDeviceXbox.store(xboxLayout, std::memory_order_release);
   PortPrompts::NoteTouchInput(xboxLayout);
 }
-
-bool DeviceIsXbox() { return sDeviceXbox.load(std::memory_order_acquire); }
 
 bool Active() {
 #if defined(PORT_TOUCH_CONTROLS)
