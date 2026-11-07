@@ -746,9 +746,13 @@ void CmdStatus(CStateManager& mgr, const Args& args, std::string& out) {
                   vp.mHeight);
     out += line;
     const AuroraStats* stats = aurora_get_stats();
-    std::snprintf(line, sizeof(line), "frame %.1f fps, %u draw calls, %u verts%s\n",
+    std::snprintf(line, sizeof(line),
+                  "frame %.1f fps, %u draw calls, %u KiB vertices, %u KiB indices, resident %llu KiB of %u MiB%s\n",
                   aurora_get_fps(), stats != nullptr ? stats->drawCallCount : 0u,
-                  stats != nullptr ? stats->lastVertSize : 0u,
+                  stats != nullptr ? stats->lastVertSize / 1024 : 0u,
+                  stats != nullptr ? stats->lastIndexSize / 1024 : 0u,
+                  static_cast< unsigned long long >(aurora_get_resident_geometry_used() >> 10),
+                  aurora_get_resident_geometry_mib(),
                   stats != nullptr && stats->drawCallCount < 40 ? "  <- almost nothing drawn" : "");
     out += line;
     AuroraPipelineStats pipes{};

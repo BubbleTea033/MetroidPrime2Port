@@ -24,6 +24,7 @@
 #include <aurora/main.h>
 
 #include <aurora/aurora.h>
+#include <aurora/gfx.h>
 #include <aurora/dvd.h>
 #include <dolphin/dvd.h>
 #include <dolphin/gx/GXAurora.h>
@@ -77,6 +78,7 @@ extern "C" void* OSGetArenaHi();
 extern void* gPortGameHeapLo;
 extern void* gPortGameHeapHi;
 #include "Kyoto/Basics/COsContext.hpp"
+#include "Kyoto/Graphics/CCubeModel.hpp"
 #include "Kyoto/Graphics/CGraphicsSys.hpp"
 #include "compiled_modules.h"
 #include "input/port_input_devices.h"
@@ -1268,6 +1270,14 @@ int main(int argc, char** argv) {
       // MP2_PIPELINE_SEED=0: start from an empty cache (tools/pipeline_seed.py record runs with it).
       .pipelineCacheNoSeed = !port::EnvFlag("MP2_PIPELINE_SEED", true),
   };
+  // GPU room for models' vertex arrays, uploaded once when a model is made instead of copied into
+  // every frame's buffers (CCubeModel::PortSetResident). A model that finds it full is sent each
+  // frame as before. MP2_GX_RESIDENT_MB=<n> (0 = off; up to 2048); MP2_GX_RESIDENT_DL=1 keeps
+  // display lists there too (fewer bytes a frame, but 2-4x the draws: they no longer merge).
+  // Aurora gives two fifths of it to arrays: 6 MiB, where ten Temple Grounds areas peaked at 1.2.
+  const int kResidentMiB = 16;
+  config.residentGeometryMiB =
+      static_cast< uint32_t >(std::clamp(port::EnvInt("MP2_GX_RESIDENT_MB", kResidentMiB), 0, 2048));
 #if !defined(__ANDROID__)
   // The window icon, for a bare binary that no desktop entry describes. Android takes its icon
   // from the APK.
@@ -1434,6 +1444,8 @@ int main(int argc, char** argv) {
   // (issue #44). PortVideo::Frame keeps it in step afterwards.
   aurora_set_per_pixel_lighting(PortOverlay::PerPixelLighting());
   aurora_initialize(argc, argv, &config);
+  CCubeModel::PortSetResident(aurora_get_resident_geometry_mib() != 0,
+                              port::EnvFlag("MP2_GX_RESIDENT_DL"));
   // The settings file, JSON and the logs read and write numbers in the "C" format. A toolkit loaded
   // with the window (a GTK decoration plugin, an input method) may call setlocale(LC_ALL, ""), and
   // under a comma-decimal locale "1.5" would then read as 1 (MP1's main.cpp:1304).
