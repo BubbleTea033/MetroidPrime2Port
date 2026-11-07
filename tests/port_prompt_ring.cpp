@@ -43,6 +43,8 @@ void TestDisplayList() {
   CHECK_EQ(VertexStride(0x30fu), 6u); // position, normal, texture coordinate indices
   CHECK_EQ(VertexStride(0xfu), 4u);   // position, normal
   CHECK_EQ(VertexStride(0u), 0u);
+  CHECK_EQ(VertexStride(0x30du), 0u); // a direct position: not a list this edits
+  CHECK_EQ(VertexStride(0x20fu), 0u); // an 8-bit texture coordinate index
 
   // A strip of three (vertex format 1) and a fan of four, then padding.
   std::vector< uint8_t > dl;

@@ -55,11 +55,16 @@ struct Command {
   std::vector< uint32_t > vertices;
 };
 
+// A vertex's size in a display list whose every attribute is a 16-bit index (GX_INDEX16, 3), or 0
+// for any other descriptor (a direct or 8-bit attribute): those lists are left alone.
 inline uint32_t VertexStride(uint32_t desc) {
   uint32_t stride = 0;
   for (int a = 0; a < 16; ++a) {
-    if (((desc >> (a * 2)) & 3) != 0) {
+    const uint32_t kind = (desc >> (a * 2)) & 3;
+    if (kind == 3) {
       stride += 2;
+    } else if (kind != 0) {
+      return 0;
     }
   }
   return stride;

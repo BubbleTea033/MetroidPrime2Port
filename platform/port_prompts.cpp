@@ -77,21 +77,19 @@ struct PromptKey {
 // Trilogy disc loads (its Wii-only art is the last few of each action). The few
 // textures with no id (kKeys below) are still matched by hash.
 // How an asset's icon is served. kGlow: drawn inside a glow, so GlowVariant recolours it.
-// Port: kDisc and kRing are the scan and message boxes' A, which the game draws additively
-// (black is clear) as two textures: a teal disc with the letter, and a white ring it tints, which
-// closes the box's frame line. kDisc draws the icon's symbol in white on a grey disc, and kRing
-// a clean ring the size of the game's (DiscVariant), both drawn at 4x: an HD pack's upscaled ring
-// was ragged on its inner edge, which the game's bright disc hides and a dark one shows. With the
-// game's own art (no icon) both are left to the game and the texture pack. A whole icon in place of either left a gap in the frame with a
-// dim icon floating in it, as a dark icon added onto the screen barely shows.
-// kBoxDisc is the scan, message and logbook boxes' lit disc, and kRing their ring: with Render
-// button prompt rings on (PortOverlay::PromptRing, port_prompt_ring.cpp) the disc is the game's
-// teal and centred (kTealDisc), and the ring texture, which carries the game's own letter, is
-// served as a clean white ring for the drawn ring to sample through the game's material
-// (kRingDrawn, port_prompt_ring.cpp: the game's own quad is emptied); off,
-// the grey kDisc and the drawn kRing texture above.
+// Port: kBoxDisc and kRing are the scan, message and logbook boxes' A, which the game draws
+// additively (black is clear) as two textures: a lit teal disc with the letter, and a white ring it
+// tints, which closes the box's frame line. Both are drawn (DiscVariant) at 4x, not scaled: an HD
+// pack's upscaled ring was ragged on its inner edge. A whole icon in place of either left a gap in
+// the frame with a dim icon floating in it, as a dark icon added onto the screen barely shows.
+// With Render button prompt rings on (PortOverlay::PromptRing, port_prompt_ring.cpp) the disc is
+// served as the game's teal with the icon's symbol, centred (kTealDisc), and the ring texture,
+// which carries the game's own letter, as a clean white ring the drawn ring samples through the
+// game's material (kRingDrawn; the game's own quad is emptied). Off, the disc is a grey one with
+// the symbol (kDisc) and the ring a clean ring the size of the game's (kRing); with the game's own
+// art (no icon) both are left to the game and the texture pack.
 enum PromptStyle : uint8_t {
-  kIcon, kGlow, kDisc, kRing, kDiscLabel, kBoxDisc, kTealDisc, kTealDiscLabel, kRingDrawn
+  kIcon, kGlow, kDisc, kRing, kBoxDisc, kTealDisc, kRingDrawn
 };
 struct PromptAsset {
   uint32_t id;
@@ -627,14 +625,16 @@ void GlowVariant(std::vector<uint8_t>& bytes) {
   }
 }
 
-// Port: the scan and message boxes' lit A (kDisc) from an icon: a dark grey disc where the game's
-// teal one is, 26/32 of the texture across, on black (the game adds it onto the screen), with the icon's symbol on it in
-// white at the size of the game's own letter. The symbol is what stands out from the icon's face:
-// the face is the commonest shade inside the icon, and the symbol whatever differs from it there,
-// light, dark or cut out, so a Deck button's light letter, a keycap's dark one and an Xbox
-// button's hole all come out white. Only the icon's core counts, inside its own outline by more
-// than its rim, so the edge of a shape that is no circle (a Deck trigger) stays out. `bytes` is a DDS as GlowVariant's.
-void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool label, bool teal = false) {
+// Port: the boxes' lit A from an icon: a disc where the game's teal one is (dark grey for kDisc, the
+// game's teal for kTealDisc), 26/32 of the texture across, on black (the game adds it onto the
+// screen), with the icon's symbol on it in white at the size of the game's own letter. `ring` makes
+// the ring texture instead (kRing, or kRingDrawn's when `teal`). The symbol is what stands out from
+// the icon's face: the face is the commonest shade inside the icon, and the symbol whatever differs
+// from it there, light, dark or cut out, so a Deck button's light letter, a keycap's dark one and
+// an Xbox button's hole all come out white. Only the icon's core counts, inside its own outline by
+// more than its rim, so the edge of a shape that is no circle (a Deck trigger) stays out. `bytes`
+// is a DDS as GlowVariant's.
+void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false) {
   constexpr size_t kHeader = 128;
   if (bytes.size() <= kHeader) {
     return;
@@ -652,100 +652,87 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool label, bool teal =
   const auto opaque = [&](int x, int y) { return at(x, y)[3] >= 128; };
   std::vector<float> mask(size_t(w) * h, 0.f);
   int sx0 = w, sy0 = h, sx1 = -1, sy1 = -1;
-  if (label) {
-    // A ready label (tools/make_prompt_glyphs.py's <stem>_symbol): its coverage is the symbol.
-    for (int y = 0; y < h; ++y) {
-      for (int x = 0; x < w; ++x) {
-        const float m = at(x, y)[3] / 255.f;
-        mask[size_t(y) * w + x] = m;
-        if (m > 0.25f) {
-          sx0 = std::min(sx0, x); sy0 = std::min(sy0, y); sx1 = std::max(sx1, x); sy1 = std::max(sy1, y);
+  // Outside: clear texels reachable from the border. A clear texel it doesn't reach is a hole in
+  // the icon (a cut-out symbol). Then each texel's distance in from the outside.
+  constexpr int kFar = 1 << 20;
+  std::vector<int> dist(size_t(w) * h, kFar);
+  std::vector<int> queue;
+  queue.reserve(size_t(w) * h);
+  const auto seed = [&](int x, int y) {
+    int& d = dist[size_t(y) * w + x];
+    if (d != 0 && !opaque(x, y)) {
+      d = 0;
+      queue.push_back(y * w + x);
+    }
+  };
+  for (int x = 0; x < w; ++x) {
+    seed(x, 0);
+    seed(x, h - 1);
+  }
+  for (int y = 0; y < h; ++y) {
+    seed(0, y);
+    seed(w - 1, y);
+  }
+  for (size_t q = 0; q < queue.size(); ++q) { // the outside, through clear texels
+    const int x = queue[q] % w, y = queue[q] / w;
+    const int n[4][2] = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
+    for (const auto& c : n) {
+      if (c[0] >= 0 && c[1] >= 0 && c[0] < w && c[1] < h) {
+        seed(c[0], c[1]);
+      }
+    }
+  }
+  for (size_t q = 0; q < queue.size(); ++q) { // then inwards, by steps of one texel either way
+    const int x = queue[q] % w, y = queue[q] / w;
+    const int d = dist[size_t(y) * w + x] + 1;
+    for (int dy = -1; dy <= 1; ++dy) {
+      for (int dx = -1; dx <= 1; ++dx) {
+        const int nx = x + dx, ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h && dist[size_t(ny) * w + nx] > d) {
+          dist[size_t(ny) * w + nx] = d;
+          queue.push_back(ny * w + nx);
         }
       }
     }
-  } else {
-    // Outside: clear texels reachable from the border. A clear texel it doesn't reach is a hole in
-    // the icon (a cut-out symbol). Then each texel's distance in from the outside.
-    constexpr int kFar = 1 << 20;
-    std::vector<int> dist(size_t(w) * h, kFar);
-    std::vector<int> queue;
-    queue.reserve(size_t(w) * h);
-    const auto seed = [&](int x, int y) {
-      int& d = dist[size_t(y) * w + x];
-      if (d != 0 && !opaque(x, y)) {
-        d = 0;
-        queue.push_back(y * w + x);
-      }
-    };
+  }
+  int x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (int y = 0; y < h; ++y) {
     for (int x = 0; x < w; ++x) {
-      seed(x, 0);
-      seed(x, h - 1);
-    }
-    for (int y = 0; y < h; ++y) {
-      seed(0, y);
-      seed(w - 1, y);
-    }
-    for (size_t q = 0; q < queue.size(); ++q) { // the outside, through clear texels
-      const int x = queue[q] % w, y = queue[q] / w;
-      const int n[4][2] = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
-      for (const auto& c : n) {
-        if (c[0] >= 0 && c[1] >= 0 && c[0] < w && c[1] < h) {
-          seed(c[0], c[1]);
-        }
+      if (dist[size_t(y) * w + x] > 0) {
+        x0 = std::min(x0, x); y0 = std::min(y0, y); x1 = std::max(x1, x); y1 = std::max(y1, y);
       }
     }
-    for (size_t q = 0; q < queue.size(); ++q) { // then inwards, by steps of one texel either way
-      const int x = queue[q] % w, y = queue[q] / w;
-      const int d = dist[size_t(y) * w + x] + 1;
-      for (int dy = -1; dy <= 1; ++dy) {
-        for (int dx = -1; dx <= 1; ++dx) {
-          const int nx = x + dx, ny = y + dy;
-          if (nx >= 0 && ny >= 0 && nx < w && ny < h && dist[size_t(ny) * w + nx] > d) {
-            dist[size_t(ny) * w + nx] = d;
-            queue.push_back(ny * w + nx);
-          }
-        }
+  }
+  if (x1 < 0) {
+    return;
+  }
+  // The core: inside the icon's own outline by more than its rim, whatever its shape (a Deck
+  // trigger is no circle; a circle around it caught its edge and drew that as a stroke).
+  const int rim = std::max(2, static_cast<int>(std::lround(0.12f * std::min(x1 - x0 + 1, y1 - y0 + 1))));
+  const auto core = [&](int x, int y) { return dist[size_t(y) * w + x] > rim; };
+  int histogram[32] = {};
+  for (int y = 0; y < h; ++y) {
+    for (int x = 0; x < w; ++x) {
+      if (core(x, y) && opaque(x, y)) {
+        ++histogram[luma(at(x, y)) >> 3];
       }
     }
-    int x0 = w, y0 = h, x1 = -1, y1 = -1;
-    for (int y = 0; y < h; ++y) {
-      for (int x = 0; x < w; ++x) {
-        if (dist[size_t(y) * w + x] > 0) {
-          x0 = std::min(x0, x); y0 = std::min(y0, y); x1 = std::max(x1, x); y1 = std::max(y1, y);
-        }
+  }
+  const int face = static_cast<int>(std::max_element(std::begin(histogram), std::end(histogram)) -
+                                    std::begin(histogram)) * 8 + 4;
+  for (int y = 0; y < h; ++y) {
+    for (int x = 0; x < w; ++x) {
+      if (!core(x, y)) {
+        continue;
       }
-    }
-    if (x1 < 0) {
-      return;
-    }
-    // The core: inside the icon's own outline by more than its rim, whatever its shape (a Deck
-    // trigger is no circle; a circle around it caught its edge and drew that as a stroke).
-    const int rim = std::max(2, static_cast<int>(std::lround(0.12f * std::min(x1 - x0 + 1, y1 - y0 + 1))));
-    const auto core = [&](int x, int y) { return dist[size_t(y) * w + x] > rim; };
-    int histogram[32] = {};
-    for (int y = 0; y < h; ++y) {
-      for (int x = 0; x < w; ++x) {
-        if (core(x, y) && opaque(x, y)) {
-          ++histogram[luma(at(x, y)) >> 3];
-        }
-      }
-    }
-    const int face = static_cast<int>(std::max_element(std::begin(histogram), std::end(histogram)) -
-                                      std::begin(histogram)) * 8 + 4;
-    for (int y = 0; y < h; ++y) {
-      for (int x = 0; x < w; ++x) {
-        if (!core(x, y)) {
-          continue;
-        }
-        const uint8_t* p = at(x, y);
-        // A symbol cut out of the face (Kenney's Xbox letters) is a hole: clear texels count too.
-        const float alpha = p[3] / 255.f;
-        const float m = std::max(std::clamp((std::abs(luma(p) - face) - 40) / 64.f, 0.f, 1.f) * alpha,
-                                 1.f - alpha);
-        mask[size_t(y) * w + x] = m;
-        if (m > 0.25f) {
-          sx0 = std::min(sx0, x); sy0 = std::min(sy0, y); sx1 = std::max(sx1, x); sy1 = std::max(sy1, y);
-        }
+      const uint8_t* p = at(x, y);
+      // A symbol cut out of the face (Kenney's Xbox letters) is a hole: clear texels count too.
+      const float alpha = p[3] / 255.f;
+      const float m = std::max(std::clamp((std::abs(luma(p) - face) - 40) / 64.f, 0.f, 1.f) * alpha,
+                               1.f - alpha);
+      mask[size_t(y) * w + x] = m;
+      if (m > 0.25f) {
+        sx0 = std::min(sx0, x); sy0 = std::min(sy0, y); sx1 = std::max(sx1, x); sy1 = std::max(sy1, y);
       }
     }
   }
@@ -777,9 +764,9 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool label, bool teal =
   };
   // The teal disc stops half a game texel inside the drawn ring (13 of 32): an even gap all round.
   const float discR = (teal ? PortPromptRingMath::kDiscRadius : 13.f) / 32.f * static_cast<float>(std::min(w, h));
-  // A neutral dark grey rather than the game's teal, which belongs to the GameCube's green A and
-  // muddied the other sets' symbols.
-  // The teal is the game's own (its lit disc), under a drawn ring that gives the box back its look.
+  // Off, a neutral dark grey rather than the game's teal, which belongs to the GameCube's green A
+  // and muddied the other sets' symbols. On, the game's own teal, under a drawn ring that gives the
+  // box back its look.
   const float kFace[3] = {teal ? 0.f : 40.f, teal ? 107.f : 40.f, teal ? 121.f : 40.f};
   constexpr float kLetter[3] = {240.f, 255.f, 255.f};
   uint8_t* out = bytes.data() + kHeader;
@@ -841,11 +828,11 @@ void ApplyStyle(std::vector<uint8_t>& bytes, uint8_t style) {
     bytes.resize(kHeader + size_t(kSize) * kSize * 4);
     const uint32_t dims[3] = {kSize, kSize, kSize * 4};
     std::memcpy(bytes.data() + 12, dims, sizeof(dims));
-    DiscVariant(bytes, true, false, true);
-  } else if (style == kDisc || style == kRing || style == kDiscLabel) {
-    DiscVariant(bytes, style == kRing, style == kDiscLabel);
-  } else if (style == kTealDisc || style == kTealDiscLabel) {
-    DiscVariant(bytes, false, style == kTealDiscLabel, true);
+    DiscVariant(bytes, true, true);
+  } else if (style == kDisc || style == kRing) {
+    DiscVariant(bytes, style == kRing);
+  } else if (style == kTealDisc) {
+    DiscVariant(bytes, false, true);
   }
 }
 
@@ -1223,9 +1210,10 @@ void ApplyBound(const void* owner, BoundPrompt& bound, const std::string& action
   if (stem.empty()) {
     return;
   }
-  // Port: a disc or ring (kDisc, kRing) is drawn, not scaled, so it can come out at any size; it takes the icon
-  // made for a slot twice as large, and comes out at twice the resolution of a plain icon (4x the
-  // game's, as HD texture packs draw the box around it), with a sharper symbol to draw from.
+  // Port: a disc or ring (kDisc, kRing and their drawn-ring forms) is drawn, not scaled, so it can
+  // come out at any size; it takes the icon made for a slot twice as large, and comes out at twice
+  // the resolution of a plain icon (4x the game's, as HD texture packs draw the box around it), with
+  // a sharper symbol to draw from.
   uint8_t style = bound.style;
   const bool drawnRing = PortOverlay::PromptRing();
   if (style == kBoxDisc) {
@@ -1234,16 +1222,8 @@ void ApplyBound(const void* owner, BoundPrompt& bound, const std::string& action
     style = kRingDrawn;
   }
   std::string iconPath;
-  if (style == kDisc || style == kTealDisc) {
-    // A ready label for the symbol, where the icon set has one (the Steam Deck's).
-    iconPath = FindIconFile(stem + "_symbol.dds");
-    if (!iconPath.empty()) {
-      style = style == kTealDisc ? kTealDiscLabel : kDiscLabel;
-    }
-  }
   bound.served = style;
-  if (iconPath.empty() &&
-      (style == kDisc || style == kRing || style == kTealDisc || style == kRingDrawn)) {
+  if (style == kDisc || style == kRing || style == kTealDisc || style == kRingDrawn) {
     iconPath = FindIconForSize(stem, bound.width * 2, bound.height * 2);
   }
   if (iconPath.empty()) {
@@ -1280,8 +1260,8 @@ void ApplyBound(const void* owner, BoundPrompt& bound, const std::string& action
   // action still shows the key or button it is bound to.
   // The style's own name, so two styles of one file are two replacements.
   const char* suffix = style == kGlow                                 ? "#glow"
-                       : style == kDisc || style == kDiscLabel         ? "#disc"
-                       : style == kTealDisc || style == kTealDiscLabel ? "#teal"
+                       : style == kDisc                                ? "#disc"
+                       : style == kTealDisc                            ? "#teal"
                        : style == kRing                                ? "#ring"
                        : style == kRingDrawn                           ? "#ringdrawn"
                                                                        : "";
@@ -1514,8 +1494,7 @@ bool IsBoxDisc(const void* texture) {
 
 bool IsTealDisc(const void* texture) {
   const auto it = sBound.find(texture);
-  return it != sBound.end() && it->second.registered &&
-         (it->second.served == kTealDisc || it->second.served == kTealDiscLabel);
+  return it != sBound.end() && it->second.registered && it->second.served == kTealDisc;
 }
 
 bool BindTexture(const void* owner, uint32_t id, uint32_t width, uint32_t height) {

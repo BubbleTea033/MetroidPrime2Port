@@ -200,6 +200,7 @@ const RingModel* FindRing(const CCubeModel* model) {
   if (ring.scanned) {
     return ring.texture != nullptr ? &ring : nullptr;
   }
+  ring = RingModel{}; // what an earlier scan cut short (a texture not in yet) had gathered
   const CCubeModel::ModelInstance& instance = model->GetModelInstance();
   const uint* coords = static_cast< const uint* >(instance.GetTCPointer());
   const uint* positions = static_cast< const uint* >(model->GetPositions());
@@ -821,6 +822,15 @@ void ModelGone(const void* model) {
   if (sIdentities.erase(static_cast< const CCubeModel* >(model)) != 0) {
     Drop(model);
   }
+}
+
+void FrameGone(const void* frame) {
+  sRingOnScreen.erase(frame);
+  sDiscCentres.erase(frame);
+  sDiscWidgets.erase(frame);
+  sPending.erase(std::remove_if(sPending.begin(), sPending.end(),
+                                [frame](const PendingRing& p) { return p.frame == frame; }),
+                 sPending.end());
 }
 
 void BeforeDraw(const CGuiModel& widget) {

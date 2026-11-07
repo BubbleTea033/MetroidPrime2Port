@@ -254,6 +254,14 @@ game ignores SIGPIPE, the copier ignores SIGTERM/SIGHUP, and Aurora logs through
   matches the `userData` `CTexture` sets with `GXInitTexObjUserData` (re-set in `Load`). A re-vendor must
   keep the key overload. The hint memo's button blinks on purpose (game behaviour): screenshot several
   frames. `kKeys` (texel hashes) still serves the few prompt textures without an asset id.
+- **The drawn prompt ring edits the boxes' models in place** (`platform/port_prompt_ring.cpp`): the
+  frame line's end positions are written into the model's position array and the ring quad's and
+  fill's display-list commands are rewritten, then put back when the ring is off. It works because
+  Aurora copies a display list when it is called and re-reads unretained vertex arrays every frame;
+  making GUI models resident with `GXPortRetainResident` would freeze the game's geometry and the
+  ring would silently stop closing the frame. The position writes happen on the main thread while
+  the FIFO worker may still read last frame's array: aligned 32-bit stores, so at worst one frame
+  shows the old ends.
 - **`replacement_usage(registrations)` is a vendored-Aurora addition** (same files): `s_matchedIds` records
   each registration a cache-missing lookup selected (erased with the registration, cleared with the runtime
   state); F1 > Mods shows the user pack's matched/failed counts from it (`PortTextures::UserPackMatches`).

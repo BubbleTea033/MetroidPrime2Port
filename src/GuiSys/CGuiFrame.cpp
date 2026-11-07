@@ -17,6 +17,7 @@
 
 #ifdef TARGET_PC
 #include "Kyoto/Math/CAABox.hpp"
+#include "port_prompt_ring.h"
 
 // Port: widescreen HUD, as MP1's CGuiFrame::Draw. The camera widened the projection by `spread`
 // (CGuiCamera::Draw). A model spanning both outer quarters of the authored view (the visor frame)
@@ -609,6 +610,7 @@ CGuiFrame::~CGuiFrame() {
   PortDropSpreadWeights(this);
   PortDropSpreadSplits(this);
   PortDropSpreadPanels(this);
+  PortPromptRing::FrameGone(this);
   delete mRootWidget;
 }
 #else

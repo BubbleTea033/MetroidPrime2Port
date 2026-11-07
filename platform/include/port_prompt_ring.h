@@ -32,4 +32,7 @@ bool AfterDraw(const CGuiModel& widget, const CColor& color);
 bool EndBatch();
 // A CCubeModel being destroyed: whatever was recorded for it is dropped (CCubeModel's destructor).
 void ModelGone(const void* model);
+// A CGuiFrame being destroyed: its ring, disc and queued rings are dropped, so a frame later made
+// at the same address doesn't read them (CGuiFrame's destructor).
+void FrameGone(const void* frame);
 } // namespace PortPromptRing
