@@ -4,6 +4,7 @@
 // port_overlay.cpp is in port_overlay_internal.h.
 
 #include "../port_overlay_internal.h"
+#include "port_strings.h"
 
 #include "port_controls.h"
 #include "port_discord.h"
@@ -56,22 +57,8 @@ void ApplyUpdateCheck(); // game_sections.cpp
 
 namespace {
 
-std::string Trim(const std::string& s) {
-  size_t a = 0;
-  size_t b = s.size();
-  while (a < b && std::isspace(static_cast< unsigned char >(s[a])))
-    ++a;
-  while (b > a && std::isspace(static_cast< unsigned char >(s[b - 1])))
-    --b;
-  return s.substr(a, b - a);
-}
-
-bool ParseBool(const std::string& value) {
-  std::string lower;
-  for (char c : value)
-    lower += static_cast< char >(std::tolower(static_cast< unsigned char >(c)));
-  return !(lower.empty() || lower == "0" || lower == "false" || lower == "off" || lower == "no");
-}
+using port::ParseBool;
+using port::Trim;
 
 // A whole-string integer; false for anything else.
 bool ParseInt(const std::string& value, int& out) {

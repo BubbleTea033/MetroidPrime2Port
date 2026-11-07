@@ -195,10 +195,6 @@ std::string DesktopDiscFallback(const std::string& resolved) {
 // user path, so the port has to name the same folder or the two disagree about where
 // settings.cfg, controls.toml and the tools' backups live. Not SDL's call itself because SDL is
 // only on the entry's include path on Android, and because asking it creates the folder.
-std::filesystem::path Utf8Path(const std::string& text) {
-  return std::filesystem::path(std::u8string(text.begin(), text.end()));
-}
-
 std::string PerUserFolder() {
   std::string dir;
 #if defined(_WIN32)
@@ -258,7 +254,7 @@ std::string ExecutableFolder() {
 std::string InstallFolder() {
   std::string dir;
   if (InAppImage()) {
-    const std::u8string parent = Utf8Path(std::getenv("APPIMAGE")).parent_path().u8string();
+    const std::u8string parent = PortUtf8::FromUtf8(std::getenv("APPIMAGE")).parent_path().u8string();
     dir.assign(parent.begin(), parent.end());
   } else {
     dir = ExecutableFolder();
@@ -276,7 +272,7 @@ bool InAppBundle(const std::string& dir) {
 }
 
 bool FolderWritable(const std::string& dir) {
-  const std::filesystem::path probe = Utf8Path(dir) / ".port_write_test";
+  const std::filesystem::path probe = PortUtf8::FromUtf8(dir) / ".port_write_test";
   {
     std::ofstream file(probe, std::ios::binary);
     if (!file) {
@@ -307,9 +303,9 @@ std::string DesktopUserFolder(const char** why) {
     const std::string portable = InAppImage() ? install : install + "user/";
     std::error_code error;
     const bool hereHasSettings =
-        std::filesystem::exists(Utf8Path(portable + "settings.cfg"), error);
+        std::filesystem::exists(PortUtf8::FromUtf8(portable + "settings.cfg"), error);
     const bool legacyHasSettings =
-        !perUser.empty() && std::filesystem::exists(Utf8Path(perUser + "settings.cfg"), error);
+        !perUser.empty() && std::filesystem::exists(PortUtf8::FromUtf8(perUser + "settings.cfg"), error);
     if (hereHasSettings || !legacyHasSettings) {
       dir = portable;
       *why = "portable";
@@ -323,7 +319,7 @@ std::string DesktopUserFolder(const char** why) {
   }
   if (!dir.empty()) {
     std::error_code error;
-    std::filesystem::create_directories(Utf8Path(dir), error);
+    std::filesystem::create_directories(PortUtf8::FromUtf8(dir), error);
   }
   return dir;
 }

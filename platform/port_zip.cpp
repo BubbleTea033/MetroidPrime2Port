@@ -1,4 +1,5 @@
 #include "port_zip.h"
+#include "port_utf8_path.h"
 
 #include "port_bytes.h"
 
@@ -17,9 +18,7 @@ namespace {
 
 namespace fs = std::filesystem;
 
-fs::path FromUtf8(const std::string& text) {
-  return fs::path(std::u8string(text.begin(), text.end()));
-}
+using PortUtf8::FromUtf8;
 
 struct Entry {
   std::string name;
