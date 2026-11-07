@@ -2,6 +2,7 @@
 #include "port_mobile.h"
 #include "port_save.h"
 
+#include "port_bytes.h"
 #include "port_save_trilogy.h"
 
 #include "port_entry.h"
@@ -76,14 +77,6 @@ constexpr size_t kUserDataSize = 0x1ff8;
 
 std::string sUserDirectory;
 constexpr std::streamoff kMaxReadBytes = 16 * 1024 * 1024;
-
-uint32_t Be32(const uint8_t* p) {
-  return (uint32_t(p[0]) << 24) | (uint32_t(p[1]) << 16) | (uint32_t(p[2]) << 8) | uint32_t(p[3]);
-}
-
-uint32_t Le32(const uint8_t* p) {
-  return (uint32_t(p[3]) << 24) | (uint32_t(p[2]) << 16) | (uint32_t(p[1]) << 8) | uint32_t(p[0]);
-}
 
 bool ReadAll(const std::string& path, std::vector<uint8_t>& out, std::string& error) {
   std::ifstream in(PortUtf8::FromUtf8(path), std::ios::binary);
@@ -273,7 +266,7 @@ bool ParseCopy(const uint8_t* user, size_t size, SCopy& out) {
     out.why = "the save data has no SAVH header";
     return false;
   }
-  out.saveIdx = int(Be32(user + 4));
+  out.saveIdx = int(port::ReadBE32(user + 4));
   const bool present[3] = {user[8] != 0, user[9] != 0, user[10] != 0};
   for (int i = 0; i < 3; ++i) {
     out.slots[i].present = present[i];
@@ -561,10 +554,10 @@ bool Inspect(const std::string& path, File& out, std::string& error) {
     // Legacy port saves stored generation and CRC in host order. New port saves, consoles and
     // Dolphin use big-endian; a match either way is a valid copy, and the byte order that
     // matched says how to read the generation.
-    const bool little = crc == Le32(block);
-    const bool big = crc == Be32(block);
+    const bool little = crc == port::ReadLE32(block);
+    const bool big = crc == port::ReadBE32(block);
     copies[i].crc = little || big;
-    copies[i].generation = little ? int(Le32(block + 4)) : int(Be32(block + 4));
+    copies[i].generation = little ? int(port::ReadLE32(block + 4)) : int(port::ReadBE32(block + 4));
     if (!copies[i].crc) {
       copies[i].why = "CRC mismatch";
       continue;

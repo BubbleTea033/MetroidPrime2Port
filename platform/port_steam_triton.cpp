@@ -3,6 +3,9 @@
 
 #include "port_steam_triton.h"
 
+#include "port_bytes.h"
+#include "port_crc32.h"
+
 #include <cstring>
 
 namespace PortSteamTriton {
@@ -17,10 +20,6 @@ constexpr size_t kImu = 29;
 constexpr size_t kImuTimestamped = 31;
 
 int16_t I16(const uint8_t* p) { return int16_t(uint16_t(p[0] | (p[1] << 8))); }
-
-uint32_t U32(const uint8_t* p) {
-  return uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);
-}
 
 } // namespace
 
@@ -80,8 +79,8 @@ bool ParseDeckState(const uint8_t* data, size_t size, Sample& out) {
   out = Sample{};
   out.deck = true;
   out.report = kDeckReportType;
-  out.buttons = U32(data + 8);
-  out.paddles = DeckPaddleBits(out.buttons, U32(data + 12));
+  out.buttons = port::ReadLE32(data + 8);
+  out.paddles = DeckPaddleBits(out.buttons, port::ReadLE32(data + 12));
   // FNV-1a over the raw accelerometer and gyro (bytes 24-35).
   uint32_t hash = 2166136261u;
   for (size_t i = 24; i < 36; ++i) {
@@ -128,9 +127,9 @@ bool ParseState(const uint8_t* data, size_t size, Sample& out) {
   const uint8_t* p = data + 1;
   out = Sample{};
   out.report = data[0];
-  out.buttons = U32(p + 1);
+  out.buttons = port::ReadLE32(p + 1);
   out.paddles = PaddleBits(out.buttons);
-  out.imuTimestamp = values - imu == 4 ? U32(p + imu) : uint32_t(p[imu] | (p[imu + 1] << 8));
+  out.imuTimestamp = values - imu == 4 ? port::ReadLE32(p + imu) : uint32_t(p[imu] | (p[imu + 1] << 8));
   const int16_t ax = I16(p + values);
   const int16_t ay = I16(p + values + 2);
   const int16_t az = I16(p + values + 4);
@@ -191,22 +190,11 @@ constexpr float kSonyAccelCountsPerG = 8192.f;
 constexpr float kSwitchGyroScale = 14.2842f;
 constexpr float kSwitchAccelScale = 4096.f;
 
-uint32_t Crc32(uint32_t crc, const uint8_t* data, size_t size) {
-  crc = ~crc;
-  for (size_t i = 0; i < size; ++i) {
-    crc ^= data[i];
-    for (int bit = 0; bit < 8; ++bit) {
-      crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
-    }
-  }
-  return ~crc;
-}
-
 // A Bluetooth report's CRC-32 over the HID header byte 0xA1 and its first size - 4 bytes.
 bool SonyCrcValid(const uint8_t* data, size_t size) {
   const uint8_t header = 0xA1;
-  const uint32_t crc = Crc32(Crc32(0, &header, 1), data, size - 4);
-  return crc == U32(data + size - 4);
+  const uint32_t crc = port::Crc32(data, size - 4, port::Crc32(&header, 1));
+  return crc == port::ReadLE32(data + size - 4);
 }
 
 int Abs(int v) { return v < 0 ? -v : v; }
@@ -333,8 +321,8 @@ bool ParseSonyState(Family family, const uint8_t* data, size_t size, const ImuSc
     out.buttons = uint32_t(state[4]) | (uint32_t(state[5]) << 8) | (uint32_t(state[6]) << 16);
     out.imuTimestamp = uint32_t(state[9] | (state[10] << 8));
   } else {
-    out.buttons = U32(state + 7);
-    out.imuTimestamp = U32(state + 27);
+    out.buttons = port::ReadLE32(state + 7);
+    out.imuTimestamp = port::ReadLE32(state + 27);
   }
   if (family == Family::DualSenseEdge) {
     const uint8_t b = state[9];
