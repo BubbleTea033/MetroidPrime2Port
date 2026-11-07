@@ -786,13 +786,14 @@ void CmdStatus(CStateManager& mgr, const Args& args, std::string& out) {
       std::snprintf(line, sizeof(line),
                     "perf breaks copy %u depthsnap %u encoder %u offscreen %u resolve %u | copytex %u"
                     " | tex hit %u miss %u hash %u upload %u init %u initdata %u | dstalphadup %u"
-                    " bindinval %u\n",
+                    " bindinval %u | arrays %u (%u KiB) reused %u\n",
                     b[AURORA_PERF_BREAK_COPY], b[AURORA_PERF_BREAK_DEPTH_SNAPSHOT],
                     b[AURORA_PERF_BREAK_ENCODER_TASK], b[AURORA_PERF_BREAK_OFFSCREEN],
                     b[AURORA_PERF_BREAK_RESOLVE], c[AURORA_PERF_COPY_TEX], c[AURORA_PERF_TEX_OBJ_HIT],
                     c[AURORA_PERF_TEX_OBJ_MISS], c[AURORA_PERF_TEX_HASH], c[AURORA_PERF_TEX_UPLOAD],
                     c[AURORA_PERF_TEX_INIT], c[AURORA_PERF_TEX_INIT_DATA], c[AURORA_PERF_DST_ALPHA_DUP],
-                    c[AURORA_PERF_BIND_INVALIDATE]);
+                    c[AURORA_PERF_BIND_INVALIDATE], c[AURORA_PERF_ARRAY_UPLOAD],
+                    c[AURORA_PERF_ARRAY_UPLOAD_BYTES] / 1024, c[AURORA_PERF_ARRAY_REUSE]);
       out += line;
       if (perf->copySiteCount != 0) {
         out += "copy sites";
