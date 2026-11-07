@@ -62,9 +62,11 @@ SUBTAB_RE = re.compile(r'SubTab\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)')
 KEY_RE = re.compile(r'^    \{"([a-z0-9_]+)",|^    BoolKey< &\w+ >\("([a-z0-9_]+)"\)'
                     r'|^    (?:Int|Float)Key<[^>]*>\(\s*"([a-z0-9_]+)"'
                     r'|^    (?:FN_BOOL_KEY|FN_RANGE_KEY|RANGE_KEY)\(\s*"([a-z0-9_]+)"', re.M)
+# ImGui widgets, and the debug_ui helpers that wrap them (CheckboxTip, CheckboxFn).
 WIDGET_RE = re.compile(
-    r'ImGui::(Checkbox|SliderInt|SliderFloat\w*|DragInt\w*|DragFloat\w*|Combo|BeginCombo'
-    r'|RadioButton|InputText\w*|ColorEdit\w*)\(\s*' + STR)
+    r'(?:ImGui::|(?<![\w:])(?=CheckboxTip\(|CheckboxFn\())'
+    r'(CheckboxTip|CheckboxFn|Checkbox|SliderInt|SliderFloat\w*|DragInt\w*|DragFloat\w*|Combo'
+    r'|BeginCombo|RadioButton|InputText\w*|ColorEdit\w*)\(\s*' + STR)
 
 
 def visible(label):
@@ -131,7 +133,7 @@ def main(argv):
             if not label or label in index_labels or label in EXCLUDED:
                 continue
             line = text.count("\n", 0, m.start()) + 1
-            problems.append(f"{path}:{line}: ImGui::{m.group(1)} '{label}' is not in {INDEX} "
+            problems.append(f"{path}:{line}: {m.group(1)} '{label}' is not in {INDEX} "
                             "and not in EXCLUDED")
 
     keys = setting_keys((root / SETTINGS_SRC).read_text(encoding="utf-8"))

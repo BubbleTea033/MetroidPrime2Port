@@ -44,9 +44,9 @@ void DrawEnhancementsTab() {
            "such as a second Missile Expansion or Energy Tank, so each kind's first box still "
            "shows.");
   // Off walks at retail speed; a custom action bound to this switch makes the slider a sprint.
-  Changed(ImGui::Checkbox("Custom walk speed", &sWalkSpeedEnabled));
-  ImGui::SetItemTooltip("Off: retail speed. Bind a custom action to this setting (Toggle or While\n"
-                        "held) in Controls to sprint at the speed below.");
+  CheckboxTip("Custom walk speed", &sWalkSpeedEnabled,
+                  "Off: retail speed. Bind a custom action to this setting (Toggle or While\n"
+                  "held) in Controls to sprint at the speed below.");
   ImGui::BeginDisabled(!sWalkSpeedEnabled);
   int walkSpeed = sWalkSpeed;
   if (ImGui::SliderInt("Walk speed", &walkSpeed, PortOverlay::kWalkSpeedMin,

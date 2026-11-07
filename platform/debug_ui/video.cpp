@@ -45,8 +45,7 @@ void DrawVideoDisplay() {
     PortOverlay::SetFullscreen(fullscreen);
   }
   // Applied by PortOverlay::Draw through aurora_enable_vsync, every frame it changes.
-  Changed(ImGui::Checkbox("Vsync", &sVsync));
-  ImGui::SetItemTooltip("Waits for the display's refresh before presenting a frame.");
+  CheckboxTip("Vsync", &sVsync, "Waits for the display's refresh before presenting a frame.");
   // Applied by ApplyAspect on the next loop iteration: the render mode is widened and the world and
   // GUI cameras follow its viewport.
   int aspect = sAspectMode;
@@ -189,8 +188,8 @@ void DrawVideoDisplay() {
                           "reticle's model does not load there. GameCube: on a Trilogy disc, the\n"
                           "GameCube crosshair in place of Trilogy's aiming cursor (Classic on a\n"
                           "GameCube disc).");
-    Changed(ImGui::Checkbox("Custom crosshair colour", &sCrosshairCustomColor));
-    ImGui::SetItemTooltip("Off: the game's own colour.");
+    CheckboxTip("Custom crosshair colour", &sCrosshairCustomColor,
+                    "Off: the game's own colour.");
     ImGui::SameLine();
     ImGui::BeginDisabled(!sCrosshairCustomColor);
     Changed(ImGui::ColorEdit3("##crosshair_color", sCrosshairColor,
@@ -206,19 +205,19 @@ void DrawVideoDisplay() {
       "Plays from behind Samus's shoulder (single player; not the morph ball or cutscenes),\n"
       "showing her body and hiding the arm cannon and helmet. Distance, shoulder and height:\n"
       "console `thirdperson`, or third_person_* in the settings file.");
-  Changed(ImGui::Checkbox("Hide visor effects", &sHideVisorEffects));
-  ImGui::SetItemTooltip("The scan visor's window and edges are what a visor effect draws here.");
-  Changed(ImGui::Checkbox("Cutscene black bars", &sCinemaBars));
-  ImGui::SetItemTooltip("Off lets a cutscene fill the screen instead of the game's letterbox.");
-  Changed(ImGui::Checkbox("Morph ball black bars", &sBallBars));
-  ImGui::SetItemTooltip("Off: the world fills the screen in morph ball.\nOn: the game's narrowed ball view.");
-  Changed(ImGui::Checkbox("Crosshair in Dark Visor", &sCrosshairDark));
-  ImGui::SetItemTooltip("Off hides the aiming crosshair in the Dark Visor. On under Original experience.");
+  CheckboxTip("Hide visor effects", &sHideVisorEffects,
+                  "The scan visor's window and edges are what a visor effect draws here.");
+  CheckboxTip("Cutscene black bars", &sCinemaBars,
+                  "Off lets a cutscene fill the screen instead of the game's letterbox.");
+  CheckboxTip("Morph ball black bars", &sBallBars,
+                  "Off: the world fills the screen in morph ball.\nOn: the game's narrowed ball view.");
+  CheckboxTip("Crosshair in Dark Visor", &sCrosshairDark,
+                  "Off hides the aiming crosshair in the Dark Visor. On under Original experience.");
   ImGui::SameLine();
-  Changed(ImGui::Checkbox("Crosshair in Echo Visor", &sCrosshairEcho));
-  ImGui::SetItemTooltip("Off hides the aiming crosshair in the Echo Visor. On under Original experience.");
-  Changed(ImGui::Checkbox("Secondary crosshairs", &sSecondaryCrosshairs));
-  ImGui::SetItemTooltip("Off hides the next-target reticle; the lock-on reticle and the scan box stay.");
+  CheckboxTip("Crosshair in Echo Visor", &sCrosshairEcho,
+                  "Off hides the aiming crosshair in the Echo Visor. On under Original experience.");
+  CheckboxTip("Secondary crosshairs", &sSecondaryCrosshairs,
+                  "Off hides the next-target reticle; the lock-on reticle and the scan box stay.");
   // Applied by CCameraManager::UpdateCameras: the first-person camera takes its FOV when it is
   // built, so the live change goes through CCameraManager::mFirstPersonFov. 0 is the game's own 55.
   float fov = sFirstPersonFov > 0.f ? sFirstPersonFov : 55.f;
@@ -234,11 +233,11 @@ void DrawVideoDisplay() {
   }
   ImGui::EndDisabled();
   ImGui::SetItemTooltip("Back to the retail 55 deg.");
-  Changed(ImGui::Checkbox("Arm cannon follows FOV", &sGunFollowsFov));
-  ImGui::SetItemTooltip("Off: the arm cannon is drawn at its own FOV (below) whatever the field\n"
-                        "of view, so it keeps its size and place. On: it shares the world's\n"
-                        "perspective, so a wider FOV draws it smaller and further into the corner.\n"
-                        "Off under Original experience.");
+  CheckboxTip("Arm cannon follows FOV", &sGunFollowsFov,
+                  "Off: the arm cannon is drawn at its own FOV (below) whatever the field\n"
+                  "of view, so it keeps its size and place. On: it shares the world's\n"
+                  "perspective, so a wider FOV draws it smaller and further into the corner.\n"
+                  "Off under Original experience.");
   ImGui::BeginDisabled(sGunFollowsFov);
   float gunFov = sGunFov;
   if (ImGui::SliderFloat("Arm cannon FOV", &gunFov, PortOverlay::kGunFovMin, PortOverlay::kGunFovMax,
@@ -289,12 +288,12 @@ void DrawVideoQuality() {
     Changed(true);
   }
   // The two toasts are drawn by DrawUI (overlays.cpp), with the panel open or closed.
-  Changed(ImGui::Checkbox("Show shader compilation", &sShowShaderCompilation));
-  ImGui::SetItemTooltip("A small progress bar while the shader cache compiles at startup (longest on the first\n"
-                        "start after an install or update). Draws whose shader isn't ready yet are skipped.");
-  Changed(ImGui::Checkbox("Show F1 hint at launch", &sShowMenuHint));
-  ImGui::SetItemTooltip("A note in the top left corner for the first seconds of each launch saying how to\n"
-                        "open this panel.");
+  CheckboxTip("Show shader compilation", &sShowShaderCompilation,
+                  "A small progress bar while the shader cache compiles at startup (longest on the first\n"
+                  "start after an install or update). Draws whose shader isn't ready yet are skipped.");
+  CheckboxTip("Show F1 hint at launch", &sShowMenuHint,
+                  "A note in the top left corner for the first seconds of each launch saying how to\n"
+                  "open this panel.");
   // A max, so the combo shows the smallest offered step that covers it (a hand-written MP2_ANISO=3
   // reads as 4x); picking a row sets that step.
   static const int kAnisoSteps[] = {1, 2, 4, 8, 16};
@@ -310,9 +309,9 @@ void DrawVideoQuality() {
     Changed(true);
   }
   // Applied by PortVideo::Frame through aurora_set_per_pixel_lighting, on change.
-  Changed(ImGui::Checkbox("Per-pixel lighting", &sPerPixelLighting));
-  ImGui::SetItemTooltip("Sums the game's lights per pixel instead of per vertex, like Dolphin: smoother\n"
-                        "on low-poly models, not the original look.");
+  CheckboxTip("Per-pixel lighting", &sPerPixelLighting,
+                  "Sums the game's lights per pixel instead of per vertex, like Dolphin: smoother\n"
+                  "on low-poly models, not the original look.");
   // Applied by ApplyRenderScale from Draw, through PortVideo::DrawScale (dynamic resolution's while
   // it has lowered the scale).
   // Dynamic resolution's mode is the two saved settings together: Auto draws up to the window's own
@@ -665,10 +664,10 @@ void DrawVideoCompatibility() {
   size_t backendCount = 0;
   const AuroraBackend* backends = aurora_get_available_backends(&backendCount);
   if (std::find(backends, backends + backendCount, BACKEND_OPENGLES) != backends + backendCount) {
-    Changed(ImGui::Checkbox("Use OpenGL ES", &sOpenGles));
-    ImGui::SetItemTooltip("Renders through OpenGL ES instead of Vulkan. Try it if the world draws black\n"
-                          "or untextured (some Adreno drivers). Takes effect after a restart; if the\n"
-                          "driver crashes starting it, the next start goes back to Vulkan.");
+    CheckboxTip("Use OpenGL ES", &sOpenGles,
+                    "Renders through OpenGL ES instead of Vulkan. Try it if the world draws black\n"
+                    "or untextured (some Adreno drivers). Takes effect after a restart; if the\n"
+                    "driver crashes starting it, the next start goes back to Vulkan.");
     if (sOpenGles != sOpenGlesAtStart) {
       ImGui::SameLine();
       ImGui::TextColored(ThemeWarnColor(), "Restart to apply");
@@ -695,9 +694,9 @@ void DrawVideoCompatibility() {
     }
   }
   // Aurora reads MP2_GPU_POWER=low when it picks the adapter; MP1 has only the variable.
-  Changed(ImGui::Checkbox("Low-power GPU", &sLowPowerGpu));
-  ImGui::SetItemTooltip("Asks for the integrated GPU on a machine that also has a discrete one (longer\n"
-                        "battery, less heat, lower frame rate). Restart to apply.");
+  CheckboxTip("Low-power GPU", &sLowPowerGpu,
+                  "Asks for the integrated GPU on a machine that also has a discrete one (longer\n"
+                  "battery, less heat, lower frame rate). Restart to apply.");
   if (sLowPowerGpu != sLowPowerGpuAtStart) {
     ImGui::SameLine();
     ImGui::TextColored(ThemeWarnColor(), "Restart to apply");

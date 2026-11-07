@@ -226,10 +226,7 @@ void DrawCheatsSection() {
   ImGui::SetItemTooltip("Stacked shots skip the Dark Beam unless it's the one in hand, so they "
                         "don't drain light beacons and crystals.");
   ImGui::EndDisabled();
-  bool moonJump = PortOverlay::MoonJumpSet();
-  if (ImGui::Checkbox("Moon jump", &moonJump)) {
-    PortOverlay::SetMoonJump(moonJump);
-  }
+  CheckboxFn("Moon jump", PortOverlay::MoonJumpSet, PortOverlay::SetMoonJump);
   ImGui::SetItemTooltip("Holding Jump in the air lifts Samus at a steady speed, on foot only. Not saved.");
   float boostSpeed = PortOverlay::BoostSpeedScaleSet();
   float boostDuration = PortOverlay::BoostDurationScaleSet();
@@ -243,18 +240,12 @@ void DrawCheatsSection() {
   if (boostChanged) {
     PortOverlay::SetBoostScales(boostSpeed, boostDuration);
   }
-  bool boostAnywhere = PortOverlay::BoostAnywhereSet();
-  if (ImGui::Checkbox("Boost anywhere", &boostAnywhere)) {
-    PortOverlay::SetBoostAnywhere(boostAnywhere);
-  }
+  CheckboxFn("Boost anywhere", PortOverlay::BoostAnywhereSet, PortOverlay::SetBoostAnywhere);
   ImGui::SetItemTooltip("The Boost Ball also fires in the air, after a bomb or spring jump, and a boost "
                         "no longer stops short when the ball leaves the ground, so a boost into a spring "
                         "jump keeps its height. Not saved.");
   ImGui::SameLine();
-  bool boostSteer = PortOverlay::BoostSteerSet();
-  if (ImGui::Checkbox("Steer while boosting", &boostSteer)) {
-    PortOverlay::SetBoostSteer(boostSteer);
-  }
+  CheckboxFn("Steer while boosting", PortOverlay::BoostSteerSet, PortOverlay::SetBoostSteer);
   ImGui::SetItemTooltip("The stick turns a boosted ball's course, keeping its speed. Not saved.");
   ImGui::EndDisabled();
 

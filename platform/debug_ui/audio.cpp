@@ -41,14 +41,8 @@ void SetMusyxAudioEnabled(bool enabled) {
 }
 
 void DrawAudio() {
-  bool ai = AiAudioEnabled();
-  if (ImGui::Checkbox("Streamed audio (music/movies)", &ai)) {
-    SetAiAudioEnabled(ai);
-  }
-  bool musyx = MusyxAudioEnabled();
-  if (ImGui::Checkbox("MusyX audio (effects/streams)", &musyx)) {
-    SetMusyxAudioEnabled(musyx);
-  }
+  CheckboxFn("Streamed audio (music/movies)", AiAudioEnabled, SetAiAudioEnabled);
+  CheckboxFn("MusyX audio (effects/streams)", MusyxAudioEnabled, SetMusyxAudioEnabled);
 }
 
 void DrawVoices() {

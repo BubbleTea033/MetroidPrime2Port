@@ -82,6 +82,24 @@ inline bool Changed(bool changed) {
   return changed;
 }
 
+// A checkbox on a setting's variable: the change is saved (Changed) and `tooltip` shows on hover.
+inline bool CheckboxTip(const char* label, bool* value, const char* tooltip) {
+  const bool changed = Changed(ImGui::Checkbox(label, value));
+  ImGui::SetItemTooltip("%s", tooltip);
+  return changed;
+}
+
+// A checkbox on a value behind a getter and setter; the setter does any saving.
+template < class Get, class Set >
+bool CheckboxFn(const char* label, Get get, Set set) {
+  bool value = get();
+  const bool changed = ImGui::Checkbox(label, &value);
+  if (changed) {
+    set(value);
+  }
+  return changed;
+}
+
 // Pages and sections, each drawn by the file it is named after.
 struct DebugPage {
   const char* name;
