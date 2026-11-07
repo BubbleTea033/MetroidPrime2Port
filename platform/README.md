@@ -288,8 +288,8 @@ user pack (1), binding icons (2).
   `port_embedded_data.cpp` from `textures/`) carry that set inside the executable and ignore a stale
   `textures` folder beside it; with `-DMP_EMBED_RESOURCES=OFF` (and on Android) the default is a
   `textures` folder beside the executable (on Android, in the user directory), used only if it exists. A `<dir>/<device>` subfolder
-  (`keyboard`, `xbox`, `playstation`, `switch`, `gamecube`, `standard`) is used when present;
-  `<dir>` itself only when it holds no device folders at all.
+  (`keyboard`, `xbox`, `playstation`, `switch`, `gamecube`, `standard`, `steamdeck`) is used when
+  present (`steamdeck` falls back to `xbox`); `<dir>` itself only when it holds no device folders at all.
 - `MP2_USER_TEXTURES=<dir>` — the user's own pack, over the built-in set; default
   `<user>/user_textures`. Same per-device layout.
 - `MP2_TEXTURE_DEVICE=<name>` — forces the device set (and the binding icons) instead of following

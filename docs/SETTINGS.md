@@ -258,8 +258,8 @@ Controls > Options:
   (the touch overlay has no Z on pointer-menu screens). Env `MP2_MENU_EXIT`.
 - `prompt_glyphs`: Options > On-screen prompts > Button glyphs (Auto follows the last-used device;
   Xbox, PlayStation, Switch, GameCube, Keyboard or Steam Deck forces the set in the F1 UI and the
-  game's prompts; a Valve controller (Steam Deck, Steam Controller, Steam Input's virtual pad)
-  follows the Steam Deck set on Auto; env `MP2_PROMPT_GLYPHS` 0-6, and `MP2_TEXTURE_DEVICE` still
+  game's prompts; a Valve controller (Steam Deck, Steam Controller, also behind Steam Input's
+  virtual pad when Steam reports which it is) follows the Steam Deck set on Auto; env `MP2_PROMPT_GLYPHS` 0-6, and `MP2_TEXTURE_DEVICE` still
   wins).
 - `minimap_tap`: Options > Menus > Tap minimap for map (a tap or click on the HUD minimap opens the
   map screen; default on; env `MP2_MINIMAP_TAP`; console `minimap`, `maptap`).
