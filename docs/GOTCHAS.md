@@ -60,10 +60,10 @@ Things that took real effort to find out. AGENTS.md keeps a one-line index; the 
 - GCC "specialization after instantiation" in rstl: declare the specialization in the header's
   `TARGET_PC` block (e.g. `include/rstl/string.hpp`), not the .cpp.
 - Host objects outgrow retail sizes: hard-coded `Alloc(0x20)` etc. need `sizeof` under TARGET_PC.
-- `src/MetroidPrime/PortGlobals.cpp`, `PortBoot.cpp`, `PortReachStubs.cpp` are old-tree files
-  not built; mine them for values only. So is `platform/debug_ui.cpp`: it is in no CMake target
-  (`CMakeLists.txt:690` says why: the F1 overlay is built in `mp_port_audio` instead), so editing it
-  changes nothing and a setting added there will not link. The live F1 overlay is two pieces:
+- `src/MetroidPrime/PortReachStubs.cpp` is an old-tree file built only by `MP_BOOT_STUBS`. The other
+  old-tree files (`PortGlobals.cpp`, `PortBoot.cpp`, the single-file `platform/debug_ui.cpp`, `smoke.cpp`,
+  ...) were deleted 2026-11-07; mine them for values with `git log --diff-filter=D -- <path>` and
+  `git show <that commit>^:<path>`. The live F1 overlay is two pieces:
   `platform/debug_ui/*.cpp` is the window and its pages (`CMakeLists.txt:661-666`, built into
   `mp_port_audio`, :650), and
   `platform/port_overlay.cpp` holds the `PortOverlayState` knobs and the game-facing API behind them;
@@ -128,7 +128,7 @@ Things that took real effort to find out. AGENTS.md keeps a one-line index; the 
   `tools/sweep_report.py` learned to call that RELOAD. `B` is the cancel button: `tools/sweep_areas.sh`
   presses it twice per area. The three traps compose: `START` pauses the game, *no* buttons leaves it
   paused, and `A` leaves it in a save screen.
-- `MP_PORT_FRAMES` is only read by the unbuilt `PortBoot.cpp`: the current loop never exits, so
+- Nothing reads `MP_PORT_FRAMES` (only the deleted `PortBoot.cpp` did): the current loop never exits, so
   `timeout` ends boots (exit 124/137 = still running, not a crash). The fault handler prints
   `port: crashed: <signal>` + stack and breadcrumbs on real crashes, **and on an external
   `kill -SEGV`** (`platform/main.cpp:1174` installs `PortCrash::Install`, `platform/port_crash.cpp`,

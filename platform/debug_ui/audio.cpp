@@ -21,8 +21,8 @@ namespace {
 bool sMusyxEnabled = true;
 } // namespace
 
-// The two audio paths' switches (declared in port_debug.h; the old platform/debug_ui.cpp that
-// defined them is not built). Neither is saved: a relaunch has sound.
+// The two audio paths' switches (declared in port_debug.h). Neither is saved: a relaunch has
+// sound.
 bool AiAudioEnabled() {
   return AIPortOutputEnabled() != 0;
 }

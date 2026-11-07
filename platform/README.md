@@ -326,9 +326,7 @@ values for a run. The hooks are in `CStateManager` (tick, destructor) and
 
 ## Not built
 
-`disc.cpp` (with `include/port_disc.h`), `debug_ui.cpp` and `smoke.cpp` are carried over from the
-Prime port and are in no CMake target (checked against `CMakeLists.txt`); the F1 overlay is
-`platform/debug_ui/*.cpp`. `ai_dma.cpp`, `port_randomizer.cpp` and `port_rando_*.cpp` are built, in
+The F1 overlay is `platform/debug_ui/*.cpp`. `ai_dma.cpp`, `port_randomizer.cpp` and `port_rando_*.cpp` are built, in
 `mp_port_audio`. Randomizer env vars (see `docs/RANDOMIZER.md`): `MP_RANDO_DUMP=1` logs every pickup
 location to `<user>/randomizer_locations.log`; `MP_RANDO_GEN=<name>` builds a no-logic seed from that
 log; `MP_RANDO_SEED=<path>` overrides the seed file; `MP_USER_PATH` sets `<user>` for these.

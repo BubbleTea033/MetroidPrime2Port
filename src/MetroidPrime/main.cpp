@@ -253,8 +253,7 @@ void CMain::ShutdownSubsystems() {
   // rather than on disc), waits for the REL manager, shuts down `CDamageVulnerability` and
   // reports the main stack's usage. Those either duplicate work the port's own teardown does
   // (`platform/main.cpp` frees the REL modules and the graphics system) or are console-only
-  // (the stack walk reads Aurora's allocator rather than a stack; see
-  // `src/MetroidPrime/PortBoot.cpp`). The first call, the one that frees everything the game
+  // (the stack walk reads Aurora's allocator rather than a stack). The first call, the one that frees everything the game
   // deferred to the end of a frame, is written and meaningful on a host.
   CFrameDelayedKiller::ShutDown();
 }
