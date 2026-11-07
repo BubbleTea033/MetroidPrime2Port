@@ -58,9 +58,10 @@ PAGE_RE = re.compile(r'\{\s*"([^"]+)"\s*,\s*Draw\w+\s*\}')
 SUBTAB_RE = re.compile(r'SubTab\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)')
 # A row of kSettingKeys starts at four spaces; the lambdas inside it are indented further. This
 # port's table also has IntKey< ... >("key", ...) and FloatKey< ... >("key", ...) rows, whose
-# argument list may start on the next line.
+# argument list may start on the next line, and FN_BOOL_KEY / FN_RANGE_KEY / RANGE_KEY("key", ...).
 KEY_RE = re.compile(r'^    \{"([a-z0-9_]+)",|^    BoolKey< &\w+ >\("([a-z0-9_]+)"\)'
-                    r'|^    (?:Int|Float)Key<[^>]*>\(\s*"([a-z0-9_]+)"', re.M)
+                    r'|^    (?:Int|Float)Key<[^>]*>\(\s*"([a-z0-9_]+)"'
+                    r'|^    (?:FN_BOOL_KEY|FN_RANGE_KEY|RANGE_KEY)\(\s*"([a-z0-9_]+)"', re.M)
 WIDGET_RE = re.compile(
     r'ImGui::(Checkbox|SliderInt|SliderFloat\w*|DragInt\w*|DragFloat\w*|Combo|BeginCombo'
     r'|RadioButton|InputText\w*|ColorEdit\w*)\(\s*' + STR)
@@ -71,13 +72,13 @@ def visible(label):
 
 
 def setting_keys(text):
-    """The keys of kSettingKeys, in table order: rows {"key", ...}, BoolKey< &var >("key") and
-    IntKey/FloatKey< &var, min, max >("key", ...)."""
+    """The keys of kSettingKeys, in table order: rows {"key", ...}, BoolKey< &var >("key"),
+    IntKey/FloatKey< &var, min, max >("key", ...) and FN_BOOL_KEY/FN_RANGE_KEY/RANGE_KEY("key", ...)."""
     start = text.find("const SettingKey kSettingKeys[] = {")
     if start < 0:
         return []
     table = text[start:text.find("\n};\n", start)]
-    return [plain or flag or ranged for plain, flag, ranged in KEY_RE.findall(table)]
+    return [next(g for g in groups if g) for groups in KEY_RE.findall(table)]
 
 
 def main(argv):
