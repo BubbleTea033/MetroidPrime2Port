@@ -46,7 +46,6 @@ PORT_ONLY = [
     "src/MetroidPrime/PortStateMachineBase.cpp",
     "src/MetroidPrime/PortTweakGlobals.cpp",
 ]
-# src/MetroidPrime/PortReachStubs.cpp is diagnostic-only (MP_BOOT_STUBS), never listed.
 
 # The first argument may be a call with its own commas: MatchingFor("G2ME01", "G2MP01").
 OBJ_RE = re.compile(r'Object\(\s*(?:[^,()]|\([^)]*\))+,\s*"([^"]+)"([^)]*)\)')

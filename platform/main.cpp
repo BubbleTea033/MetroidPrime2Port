@@ -1062,8 +1062,7 @@ std::string PickDiscUntilChosen() {
 
 // Crash reports are PortCrash's (platform/port_crash.cpp): signal, fault address, module offset,
 // build, stack and breadcrumbs, written into the log, and the signal then goes on to the handler
-// that was there before (the default one, so the exit status still says "died on signal 11",
-// which boot_probe.sh greps; on Android debuggerd's, which writes the tombstone).
+// that was there before (the default one, so the exit status still says "died on signal 11"; on Android debuggerd's, which writes the tombstone).
 #if defined(__ANDROID__)
 // Everything the report wrote went into the stderr pipe, and only the pump thread turns it into
 // logcat lines: give it up to half a second to empty the pipe, or the process dies with the stack

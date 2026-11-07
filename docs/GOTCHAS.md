@@ -60,16 +60,14 @@ Things that took real effort to find out. AGENTS.md keeps a one-line index; the 
 - GCC "specialization after instantiation" in rstl: declare the specialization in the header's
   `TARGET_PC` block (e.g. `include/rstl/string.hpp`), not the .cpp.
 - Host objects outgrow retail sizes: hard-coded `Alloc(0x20)` etc. need `sizeof` under TARGET_PC.
-- `src/MetroidPrime/PortReachStubs.cpp` is an old-tree file built only by `MP_BOOT_STUBS`. The other
-  old-tree files (`PortGlobals.cpp`, `PortBoot.cpp`, the single-file `platform/debug_ui.cpp`, `smoke.cpp`,
-  ...) were deleted 2026-11-07; mine them for values with `git log --diff-filter=D -- <path>` and
+- The old tree's files (`PortGlobals.cpp`, `PortBoot.cpp`, the single-file `platform/debug_ui.cpp`,
+  `smoke.cpp`, ...) were deleted 2026-11-07, and the `MP_BOOT_STUBS` diagnostic (`PortReachStubs.cpp`,
+  `tools/boot_probe.sh`) with them; mine them for values with `git log --diff-filter=D -- <path>` and
   `git show <that commit>^:<path>`. The live F1 overlay is two pieces:
-  `platform/debug_ui/*.cpp` is the window and its pages (`CMakeLists.txt:661-666`, built into
-  `mp_port_audio`, :650), and
-  `platform/port_overlay.cpp` holds the `PortOverlayState` knobs and the game-facing API behind them;
-  it keeps no settings file at all (every knob is an `MP2_*` env var). `tools/boot_probe.sh` is the
-  build that enables `MP_BOOT_STUBS=ON` itself (`:78-82`), so `PortReachStubs.cpp` is linked there and
-  nowhere else (`CMakeLists.txt:141-156`).
+  `platform/debug_ui/*.cpp` is the window and its pages (`CMakeLists.txt:629-634`, built into
+  `mp_port_audio`, :618), and
+  `platform/port_overlay.cpp` holds the `PortOverlayState` knobs and the game-facing API behind them
+  (`debug_ui/settings.cpp` reads and writes settings.cfg).
 - Upstream code casting pointers to `u32`/`uint` fails on 64-bit; most excluded units are that.
 - Disc data is big-endian: every raw read of resource bytes needs `CBasics::SwapBytes` under
   TARGET_PC (material data, CMDL/TXTR headers, compressed-block lengths in `CResFactory`).
