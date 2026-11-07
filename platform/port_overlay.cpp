@@ -696,14 +696,6 @@ bool PointerBlocked() {
          (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse);
 }
 
-bool SkipCinematics() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_SKIP_CINEMATICS", sSkipCinematics);
-}
-
 namespace {
 uint64_t sSkipConfirmUntilNs = 0;
 std::atomic<bool> sSkipConfirmTapped{false};
@@ -737,12 +729,6 @@ void SkipConfirmTap() {
 }
 
 bool TakeSkipConfirmTap() { return sSkipConfirmTapped.exchange(false); }
-
-void SetSkipCinematics(bool skip) {
-  ReadEnv();
-  sSkipCinematics = skip;
-  Persist();
-}
 
 int SeamlessPickups() {
   ReadEnv();
@@ -796,32 +782,6 @@ int WorldNameCard() {
   return EnvScreenMode("MP2_WORLD_NAME", OriginalExperience() ? kScreen_Show : kScreen_Skippable);
 }
 
-bool HideHelmet() {
-  ReadEnv();
-  return EnvBool("MP2_NO_HELMET", sHideHelmet);
-}
-
-bool HideVisorEffects() {
-  ReadEnv();
-  return EnvBool("MP2_NO_VISOR_FX", sHideVisorEffects);
-}
-
-bool CinemaBars() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return true;
-  }
-  return EnvBool("MP2_CINEMA_BARS", sCinemaBars);
-}
-
-bool SecondaryCrosshairs() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return true;
-  }
-  return EnvBool("MP2_SECONDARY_CROSSHAIRS", sSecondaryCrosshairs);
-}
-
 bool CrosshairInVisor(int visor) {
   ReadEnv();
   if (OriginalExperience()) {
@@ -835,22 +795,6 @@ bool CrosshairInVisor(int visor) {
   default:
     return true;
   }
-}
-
-bool BallBars() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return true;
-  }
-  return EnvBool("MP2_BALL_BARS", sBallBars);
-}
-
-bool DarkVisorFullScreen() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_DARK_VISOR_FULL", sDarkVisorFull);
 }
 
 int DarkVisorStatic() {
@@ -881,17 +825,6 @@ void SetHudOpacity(HudOpacityPart part, int percent) {
   Persist();
 }
 
-bool AimCrosshair() {
-  ReadEnv();
-  return EnvBool("MP2_AIM_CROSSHAIR", sAimCrosshair);
-}
-
-void SetAimCrosshair(bool enabled) {
-  ReadEnv();
-  sAimCrosshair = enabled;
-  Persist();
-}
-
 int CrosshairStyle() {
   ReadEnv();
   const char* env = port::EnvString("MP2_CROSSHAIR_STYLE");
@@ -905,34 +838,6 @@ int CrosshairStyle() {
     return kCrosshairStyle_GameCube;
   }
   return EnvIntIn("MP2_CROSSHAIR_STYLE", sCrosshairStyle, kCrosshairStyle_Classic, kCrosshairStyle_GameCube);
-}
-
-void SetCrosshairStyle(int style) {
-  ReadEnv();
-  sCrosshairStyle = std::clamp(style, kCrosshairStyle_Classic, kCrosshairStyle_GameCube);
-  Persist();
-}
-
-int CrosshairSize() {
-  ReadEnv();
-  return EnvIntIn("MP2_CROSSHAIR_SIZE", sCrosshairSize, kCrosshairSizeMin, kCrosshairSizeMax);
-}
-
-void SetCrosshairSize(int percent) {
-  ReadEnv();
-  sCrosshairSize = std::clamp(percent, kCrosshairSizeMin, kCrosshairSizeMax);
-  Persist();
-}
-
-int CrosshairOpacity() {
-  ReadEnv();
-  return EnvIntIn("MP2_CROSSHAIR_OPACITY", sCrosshairOpacity, kCrosshairOpacityMin, kCrosshairOpacityMax);
-}
-
-void SetCrosshairOpacity(int percent) {
-  ReadEnv();
-  sCrosshairOpacity = std::clamp(percent, kCrosshairOpacityMin, kCrosshairOpacityMax);
-  Persist();
 }
 
 bool CrosshairColor(float rgb[3]) {
@@ -978,12 +883,6 @@ bool GunFollowsFov() {
   return !OriginalExperience() && EnvBool("MP2_GUN_FOLLOWS_FOV", sGunFollowsFov);
 }
 
-void SetGunFollowsFov(bool enabled) {
-  ReadEnv();
-  sGunFollowsFov = enabled;
-  Persist();
-}
-
 float GunFov() {
   ReadEnv();
   if (OriginalExperience()) {
@@ -1026,28 +925,11 @@ void SetMsaa(int samples) {
   Persist();
 }
 
-int Anisotropy() {
-  ReadEnv();
-  return EnvIntIn("MP2_ANISO", sAnisotropy, 1, 16);
-}
-
-void SetAnisotropy(int maxAnisotropy) {
-  ReadEnv();
-  sAnisotropy = std::clamp(maxAnisotropy, 1, 16);
-  Persist();
-}
-
 int HudScale() {
   ReadEnv();
   // 0 means the full-size HUD.
   const int env = port::EnvInt("MP2_HUD_SCALE", sHudScale);
   return env == 0 ? kHudScaleMax : (env >= kHudScaleMin && env <= kHudScaleMax ? env : sHudScale);
-}
-
-void SetHudScale(int percent) {
-  ReadEnv();
-  sHudScale = std::clamp(percent, kHudScaleMin, kHudScaleMax);
-  Persist();
 }
 
 bool HudScalingActive() { return sHudScaling; }
@@ -1112,22 +994,6 @@ unsigned InfiniteAmmoKind(int itemType) {
   }
 }
 
-bool InfiniteBeamAmmo() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_INFINITE_BEAM_AMMO", sInfiniteBeamAmmo);
-}
-
-bool DarkWorldLightMusic() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_DARK_WORLD_LIGHT_MUSIC", sDarkWorldLightMusic);
-}
-
 bool InfiniteAmmo(unsigned kinds) {
   ReadEnv();
   const unsigned on = sInfiniteAmmo | (InfiniteBeamAmmo() ? kInfAmmoDark | kInfAmmoLight : 0u);
@@ -1137,31 +1003,6 @@ bool InfiniteAmmo(unsigned kinds) {
 void SetInfiniteAmmo(unsigned kinds, bool enabled) {
   ReadEnv();
   sInfiniteAmmo = enabled ? sInfiniteAmmo | kinds : sInfiniteAmmo & ~kinds;
-}
-
-bool FastMorph() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_FAST_MORPH", sFastMorph);
-}
-
-void SetFastMorph(bool enabled) {
-  ReadEnv();
-  sFastMorph = enabled;
-  Persist();
-}
-
-bool MinimapTap() {
-  ReadEnv();
-  return EnvBool("MP2_MINIMAP_TAP", sMinimapTap);
-}
-
-void SetMinimapTap(bool enabled) {
-  ReadEnv();
-  sMinimapTap = enabled;
-  Persist();
 }
 
 int MapPickups() {
@@ -1189,42 +1030,9 @@ void SetMapPickups(int mode) {
   Persist();
 }
 
-bool MapPickupKinds() {
-  ReadEnv();
-  return EnvBool("MP2_MAP_PICKUP_KINDS", sMapPickupKinds);
-}
-
-void SetMapPickupKinds(bool enabled) {
-  ReadEnv();
-  sMapPickupKinds = enabled;
-  Persist();
-}
-
 bool RevealMap() {
   ReadEnv();
   return !OriginalExperience() && EnvBool("MP2_REVEAL_MAP", sRevealMap);
-}
-
-void SetRevealMap(bool enabled) {
-  ReadEnv();
-  sRevealMap = enabled;
-  Persist();
-}
-
-bool PointerMenus() {
-  ReadEnv();
-  return EnvBool("MP2_POINTER_MENUS", sPointerMenus);
-}
-
-void SetPointerMenus(bool enabled) {
-  ReadEnv();
-  sPointerMenus = enabled;
-  Persist();
-}
-
-bool MenuExit() {
-  ReadEnv();
-  return EnvBool("MP2_MENU_EXIT", sMenuExit);
 }
 
 void RequestQuit() {
@@ -1232,34 +1040,6 @@ void RequestQuit() {
   SDL_Event quit{};
   quit.type = SDL_EVENT_QUIT;
   SDL_PushEvent(&quit);
-}
-
-bool MapSwapFingers() {
-  ReadEnv();
-  return EnvBool("MP2_MAP_SWAP_FINGERS", sMapSwapFingers);
-}
-
-bool MapInvertX() {
-  ReadEnv();
-  return EnvBool("MP2_MAP_INVERT_X", sMapInvertX);
-}
-
-bool MapInvertY() {
-  ReadEnv();
-  return EnvBool("MP2_MAP_INVERT_Y", sMapInvertY);
-}
-
-bool BallCamControl() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_BALL_CAM", sBallCam);
-}
-
-int BallCamSpeed() {
-  ReadEnv();
-  return EnvIntIn("MP2_BALL_CAM_SPEED", sBallCamSpeed, kBallCamSpeedMin, kBallCamSpeedMax);
 }
 
 int WalkSpeed() {
@@ -1291,36 +1071,6 @@ bool ConsumeShowHintRequest() {
   return requested;
 }
 
-bool WalkSpeedEnabled() {
-  ReadEnv();
-  return EnvBool("MP2_WALK_SPEED_ENABLED", sWalkSpeedEnabled);
-}
-
-void SetWalkSpeedEnabled(bool enabled) {
-  ReadEnv();
-  sWalkSpeedEnabled = enabled;
-  Persist();
-}
-
-void SetWalkSpeed(int percent) {
-  ReadEnv();
-  sWalkSpeed = std::clamp(percent, kWalkSpeedMin, kWalkSpeedMax);
-  Persist();
-}
-
-bool SpringBall() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_SPRING_BALL", sSpringBall);
-}
-
-bool QuickResume() {
-  ReadEnv();
-  return EnvBool("MP2_QUICK_RESUME", sQuickResume);
-}
-
 // No settings: the bindings always work (unbind them in Controls > Remap) and states keep the
 // room; the env overrides stay for the harness.
 bool SaveStateHotkeys() {
@@ -1331,29 +1081,6 @@ bool SaveStateHotkeys() {
 bool SaveStateRoomState() {
   ReadEnv();
   return EnvBool("MP2_SAVESTATE_ROOM_STATE", true);
-}
-
-void SetQuickResume(bool enabled) {
-  ReadEnv();
-  sQuickResume = enabled;
-  Persist();
-}
-
-void SetSpringBall(bool enabled) {
-  ReadEnv();
-  sSpringBall = enabled;
-  Persist();
-}
-
-bool SpringBallFlick() {
-  ReadEnv();
-  return EnvBool("MP2_SPRING_BALL_FLICK", sSpringFlick);
-}
-
-void SetSpringBallFlick(bool enabled) {
-  ReadEnv();
-  sSpringFlick = enabled;
-  Persist();
 }
 
 float SpringBallFlickRate() {
@@ -1370,92 +1097,6 @@ bool LockOnToggle() {
   return EnvBool("MP2_LOCK_ON_TOGGLE", EnvBool("MP2_LOCKON_TOGGLE", sLockOnToggle));
 }
 
-void SetLockOnToggle(bool enabled) {
-  ReadEnv();
-  sLockOnToggle = enabled;
-  Persist();
-}
-
-bool SpiderToggle() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_SPIDER_TOGGLE", sSpiderToggle);
-}
-
-void SetSpiderToggle(bool enabled) {
-  ReadEnv();
-  sSpiderToggle = enabled;
-  Persist();
-}
-
-bool AimLockOn() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_AIM_LOCK_ON", sAimLockOn);
-}
-
-void SetAimLockOn(bool enabled) {
-  ReadEnv();
-  sAimLockOn = enabled;
-  Persist();
-}
-
-bool ScanShoot() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_SCAN_SHOOT", sScanShoot);
-}
-
-void SetScanShoot(bool enabled) {
-  ReadEnv();
-  sScanShoot = enabled;
-  Persist();
-}
-
-bool StickyCharge() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_STICKY_CHARGE", sStickyCharge);
-}
-
-void SetStickyCharge(bool enabled) {
-  ReadEnv();
-  sStickyCharge = enabled;
-  Persist();
-}
-
-bool AutoAim() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return true;
-  }
-  return EnvBool("MP2_AUTO_AIM", sAutoAim);
-}
-
-void SetAutoAim(bool enabled) {
-  ReadEnv();
-  sAutoAim = enabled;
-  Persist();
-}
-
-bool PointerAim() {
-  ReadEnv();
-  return EnvBool("MP2_POINTER_AIM", sPointerAim);
-}
-
-bool TrilogyRadialSelectors() {
-  ReadEnv();
-  return EnvBool("MP2_TRILOGY_RADIAL_SELECTORS", sTrilogyRadialSelectors);
-}
-
 void SetTrilogyRadialSelectors(bool enabled) {
   sTrilogyRadialSelectors = enabled;
   if (!enabled) {
@@ -1464,125 +1105,9 @@ void SetTrilogyRadialSelectors(bool enabled) {
   }
 }
 
-void SetPointerAim(bool enabled) {
-  ReadEnv();
-  sPointerAim = enabled;
-  Persist();
-}
-
-int PointerAimBox() {
-  ReadEnv();
-  return EnvIntIn("MP2_POINTER_AIM_BOX", sPointerAimBox, kPointerAimBoxMin, kPointerAimBoxMax);
-}
-
-int PointerAimTurn() {
-  ReadEnv();
-  return EnvIntIn("MP2_POINTER_AIM_TURN", sPointerAimTurn, kPointerAimTurnMin, kPointerAimTurnMax);
-}
-
-bool GyroAim() {
-  ReadEnv();
-  return EnvBool("MP2_GYRO_AIM", sGyroAim);
-}
-
-int GyroSource() {
-  ReadEnv();
-  return EnvIntIn("MP2_GYRO_SOURCE", sGyroSource, 0, 2);
-}
-
-bool SteamInputBackButtons() {
-  ReadEnv();
-  return EnvBool("MP2_STEAM_INPUT_BACK_BUTTONS", sSteamInputBackButtons);
-}
-
 int GyroSpace() {
   ReadEnv();
   return EnvIntIn("MP2_GYRO_SPACE", sGyroSpace, 0, PortGyro::kSpaceCount - 1);
-}
-
-int GyroAutoCalibrate() {
-  ReadEnv();
-  return EnvIntIn("MP2_GYRO_AUTO_CALIBRATE", sGyroAutoCalibrate, 0, 2);
-}
-
-float GyroSmoothing() {
-  ReadEnv();
-  return EnvFloatIn("MP2_GYRO_SMOOTHING", sGyroSmoothing, 0.f, kGyroThresholdMax);
-}
-
-float GyroTightening() {
-  ReadEnv();
-  return EnvFloatIn("MP2_GYRO_TIGHTENING", sGyroTightening, 0.f, kGyroThresholdMax);
-}
-
-float GyroCursorAngle() {
-  ReadEnv();
-  return EnvFloatIn("MP2_GYRO_CURSOR_ANGLE", sGyroCursorAngle, kGyroCursorAngleMin, kGyroCursorAngleMax);
-}
-
-int GyroMode() {
-  ReadEnv();
-  return EnvIntIn("MP2_GYRO_MODE", sGyroMode, kGyroModeMin, kGyroModeMax);
-}
-
-float GyroSensitivity() {
-  ReadEnv();
-  return EnvFloatIn("MP2_GYRO_SENSITIVITY", sGyroSensitivity, kGyroSensitivityMin, kGyroSensitivityMax);
-}
-
-bool GyroCursorCamera() {
-  ReadEnv();
-  return EnvBool("MP2_GYRO_CURSOR_CAMERA", sGyroCursorCamera);
-}
-
-bool GyroSplit() {
-  ReadEnv();
-  return EnvBool("MP2_GYRO_SPLIT", sGyroSplit);
-}
-
-float GyroSensitivityY() {
-  ReadEnv();
-  return EnvFloatIn("MP2_GYRO_SENSITIVITY_Y", sGyroSensitivityY, kGyroSensitivityMin, kGyroSensitivityMax);
-}
-
-bool HandOnCannon() {
-  ReadEnv();
-  return EnvBool("MP2_HAND_ON_CANNON", sHandOnCannon);
-}
-
-bool LockOnFreeAim() {
-  ReadEnv();
-  return EnvBool("MP2_LOCK_ON_FREE_AIM", sLockOnFreeAim);
-}
-
-bool ResetAimBoth() {
-  ReadEnv();
-  return EnvBool("MP2_RESET_AIM_BOTH", sResetAimBoth);
-}
-
-bool MenuStandardButtons() {
-  ReadEnv();
-  return EnvBool("MP2_MENU_STANDARD_BUTTONS", sMenuStandardButtons);
-}
-
-void SetMenuStandardButtons(bool enabled) {
-  ReadEnv();
-  sMenuStandardButtons = enabled;
-  Persist();
-}
-
-bool RapidCharge() {
-  ReadEnv();
-  if (OriginalExperience()) {
-    return false;
-  }
-  return EnvBool("MP2_RAPID_CHARGE", sRapidCharge);
-}
-
-void SetRapidCharge(bool enabled) {
-  ReadEnv();
-  sRapidCharge = enabled;
-  Persist();
 }
 
 namespace {
@@ -1661,65 +1186,11 @@ float GyroSensitivityYEffective(int player) {
                            : GyroSensitivity(player);
 }
 
-bool CardBackup() {
-  ReadEnv();
-  return EnvBool("MP2_CARD_BACKUP", sCardBackup);
-}
-
-void SetCardBackup(bool enabled) {
-  ReadEnv();
-  sCardBackup = enabled;
-  Persist();
-}
-
-bool LogFile() {
-  ReadEnv();
-  return EnvBool("MP2_LOG_FILE", sLogFile);
-}
-
-void SetLogFile(bool enabled) {
-  ReadEnv();
-  sLogFile = enabled;
-  Persist();
-}
-
-int UiScale() {
-  ReadEnv();
-  return EnvIntIn("MP2_UI_SCALE", sUiScale, kUiScaleMin, kUiScaleMax);
-}
-
-void SetUiScale(int percent) {
-  ReadEnv();
-  sUiScale = std::clamp(percent, kUiScaleMin, kUiScaleMax);
-  Persist();
-}
-
-bool Vsync() {
-  ReadEnv();
-  return EnvBool("MP2_VSYNC", sVsync);
-}
-
-void SetVsync(bool enabled) {
-  ReadEnv();
-  sVsync = enabled;
-  Persist();
-}
-
-bool Fullscreen() {
-  ReadEnv();
-  return EnvBool("MP2_FULLSCREEN", sFullscreen);
-}
-
 void SetFullscreen(bool enabled) {
   ReadEnv();
   sFullscreen = enabled;
   Persist();
   VISetWindowFullscreen(enabled);
-}
-
-bool FrameLimit() {
-  ReadEnv();
-  return EnvBool("MP2_FRAME_LIMIT", sFrameLimit);
 }
 
 void SetFrameLimit(bool enabled) {
@@ -1728,11 +1199,6 @@ void SetFrameLimit(bool enabled) {
     sFrameLimit = enabled;
     Persist();
   }
-}
-
-bool SmoothFrames() {
-  ReadEnv();
-  return EnvBool("MP2_SMOOTH_FRAMES", sSmoothFrames);
 }
 
 void SetSmoothFrames(bool enabled) {
@@ -1809,11 +1275,6 @@ unsigned TakeHeldTicks() {
   return 1;
 }
 
-bool PoseInterpolation() {
-  ReadEnv();
-  return EnvBool("MP2_POSE_INTERPOLATION", sPoseInterpolation);
-}
-
 void SetPoseInterpolation(bool enabled) {
   ReadEnv();
   if (sPoseInterpolation != enabled) {
@@ -1822,22 +1283,12 @@ void SetPoseInterpolation(bool enabled) {
   }
 }
 
-bool ParticleInterpolation() {
-  ReadEnv();
-  return EnvBool("MP2_PARTICLE_INTERPOLATION", sParticleInterpolation);
-}
-
 void SetParticleInterpolation(bool enabled) {
   ReadEnv();
   if (sParticleInterpolation != enabled) {
     sParticleInterpolation = enabled;
     Persist();
   }
-}
-
-bool HudWide() {
-  ReadEnv();
-  return EnvBool("MP2_HUD_WIDE", sHudWide);
 }
 
 void SetHudWide(bool enabled) {
@@ -1907,11 +1358,6 @@ float HudSpreadCap() {
   return mode <= 0 ? (16.f / 9.f) / (4.f / 3.f) : mode == 1 ? (21.f / 9.f) / (4.f / 3.f) : 1e6f;
 }
 
-bool LookInterpolation() {
-  ReadEnv();
-  return EnvBool("MP2_LOOK_INTERPOLATION", sLookInterpolation);
-}
-
 void SetLookInterpolation(bool enabled) {
   ReadEnv();
   if (sLookInterpolation != enabled) {
@@ -1964,12 +1410,6 @@ int AspectMode() {
     return kAspect_16_9;
   }
   return mode;
-}
-
-void SetAspectMode(int mode) {
-  ReadEnv();
-  sAspectMode = std::clamp(mode, kAspect_4_3, kAspect_Window);
-  Persist();
 }
 
 // The Prime 1 port's ApplyAspectMode (src/MetroidPrime/main.cpp there), with one difference: 4:3
@@ -2155,21 +1595,6 @@ void ApplyVolumeBoosts() {
 
 namespace PortOverlay {
 
-bool DynamicRes() {
-  ReadEnv();
-  return EnvBool("MP2_DYNAMIC_RES", sDynamicRes);
-}
-
-int DynamicResTarget() {
-  ReadEnv();
-  return EnvIntIn("MP2_DYNAMIC_RES_TARGET", sDynamicResTarget, 0, kFpsCapMax);
-}
-
-float DynamicResMin() {
-  ReadEnv();
-  return EnvFloatIn("MP2_DYNAMIC_RES_MIN", sDynamicResMin, kDynamicResMinLowest, 4.f);
-}
-
 int UpscaleSharpen() {
   ReadEnv();
   if (const char* env = port::EnvString("MP2_UPSCALE_SHARPEN"); env != nullptr && env[0] != '\0') {
@@ -2179,36 +1604,11 @@ int UpscaleSharpen() {
   return sSharpenMode;
 }
 
-int UpscaleSharpenAmount() {
-  ReadEnv();
-  return EnvIntIn("MP2_UPSCALE_SHARPEN_AMOUNT", sSharpenAmount, 0, 100);
-}
-
 int ClampFpsCap(int fps) { return fps <= 0 ? 0 : std::clamp(fps, kFpsCapMin, kFpsCapMax); }
 
 int FpsCap() {
   ReadEnv();
   return ClampFpsCap(port::EnvInt("MP2_FPS_CAP", sFpsCap));
-}
-
-bool ShowShaderCompilation() {
-  ReadEnv();
-  return EnvBool("MP2_SHOW_SHADER_COMPILATION", sShowShaderCompilation);
-}
-
-bool ShowMenuHint() {
-  ReadEnv();
-  return EnvBool("MP2_SHOW_MENU_HINT", sShowMenuHint);
-}
-
-bool PerPixelLighting() {
-  ReadEnv();
-  return EnvBool("MP2_PER_PIXEL_LIGHTING", sPerPixelLighting);
-}
-
-bool OpenGles() {
-  ReadEnv();
-  return EnvBool("MP2_OPENGLES", sOpenGles);
 }
 
 int ScanSpeed() {
@@ -2219,12 +1619,6 @@ int ScanSpeed() {
   return EnvIntIn("MP2_SCAN_SPEED", sScanSpeed, kScanSpeedMin, kScanSpeedMax);
 }
 
-void SetScanSpeed(int percent) {
-  ReadEnv();
-  sScanSpeed = std::clamp(percent, kScanSpeedMin, kScanSpeedMax);
-  Persist();
-}
-
 int BeamSwitchSpeed() {
   ReadEnv();
   if (OriginalExperience()) {
@@ -2232,33 +1626,6 @@ int BeamSwitchSpeed() {
   }
   return EnvIntIn("MP2_BEAM_SWITCH_SPEED", sBeamSwitchSpeed, kBeamSwitchSpeedMin,
                   kBeamSwitchSpeedMax);
-}
-
-void SetBeamSwitchSpeed(int percent) {
-  ReadEnv();
-  sBeamSwitchSpeed = std::clamp(percent, kBeamSwitchSpeedMin, kBeamSwitchSpeedMax);
-  Persist();
-}
-
-int MusicBoost() {
-  ReadEnv();
-  return EnvIntIn("MP2_MUSIC_BOOST", sMusicBoost, kVolumeBoostMin, kVolumeBoostMax);
-}
-
-int SfxBoost() {
-  ReadEnv();
-  return EnvIntIn("MP2_SFX_BOOST", sSfxBoost, kVolumeBoostMin, kVolumeBoostMax);
-}
-
-int Language() {
-  ReadEnv();
-  return EnvIntIn("MP2_LANGUAGE", sLanguage, 0, kLanguageMax);
-}
-
-void SetLanguage(int index) {
-  ReadEnv();
-  sLanguage = std::clamp(index, 0, kLanguageMax);
-  Persist();
 }
 
 bool PromptRing() {
@@ -2310,24 +1677,12 @@ int ComboBeamCost() {
   return EnvIntIn("MP2_COMBO_BEAM_COST", sComboBeamCost, 0, kComboBeamCostMax);
 }
 
-void SetComboBeamCost(int cost) {
-  ReadEnv();
-  sComboBeamCost = std::clamp(cost, 0, kComboBeamCostMax);
-  Persist();
-}
-
 int ComboMissileCost() {
   ReadEnv();
   if (OriginalExperience()) {
     return kComboMissileCostMax;
   }
   return EnvIntIn("MP2_COMBO_MISSILE_COST", sComboMissileCost, 0, kComboMissileCostMax);
-}
-
-void SetComboMissileCost(int cost) {
-  ReadEnv();
-  sComboMissileCost = std::clamp(cost, 0, kComboMissileCostMax);
-  Persist();
 }
 
 int BeamAmmoPerExpansion() {
@@ -2337,12 +1692,6 @@ int BeamAmmoPerExpansion() {
   }
   return EnvIntIn("MP2_BEAM_AMMO_PER_EXPANSION", sBeamAmmoPerExpansion, kBeamAmmoPerExpansionMin,
                   kBeamAmmoPerExpansionMax);
-}
-
-void SetBeamAmmoPerExpansion(int ammo) {
-  ReadEnv();
-  sBeamAmmoPerExpansion = std::clamp(ammo, kBeamAmmoPerExpansionMin, kBeamAmmoPerExpansionMax);
-  Persist();
 }
 
 int RotatingRooms() {
@@ -2405,17 +1754,6 @@ void SetPortalTransition(int mode) {
   Persist();
 }
 
-bool IgtTimer() {
-  ReadEnv();
-  return EnvBool("MP2_IGT_TIMER", sIgtTimer);
-}
-
-void SetIgtTimer(bool enabled) {
-  ReadEnv();
-  sIgtTimer = enabled;
-  Persist();
-}
-
 static double sGameTime = 0.0;
 static bool sGameTimeValid = false;
 
@@ -2441,26 +1779,9 @@ bool ConsumeReturnToTitleRequest() {
   return requested;
 }
 
-bool OriginalExperience() {
-  ReadEnv();
-  return EnvBool("MP2_ORIGINAL_EXPERIENCE", sOriginalExperience);
-}
-
-void SetOriginalExperience(bool enabled) {
-  ReadEnv();
-  sOriginalExperience = enabled;
-  Persist();
-}
-
 bool UnlockHardMode() {
   ReadEnv();
   return EnvBool("MP2_UNLOCK_HARD_MODE", sUnlockHardMode) && !OriginalExperience();
-}
-
-void SetUnlockHardMode(bool enabled) {
-  ReadEnv();
-  sUnlockHardMode = enabled;
-  Persist();
 }
 
 float DamageTakenMultiplier() {
@@ -2498,21 +1819,9 @@ bool UnlockGalleries() {
   return EnvBool("MP2_UNLOCK_GALLERIES", sUnlockGalleries) && !OriginalExperience();
 }
 
-void SetUnlockGalleries(bool enabled) {
-  ReadEnv();
-  sUnlockGalleries = enabled;
-  Persist();
-}
-
 bool UnlockBeamDoors() {
   ReadEnv();
   return EnvBool("MP2_UNLOCK_BEAM_DOORS", sUnlockBeamDoors) && !OriginalExperience();
-}
-
-void SetUnlockBeamDoors(bool enabled) {
-  ReadEnv();
-  sUnlockBeamDoors = enabled;
-  Persist();
 }
 
 bool StackBeams() {
@@ -2520,21 +1829,7 @@ bool StackBeams() {
   return EnvBool("MP2_STACK_BEAMS", sStackBeams) && !OriginalExperience();
 }
 
-void SetStackBeams(bool enabled) {
-  ReadEnv();
-  sStackBeams = enabled;
-  Persist();
-}
-
-bool StackBeamsSkipDark() {
-  ReadEnv();
-  return EnvBool("MP2_STACK_BEAMS_SKIP_DARK", sStackBeamsSkipDark);
-}
-
-void SetStackBeamsSkipDark(bool enabled) {
-  ReadEnv();
-  sStackBeamsSkipDark = enabled;
-  Persist();
-}
+// The accessors that are one of the table's shapes.
+#include "port_overlay_accessors.inc"
 
 } // namespace PortOverlay
