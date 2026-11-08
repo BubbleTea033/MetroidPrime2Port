@@ -829,46 +829,6 @@ void DrawShaderCompilationToast() {
   ImGui::End();
 }
 
-// Once per launch, for 8 s, until the window is first opened: how to open it. Top left.
-void DrawMenuHintToast() {
-  static double sShownAt = -1.0;
-  static bool sDone = false;
-  if (sDone || !PortOverlay::ShowMenuHint()) {
-    return;
-  }
-  if (sVisible) {
-    sDone = true;
-    return;
-  }
-  const double now = ImGui::GetTime();
-  if (sShownAt < 0.0) {
-    sShownAt = now;
-  }
-  const double age = now - sShownAt;
-  if (age > 8.0) {
-    sDone = true;
-    return;
-  }
-  const ImGuiViewport* viewport = ImGui::GetMainViewport();
-  ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + 16.f, viewport->Pos.y + 16.f), ImGuiCond_Always);
-  ImGui::SetNextWindowBgAlpha(0.7f);
-  // Fades out over the last second.
-  ImGui::PushStyleVar(ImGuiStyleVar_Alpha, static_cast< float >(std::clamp(8.0 - age, 0.0, 1.0)));
-  if (ImGui::Begin("##menu-hint-toast", nullptr,
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
-                       ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings |
-                       ImGuiWindowFlags_AlwaysAutoResize)) {
-    const std::string keys = PortInputRemap::BindingsText(PortInput::Action::PortMenu);
-    if (keys.empty()) {
-      ImGui::TextUnformatted("Open settings from the Port menu binding in Remap");
-    } else {
-      ImGui::Text("Press %s for settings", keys.c_str());
-    }
-  }
-  ImGui::End();
-  ImGui::PopStyleVar();
-}
-
 // Once per launch, for 12 s: a newer release than this build is out (MP1's DrawUpdateToast).
 // Taps arrive on Android's UI thread (TouchControlsView), so the rect is shared under a lock and
 // a hit only sets a flag; the page opens on the game thread.

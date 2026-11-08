@@ -78,7 +78,7 @@ struct BoxSpec {
 };
 
 struct TextSpec {
-  // UTF-8; the game's text tags work.
+  // UTF-8; the game's text tags work. One line, however long, unless a \n breaks it.
   std::string text;
   Placement placement;
 };

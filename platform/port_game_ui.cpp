@@ -365,6 +365,10 @@ struct Box::Impl {
     support.SetFontColor(gpTweakGuiColors->GetHUDMemoTextForegroundColor());
     support.SetOutlineColor(gpTweakGuiColors->GetHUDMemoTextOutlineColor());
     support.SetControlTXTRMap(&gpGameState->GameOptions().GetControlTXTRMap());
+    // Text alone isn't held to the message box's width: it stays on one line (a \n breaks it).
+    if (textOnly) {
+      support.SetWordWrap(false);
+    }
     support.SetText(rstl::string_l(spec.text.c_str()));
     dressed = true;
   }

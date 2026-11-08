@@ -637,7 +637,6 @@ void DrawUI() {
   if (!sVisible) {
     DrawResumePrompt();
   }
-  DrawMenuHintToast();
   DrawDiscReadFailedAlert();
   DrawIgtTimer();
   DrawSkipConfirm();

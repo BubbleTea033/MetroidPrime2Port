@@ -208,7 +208,6 @@ void DrawShaderCompilationToast();
 void DrawUpdateToast(); // once per launch: a newer release than this build is out
 // photo.cpp: photo mode's panel, bar and toast, and the touch fingers that fly its camera.
 void DrawPhotoUI();
-void DrawMenuHintToast();
 // Top-centre toasts stack instead of overlapping: BeginTopToastStack once per frame before them,
 // then PlaceTopToast before each Begin and TopToastPlaced inside it (MP1's API).
 void BeginTopToastStack();
