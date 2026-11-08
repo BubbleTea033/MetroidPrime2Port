@@ -70,6 +70,7 @@ extern bool gPortForceMultiplayer; // CStateManager.cpp, console `mpforce`
 #include "MetroidPrime/Weapons/CGameProjectile.hpp"
 #include "Weapons/CWeaponDescription.hpp"
 #include "MetroidPrime/Player/CPlayerState.hpp"
+#include "MetroidPrime/CRezbitEffect.hpp"
 #include "MetroidPrime/CActor.hpp"
 #include "MetroidPrime/CPhysicsActor.hpp"
 #include "MetroidPrime/Factories/CScannableObjectInfo.hpp"
@@ -4611,6 +4612,30 @@ void CmdSend(CStateManager& mgr, const Args& args, std::string& out) {
   out += line;
 }
 
+// rezbit [start|stop]: player 0's Rezbit virus state (0 none, 1 infected, 2 recovering, 3 recovered);
+// `start` infects the suit as a Rezbit's virus attack does (CRezbit::StartVirusAttack, without its
+// morph-ball effect and sounds; L+R+B recovers), `stop` clears it.
+void CmdRezbit(CStateManager& mgr, const Args& args, std::string& out) {
+  CPlayer* player = mgr.GetPlayer(0);
+  if (player == nullptr) {
+    Fail("there is no player");
+    return;
+  }
+  const std::string what = args.size() > 1 ? Lower(Str(args[1])) : std::string();
+  if (what == "start") {
+    player->StartRezbitState(mgr, CRezbitEffectOptions(kInvalidAssetId, 0xffff, 0xffff, 3.f, 1.5f,
+                                                       2.5f, true));
+  } else if (what == "stop") {
+    player->StopRezbitState(mgr);
+  } else if (!what.empty()) {
+    Usage();
+    return;
+  }
+  char line[160];
+  std::snprintf(line, sizeof(line), "rezbit state %d\n", static_cast< int >(player->GetRezbitState()));
+  out += line;
+}
+
 // hurt <id> <amount> [weaponType]: put a CDamageInfo on an object through the same path a shot takes,
 // so an enemy's FSM reacts to it (a state change, a flinch, a death). The weapon type is the raw
 // EWeaponType the vulnerability tables use; 0 is the power beam. No damager object, so the damage
@@ -5809,6 +5834,8 @@ const CommandSpec kCommands[] = {
       "send <id> <msg> [from <id>] deliver a script message to an object (name or number), from a sender\n"},
     {"covdump", CmdCovdump,
       "covdump                     coverage build: write the gcov counters now (and zero them)\n"},
+    {"rezbit", CmdRezbit,
+      "rezbit [start|stop]         player 0's Rezbit virus state; start infects the suit, stop clears it\n"},
     {"hurt", CmdHurt,
       "hurt <id> <amount> [weapon] damage an object as a shot would (weapon 0 = power beam)\n"},
     {"frame", CmdFrame,
