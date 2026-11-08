@@ -245,6 +245,7 @@ extern "C" void AIPortPoll(void);
 #include "port_entry.h"
 #include "port_overlay.h"
 #include "port_menu_hint.h"
+#include "port_resume_prompt.h"
 
 #include "MetroidPrime/PortSkipFrontEnd.hpp"
 
@@ -886,8 +887,10 @@ int CMain::RsMain(int argc, const char* const* argv) {
 #endif
         architecture->GetIOWinManager().Draw();
 #ifdef TARGET_PC
-        // Port: the launch hint "Press F1 for settings" in the game's text, over the boot screens,
-        // the title screen or the game (port_menu_hint.h).
+        // Port: the boot's resume Yes/No (port_resume_prompt.h) and the launch hint "Press F1 for
+        // settings" (port_menu_hint.h) in the game's own boxes and text, over the boot screens, the
+        // title screen or the game.
+        PortResumePrompt::Draw();
         PortMenuHint::Draw();
         CCameraManager::SetPresentationInterpolation(-1.f);
         CGraphics::SetRenderTimePresentLag(0.f);

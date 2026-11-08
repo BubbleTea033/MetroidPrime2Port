@@ -4,7 +4,8 @@
 // game's own.
 //
 // A Box is one of the game's boxes (its frame line, its fill, its button and its text), sized to
-// its text or to a size you give, and placed anywhere on screen. A Text is the game's text alone.
+// its text or to a size you give, and placed anywhere on screen. A Text is the game's text alone. A
+// Question is the game's Yes/No box (the quit screen's): a title over two choices, one highlighted.
 // Both draw with the game's font, colours and lighting and with everything the port does to those
 // frames (the bound button's glyph, the drawn button ring, a texture pack's art), and never pause
 // the game.
@@ -17,6 +18,8 @@
 //   // The port's version in the top left corner.
 //   PortGameUi::Text version({.text = "Metroid Prime 2 port 0.12.0",
 //                             .placement = {PortGameUi::Anchor::TopLeft, 0.03f, 0.03f}});
+//   // A Yes/No question in the middle of the screen.
+//   PortGameUi::Question resume({.title = "Resume where you left off?"});
 //   ...
 //   skip.SetAlpha(fade);   // 0 hides it
 //   skip.Draw();           // where the game draws its GUI (see Draw)
@@ -88,6 +91,17 @@ struct TextSpec {
   Placement placement;
 };
 
+struct QuestionSpec {
+  // UTF-8, its lines broken by \n; the game's text tags work.
+  std::string title;
+  // Left and right.
+  std::string choices[2] = {"Yes", "No"};
+  // The highlighted one, 0 (left) or 1.
+  int selected = 0;
+  float scale = 1.f;
+  Placement placement;
+};
+
 // Where it was drawn, in fractions of the screen's width (x) and height (y) from its top left (for
 // a tap or click on it); `valid` once it has drawn.
 struct ScreenRect {
@@ -139,11 +153,41 @@ private:
   std::unique_ptr< Box::Impl > mImpl;
 };
 
+// The owner reads the input and says which choice is highlighted (SetSelected); ChoiceRect gives
+// where each choice was drawn, for a pointer to hover and click.
+class Question {
+public:
+  explicit Question(const QuestionSpec& spec);
+  ~Question();
+  Question(const Question&) = delete;
+  Question& operator=(const Question&) = delete;
+
+  // A new title: the box sizes itself again.
+  void SetTitle(const std::string& title);
+  void SetSelected(int choice);
+  int Selected() const;
+  void SetAlpha(float alpha);
+  void SetPlacement(const Placement& placement);
+  void Draw();
+  bool Ready() const;
+  // Its frame couldn't be loaded or isn't the quit screen's: it never draws (the owner falls back).
+  bool Failed() const;
+  ScreenRect LastRect() const;
+  // Where choice 0 or 1's text was last drawn.
+  ScreenRect ChoiceRect(int choice) const;
+
+private:
+  std::unique_ptr< Box::Impl > mImpl;
+};
+
 // For trying the kit out and finding what a new style is made of (the console's `gameui`).
 namespace Dev {
 // A test box or text, shown until hidden or replaced; Draw draws it (and finishes dumps).
 void ShowBox(const BoxSpec& spec);
 void ShowText(const TextSpec& spec);
+void ShowQuestion(const QuestionSpec& spec);
+// Highlights choice 0 or 1 of the test question.
+void Select(int choice);
 void Hide();
 void Draw();
 // Logs a frame's widgets once it is loaded: each one's name, type, position, visibility and scale,

@@ -1594,4 +1594,6 @@ bool ResumePromptShown(ResumeInfo& out, bool& yes) {
 
 void AnswerResumePrompt(bool yes) { sPromptAnswer.store(yes ? 1 : 0); }
 
+void SelectResumePrompt(bool yes) { sPromptYes.store(yes); }
+
 } // namespace PortSaveState

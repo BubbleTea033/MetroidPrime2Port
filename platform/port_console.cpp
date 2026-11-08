@@ -1783,15 +1783,17 @@ void CmdHintShow(CStateManager&, const Args&, std::string& out) {
 // `{` and `}` in the text stand for `&` and `;`, so a tag (`{image=SI,1,1,F1FA8D68}`) gets past the
 // `;` that splits console commands.
 // gameui <message|hint|scan> [nofill] [nobutton] [scale=<f>] [anchor] [x y] <text...> | gameui text
-// [scale=<f>] [anchor] [x y] <text...> | gameui off | gameui dump <FRME_name>: a box or text from
+// [scale=<f>] [anchor] [x y] <text...> | gameui question [scale=<f>] [anchor] [x y] <title...> |
+// gameui select <0|1> | gameui off | gameui dump <FRME_name>: a box, text or Yes/No question from
 // the port's game UI kit (port_game_ui.h), to try a style, size, text and placement, or a frame's
-// parts listed. The anchor is one of topleft top topright left centre right bottomleft bottom
+// parts listed. `\n` in a question's title breaks its line. The anchor is one of topleft top topright left centre right bottomleft bottom
 // bottomright (default centre); x and y, when given, are its offsets in screen heights. `{` and `}` stand for `&` and `;`, as for memo.
 void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
   (void)mgr;
   const char* usage =
       "usage: gameui <message|hint|scan> [nofill] [nobutton] [scale=<f>] [anchor] [x y] <text...> | gameui text "
-      "[scale=<f>] [anchor] [x y] <text...> | gameui off | gameui dump <FRME_name>";
+      "[scale=<f>] [anchor] [x y] <text...> | gameui question [scale=<f>] [anchor] [x y] <title...> | "
+      "gameui select <0|1> | gameui off | gameui dump <FRME_name>";
   if (args.size() == 2 && args[1] == "off") {
     PortGameUi::Dev::Hide();
     out += "hidden\n";
@@ -1806,7 +1808,13 @@ void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
     Fail(usage);
     return;
   }
-  const bool textOnly = args[1] == "text";
+  if (args.size() == 3 && args[1] == "select") {
+    PortGameUi::Dev::Select(args[2] == "1" ? 1 : 0);
+    out += "selected\n";
+    return;
+  }
+  const bool question = args[1] == "question";
+  const bool textOnly = args[1] == "text" || question;
   PortGameUi::BoxSpec spec;
   if (args[1] == "message") {
     spec.style = PortGameUi::Style::Message;
@@ -1869,7 +1877,13 @@ void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
   for (char& c : text) {
     c = c == '{' ? '&' : c == '}' ? ';' : c;
   }
-  if (textOnly) {
+  if (question) {
+    // `\n` in the title breaks its line.
+    for (size_t nl = text.find("\\n"); nl != std::string::npos; nl = text.find("\\n", nl + 1)) {
+      text.replace(nl, 2, "\n");
+    }
+    PortGameUi::Dev::ShowQuestion({.title = text, .scale = spec.scale, .placement = spec.placement});
+  } else if (textOnly) {
     PortGameUi::Dev::ShowText({.text = text, .scale = spec.scale, .placement = spec.placement});
   } else {
     spec.text = text;
@@ -5839,6 +5853,7 @@ const CommandSpec kCommands[] = {
     {"gameui", CmdGameUi,
       "gameui <message|hint|scan> [nofill] [nobutton] [scale=<f>] [anchor] [x y] <text...>  a test box from the game UI kit\n"
       "gameui text [scale=<f>] [anchor] [x y] <text...>  a test text; gameui off hides either\n"
+      "gameui question [scale=<f>] [anchor] [x y] <title...>  a test Yes/No; gameui select <0|1>\n"
       "gameui dump <FRME_name>     log a frame's widgets, model extents and kit zones\n"},
     {"memo", CmdMemo, "memo <0|1> <text...>        show a HUD memo; 1 = hint memo (framed, button ring)\n"
       "memo pause <strg>           show a string table as the boxed memo a paused HUDMemo opens\n"},

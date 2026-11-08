@@ -73,6 +73,15 @@ const StyleInfo& Info(Style style) {
   }
 }
 
+// A Question's frame: the quit screen's box (CQuitGameScreen), its title and its two choices in a
+// table, side by side. Its padding is in its own (smaller) frame units.
+const StyleInfo kQuestion{"FRME_QuitScreen1", "textpane_title", "model_messageframe", "model_bground",
+                          {nullptr, nullptr}, 0.22f, 0.12f};
+const char* const kQuestionTable = "tablegroup_choice";
+const char* const kQuestionChoices[2] = {"textpane_choice0", "textpane_choice1"};
+// Space between the title and the choices, in the same units.
+constexpr float kQuestionGap = 0.16f;
+
 // The colours the game gives the style's parts (CMessageScreen, CSamusHud's memo, CHudDecoInterfaceScan).
 void ColourParts(Style style, CGuiFrame& frame) {
   const auto set = [&frame](const char* name, const CColor& colour) {
@@ -254,6 +263,12 @@ bool FrameLoaded(CGuiFrame& frame) {
 struct Box::Impl {
   BoxSpec spec;
   bool textOnly = false;
+  // A Question: the title is `spec.text`, and two choices sit under it (kQuestion).
+  bool question = false;
+  std::string choices[2];
+  int selected = 0;
+  Extent choiceInk[2];
+  ScreenRect choiceRect[2];
   float alpha = 0.f;
   bool failed = false;
   bool shaped = false;
@@ -275,7 +290,7 @@ struct Box::Impl {
 
   ~Impl() { Unload(); }
 
-  const StyleInfo& Style() const { return Info(spec.style); }
+  const StyleInfo& Style() const { return question ? kQuestion : Info(spec.style); }
 
   void Unload() {
     // The frame's widgets hold tokens of the pool: the frame goes first.
@@ -287,6 +302,7 @@ struct Box::Impl {
     shaped = false;
     dressed = false;
     rect = ScreenRect{};
+    choiceRect[0] = choiceRect[1] = ScreenRect{};
   }
 
   void Load() {
@@ -338,8 +354,17 @@ struct Box::Impl {
   }
 
   bool Loaded() const {
-    return frame != nullptr && text != nullptr && FrameLoaded(*frame) &&
-           text->TextSupport().GetIsTextSupportFinishedLoading();
+    if (frame == nullptr || text == nullptr || !FrameLoaded(*frame) ||
+        !text->TextSupport().GetIsTextSupportFinishedLoading()) {
+      return false;
+    }
+    for (int i = 0; question && i < 2; ++i) {
+      CGuiTextPane* pane = ChoicePane(i);
+      if (pane != nullptr && !pane->TextSupport().GetIsTextSupportFinishedLoading()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // The parts it shows: its text, and for a box the line, the fill and the button.
@@ -349,6 +374,10 @@ struct Box::Impl {
       return parts;
     }
     const StyleInfo& info = Style();
+    if (question) {
+      // The table, and with it the choices it holds.
+      parts.push_back(frame->FindWidget(kQuestionTable));
+    }
     parts.push_back(frame->FindWidget(info.line));
     if (spec.fill == Fill::Game) {
       parts.push_back(frame->FindWidget(info.fill));
@@ -385,18 +414,48 @@ struct Box::Impl {
       w->SetIsVisible(shown);
       w->SetDepthTest(false);
     }
-    ColourParts(spec.style, *frame);
     CGuiTextSupport& support = text->TextSupport();
     support.SetTypeWriteEffectOptions(false, 0.f, 1.f);
-    support.SetFontColor(gpTweakGuiColors->GetHUDMemoTextForegroundColor());
-    support.SetOutlineColor(gpTweakGuiColors->GetHUDMemoTextOutlineColor());
     support.SetControlTXTRMap(&gpGameState->GameOptions().GetControlTXTRMap());
+    if (question) {
+      // The quit screen's own colours; its lines as given.
+      support.SetWordWrap(false);
+      for (int i = 0; i < 2; ++i) {
+        if (CGuiTextPane* pane = ChoicePane(i)) {
+          CGuiTextSupport& choice = pane->TextSupport();
+          choice.SetTypeWriteEffectOptions(false, 0.f, 1.f);
+          choice.SetWordWrap(false);
+          choice.SetControlTXTRMap(&gpGameState->GameOptions().GetControlTXTRMap());
+          choice.SetText(rstl::string_l(choices[i].c_str()));
+        }
+      }
+      ColourChoices();
+    } else {
+      ColourParts(spec.style, *frame);
+      support.SetFontColor(gpTweakGuiColors->GetHUDMemoTextForegroundColor());
+      support.SetOutlineColor(gpTweakGuiColors->GetHUDMemoTextOutlineColor());
+    }
     // Text alone isn't held to the message box's width: it stays on one line (a \n breaks it).
     if (textOnly) {
       support.SetWordWrap(false);
     }
     support.SetText(rstl::string_l(spec.text.c_str()));
     dressed = true;
+  }
+
+  CGuiTextPane* ChoicePane(int i) const {
+    return frame != nullptr ? static_cast< CGuiTextPane* >(frame->FindWidget(kQuestionChoices[i])) : nullptr;
+  }
+
+  // The chosen one light, the other dark, as CQuitGameScreen::SetColors.
+  void ColourChoices() {
+    const CColor chosen(uchar(200), uchar(200), uchar(200), uchar(255));
+    const CColor other(uchar(50), uchar(50), uchar(50), uchar(255));
+    for (int i = 0; i < 2; ++i) {
+      if (CGuiTextPane* pane = ChoicePane(i)) {
+        pane->SetColor(i == selected ? chosen : other);
+      }
+    }
   }
 
   // The camera's view at the box's depth, in frame units: half its width and half its height, as
@@ -427,7 +486,8 @@ struct Box::Impl {
 
   // The text's ink (where its letters are) in world space, from its bounds in the pane's text extents
   // (from the pane's top left, y down) about the pane's centre (its position moved by its scale centre).
-  Extent TextInk() {
+  Extent TextInk() { return TextInk(text); }
+  static Extent TextInk(CGuiTextPane* text) {
     CGuiTextSupport& support = text->TextSupport();
     const rstl::pair< CVector2i, CVector2i >& bounds = support.GetBounds();
     const float extentX = static_cast< float >(std::max(1, support.GetTextBoundingWidth()));
@@ -447,6 +507,10 @@ struct Box::Impl {
   // ink is what is placed. Once: the models are its own, and the drawn ring patches them on the
   // first draw.
   void Shape() {
+    if (question) {
+      ShapeQuestion();
+      return;
+    }
     const Extent ink = TextInk();
     if (textOnly) {
       box = ink;
@@ -471,7 +535,7 @@ struct Box::Impl {
     float growZ = wantHeight - (fill.z1 - fill.z0);
 
     // The button's half width keeps its notch; the line and fill move by the same change, limited by
-    // the one that can give least, each in its own units (some frames scale their widgets).
+    // the one that can give least, each in its own units (some frames scale their widgets: Grow).
     float notch = 0.f;
     if (info.button[0] != nullptr) {
       Extent e;
@@ -480,6 +544,32 @@ struct Box::Impl {
         notch = 0.5f * (e.x1 - e.x0) * 1.1f;
       }
     }
+    const Extent newFill = Grow(growX, growZ, notch);
+
+    // The text in the middle of the fill.
+    text->SetLocalPosition(textHome);
+    const Extent at = TextInk();
+    text->MoveInWorld(CVector3f(0.5f * (newFill.x0 + newFill.x1) - 0.5f * (at.x0 + at.x1), 0.f,
+                                0.5f * (newFill.z0 + newFill.z1) - 0.5f * (at.z0 + at.z1)));
+
+    // What is drawn: the line, the fill (shown or not, it is inside the line) and the button.
+    Extent drawn;
+    for (CGuiWidget* part : Parts()) {
+      if (part != text) {
+        AddWorldExtent(part, drawn);
+      }
+    }
+    AddWorldExtent(fillWidget, drawn);
+    box = drawn.valid ? drawn : newFill;
+    shaped = true;
+    std::fprintf(stderr, "[gameui] %s box: text %.2f x %.2f, box %.2f x %.2f frame units (asked %.2f, %.2f)\n",
+                 info.frame, textW, textH, box.x1 - box.x0, box.z1 - box.z0, growX, growZ);
+  }
+
+  // Resizes the box's line and fill by (growX, growZ) world units, each model in its own units, as
+  // far as their corners let them; returns the fill's new extent.
+  Extent Grow(float growX, float growZ, float notch) {
+    const StyleInfo& info = Style();
     struct Part {
       const CCubeModel* model;
       Zones zn;
@@ -494,7 +584,6 @@ struct Box::Impl {
       }
       const float sx = AxisScale(w->GetWorldTransform(), 0);
       const float sz = AxisScale(w->GetWorldTransform(), 2);
-      // The zones from the vertices it draws; every vertex moves (the rest go along unseen).
       const Zones zn = PortGameUiMath::ZonesOf(DrawnPointsOf(model), notch / sx);
       if (zn.valid) {
         growX = std::max(growX, PortGameUiMath::MinGrowX(zn) * sx);
@@ -511,30 +600,54 @@ struct Box::Impl {
         WriteFloat(pos, i * 3, q.x);
         WriteFloat(pos, i * 3 + 2, q.z);
       }
-      // Its arrays live on the GPU (resident models): send the reshaped ones.
       model->PortUpdateResidentData();
     }
+    Extent fill;
+    AddWorldExtent(frame->FindWidget(info.fill), fill);
+    return fill;
+  }
 
-    // The text in the middle of the fill.
-    Extent newFill;
-    AddWorldExtent(fillWidget, newFill);
-    text->SetLocalPosition(textHome);
-    const Extent at = TextInk();
-    text->MoveInWorld(CVector3f(0.5f * (newFill.x0 + newFill.x1) - 0.5f * (at.x0 + at.x1), 0.f,
-                                0.5f * (newFill.z0 + newFill.z1) - 0.5f * (at.z0 + at.z1)));
-
-    // What is drawn: the line, the fill (shown or not, it is inside the line) and the button.
-    Extent drawn;
-    for (CGuiWidget* part : Parts()) {
-      if (part != text) {
-        AddWorldExtent(part, drawn);
-      }
+  // A Question: the box sized to its title over its row of choices, the title at the top, the
+  // choices under it, both centred across.
+  void ShapeQuestion() {
+    const StyleInfo& info = Style();
+    CGuiWidget* table = frame->FindWidget(kQuestionTable);
+    CGuiTextPane* panes[2] = {ChoicePane(0), ChoicePane(1)};
+    if (table == nullptr || panes[0] == nullptr || panes[1] == nullptr) {
+      std::fprintf(stderr, "[gameui] %s has no choices\n", info.frame);
+      failed = true;
+      return;
     }
-    AddWorldExtent(fillWidget, drawn);
-    box = drawn.valid ? drawn : newFill;
+    const Extent title = TextInk();
+    Extent row;
+    for (CGuiTextPane* pane : panes) {
+      const Extent e = TextInk(pane);
+      row.Add(CVector3f(e.x0, e.y, e.z0));
+      row.Add(CVector3f(e.x1, e.y, e.z1));
+    }
+    Extent fill;
+    AddWorldExtent(frame->FindWidget(info.fill), fill);
+    const float wantW = std::max(title.x1 - title.x0, row.x1 - row.x0) + 2.f * info.padX;
+    const float wantH = (title.z1 - title.z0) + kQuestionGap + (row.z1 - row.z0) + 2.f * info.padZ;
+    const Extent grown = Grow(0.5f * (wantW - (fill.x1 - fill.x0)), wantH - (fill.z1 - fill.z0), 0.f);
+    const float midX = 0.5f * (grown.x0 + grown.x1);
+    // The block of title and choices centred up and down in the fill (it may have stopped bigger).
+    const float blockH = (title.z1 - title.z0) + kQuestionGap + (row.z1 - row.z0);
+    const float top = 0.5f * (grown.z0 + grown.z1) + 0.5f * blockH;
+    text->MoveInWorld(CVector3f(midX - 0.5f * (title.x0 + title.x1), 0.f, top - title.z1));
+    const float rowTop = top - (title.z1 - title.z0) - kQuestionGap;
+    table->MoveInWorld(CVector3f(midX - 0.5f * (row.x0 + row.x1), 0.f, rowTop - row.z1));
+    for (int i = 0; i < 2; ++i) {
+      choiceInk[i] = TextInk(panes[i]);
+    }
+    Extent drawn;
+    AddWorldExtent(frame->FindWidget(info.line), drawn);
+    AddWorldExtent(frame->FindWidget(info.fill), drawn);
+    box = drawn.valid ? drawn : grown;
     shaped = true;
-    std::fprintf(stderr, "[gameui] %s box: text %.2f x %.2f, box %.2f x %.2f frame units (grew %.2f, %.2f)\n",
-                 info.frame, textW, textH, box.x1 - box.x0, box.z1 - box.z0, growX, growZ);
+    std::fprintf(stderr, "[gameui] %s question: title %.2f x %.2f, choices %.2f x %.2f, box %.2f x %.2f\n",
+                 info.frame, title.x1 - title.x0, title.z1 - title.z0, row.x1 - row.x0, row.z1 - row.z0,
+                 box.x1 - box.x0, box.z1 - box.z0);
   }
 
   // Moves the frame's camera so the box sits at its placement, and notes where it lands.
@@ -593,11 +706,20 @@ struct Box::Impl {
     const float dx = wantX - haveX, dy = wantY - haveY;
     // Moving the camera one way moves the box the other way on screen.
     camera->SetLocalPosition(cameraHome + CVector3f(-dx / scaleX, 0.f, dy / scaleZ));
-    rect.valid = true;
-    rect.x0 = (bx0 + dx + halfW) / aspect;
-    rect.x1 = (bx1 + dx + halfW) / aspect;
-    rect.y0 = by0 + dy + 0.5f;
-    rect.y1 = by1 + dy + 0.5f;
+    const auto toScreen = [&](const Extent& e) {
+      ScreenRect r;
+      r.valid = e.valid;
+      r.x0 = ((e.x0 - eye.GetX()) * scaleX + dx + halfW) / aspect;
+      r.x1 = ((e.x1 - eye.GetX()) * scaleX + dx + halfW) / aspect;
+      r.y0 = -(e.z1 - eye.GetZ()) * scaleZ + dy + 0.5f;
+      r.y1 = -(e.z0 - eye.GetZ()) * scaleZ + dy + 0.5f;
+      return r;
+    };
+    rect = toScreen(box);
+    if (question) {
+      choiceRect[0] = toScreen(choiceInk[0]);
+      choiceRect[1] = toScreen(choiceInk[1]);
+    }
   }
 
   void SetText(const std::string& value) {
@@ -607,7 +729,7 @@ struct Box::Impl {
     spec.text = value;
     // The models were resized in place for the old text: a box sized to its text starts from a fresh
     // frame; one of a set size, and a text alone, only take the new words.
-    if (!textOnly && (spec.width <= 0.f || spec.height <= 0.f)) {
+    if (question || (!textOnly && (spec.width <= 0.f || spec.height <= 0.f))) {
       Unload();
     } else {
       dressed = false;
@@ -678,11 +800,43 @@ void Text::Draw() { mImpl->Draw(); }
 bool Text::Ready() const { return mImpl->shaped; }
 ScreenRect Text::LastRect() const { return mImpl->rect; }
 
+Question::Question(const QuestionSpec& spec) {
+  BoxSpec box;
+  box.text = spec.title;
+  box.scale = spec.scale;
+  box.placement = spec.placement;
+  mImpl = std::make_unique< Box::Impl >(box, false);
+  mImpl->question = true;
+  mImpl->choices[0] = spec.choices[0];
+  mImpl->choices[1] = spec.choices[1];
+  mImpl->selected = std::clamp(spec.selected, 0, 1);
+}
+Question::~Question() = default;
+void Question::SetTitle(const std::string& title) { mImpl->SetText(title); }
+void Question::SetSelected(int choice) {
+  choice = std::clamp(choice, 0, 1);
+  if (choice != mImpl->selected) {
+    mImpl->selected = choice;
+    if (mImpl->dressed) {
+      mImpl->ColourChoices();
+    }
+  }
+}
+int Question::Selected() const { return mImpl->selected; }
+void Question::SetAlpha(float alpha) { mImpl->alpha = std::clamp(alpha, 0.f, 1.f); }
+void Question::SetPlacement(const Placement& placement) { mImpl->spec.placement = placement; }
+void Question::Draw() { mImpl->Draw(); }
+bool Question::Ready() const { return mImpl->shaped; }
+bool Question::Failed() const { return mImpl->failed; }
+ScreenRect Question::LastRect() const { return mImpl->rect; }
+ScreenRect Question::ChoiceRect(int choice) const { return mImpl->choiceRect[std::clamp(choice, 0, 1)]; }
+
 namespace Dev {
 namespace {
 // Not unique_ptrs: one still shown when the program exits is left to the OS (see the header).
 Box* sBox = nullptr;
 Text* sText = nullptr;
+Question* sQuestion = nullptr;
 
 // A frame waiting to be dumped, in a pool of its own; never freed (see the header).
 struct PendingDump {
@@ -736,11 +890,25 @@ void ShowText(const TextSpec& spec) {
   sText->SetAlpha(1.f);
 }
 
+void ShowQuestion(const QuestionSpec& spec) {
+  Hide();
+  sQuestion = new Question(spec);
+  sQuestion->SetAlpha(1.f);
+}
+
+void Select(int choice) {
+  if (sQuestion != nullptr) {
+    sQuestion->SetSelected(choice);
+  }
+}
+
 void Hide() {
   delete sBox;
   sBox = nullptr;
   delete sText;
   sText = nullptr;
+  delete sQuestion;
+  sQuestion = nullptr;
 }
 
 void DumpFrame(const std::string& frameName) {
@@ -767,6 +935,9 @@ void Draw() {
   }
   if (sText != nullptr) {
     sText->Draw();
+  }
+  if (sQuestion != nullptr) {
+    sQuestion->Draw();
   }
 }
 } // namespace Dev
