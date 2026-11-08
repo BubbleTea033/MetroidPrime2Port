@@ -63,14 +63,14 @@ static void LogMem(const char* tag) {
 static void DumpFrame(const wgpu::Instance& instance, const wgpu::Device& device,
                       const wgpu::RenderPipeline& pipeline, const wgpu::BindGroup& bg,
                       wgpu::TextureFormat format) {
-  constexpr uint32_t W = 1280, H = 720, kRow = W * 4;
+  constexpr uint32_t W = 1280, H = 720, D = 256;
   wgpu::TextureDescriptor td{};
   td.size = {W, H, 1};
   td.format = format;
   td.usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::CopySrc;
   wgpu::Texture tex = device.CreateTexture(&td);
   wgpu::BufferDescriptor bd{};
-  bd.size = uint64_t(kRow) * H;
+  bd.size = uint64_t(D) * D * 4;
   bd.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead;
   wgpu::Buffer buf = device.CreateBuffer(&bd);
 
@@ -88,13 +88,16 @@ static void DumpFrame(const wgpu::Instance& instance, const wgpu::Device& device
   pass.SetBindGroup(0, bg);
   pass.Draw(3);
   pass.End();
+  // Only the central 256x256 block: under Ryujinx, a full-width readback keeps just the first
+  // quarter of each row (plain GLES does the same), while a rect this narrow reads back right.
   wgpu::TexelCopyTextureInfo src{};
   src.texture = tex;
+  src.origin = {W / 2 - D / 2, H / 2 - D / 2, 0};
   wgpu::TexelCopyBufferInfo dst{};
   dst.buffer = buf;
-  dst.layout.bytesPerRow = kRow;
-  dst.layout.rowsPerImage = H;
-  wgpu::Extent3D size{W, H, 1};
+  dst.layout.bytesPerRow = D * 4;
+  dst.layout.rowsPerImage = D;
+  wgpu::Extent3D size{D, D, 1};
   enc.CopyTextureToBuffer(&src, &dst, &size);
   wgpu::CommandBuffer cb = enc.Finish();
   device.GetQueue().Submit(1, &cb);
@@ -111,17 +114,30 @@ static void DumpFrame(const wgpu::Instance& instance, const wgpu::Device& device
   }
   const auto* px = static_cast<const uint8_t*>(buf.GetConstMappedRange(0, bd.size));
   const bool bgra = format == wgpu::TextureFormat::BGRA8Unorm || format == wgpu::TextureFormat::BGRA8UnormSrgb;
+  uint32_t clear = 0, triangle = 0, zero = 0;
   FILE* f = fopen("sdmc:/dawn-nx.ppm", "wb");
   if (f) {
-    fprintf(f, "P6\n%u %u\n255\n", W, H);
-    for (uint32_t i = 0; i < W * H; ++i) {
-      const uint8_t rgb[3] = {px[i * 4 + (bgra ? 2 : 0)], px[i * 4 + 1], px[i * 4 + (bgra ? 0 : 2)]};
+    fprintf(f, "P6\n%u %u\n255\n", D, D);
+  }
+  for (uint32_t i = 0; i < D * D; ++i) {
+    const uint8_t rgb[3] = {px[i * 4 + (bgra ? 2 : 0)], px[i * 4 + 1], px[i * 4 + (bgra ? 0 : 2)]};
+    if (f) {
       fwrite(rgb, 1, 3, f);
     }
+    if (rgb[0] == 13 && rgb[1] == 13 && rgb[2] == 51) {
+      ++clear;
+    } else if (rgb[0] == 0 && rgb[1] == 0 && rgb[2] == 0) {
+      ++zero;
+    } else {
+      ++triangle;
+    }
+  }
+  if (f) {
     fclose(f);
   }
-  Log("dumped frame: center pixel %u,%u,%u\n", px[(H / 2 * W + W / 2) * 4], px[(H / 2 * W + W / 2) * 4 + 1],
-      px[(H / 2 * W + W / 2) * 4 + 2]);
+  const uint8_t* c = &px[(D / 2 * D + D / 2) * 4];
+  Log("dumped centre %ux%u: clear %u, triangle %u, zero %u; centre %u,%u,%u\n", D, D, clear, triangle,
+      zero, c[bgra ? 2 : 0], c[1], c[bgra ? 0 : 2]);
   buf.Unmap();
 }
 

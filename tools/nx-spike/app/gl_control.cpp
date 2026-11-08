@@ -90,6 +90,13 @@ int main(int, char**) {
   glReadPixels(0, 0, W, H, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
   Summarize("readpixels", px, W, H);
 
+  // A 256x256 rect at the centre: fits inside the first quarter of a row's bytes.
+  {
+    std::vector<uint8_t> sub(256 * 256 * 4);
+    glReadPixels(W / 2 - 128, H / 2 - 128, 256, 256, GL_RGBA, GL_UNSIGNED_BYTE, sub.data());
+    Summarize("readpixels centre 256x256", sub, 256, 256);
+  }
+
   GLuint pbo;
   glGenBuffers(1, &pbo);
   glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
@@ -105,13 +112,24 @@ int main(int, char**) {
   }
   Log("gl error 0x%x\n", glGetError());
 
-  // Present a few frames so the emulator's own frame path runs too.
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  for (int i = 0; i < 120 && appletMainLoop(); ++i) {
+  // Present: 20 s drawn straight into the window, then 20 s drawn into the FBO and blitted
+  // y-flipped with GL_LINEAR, as Dawn's EGL swapchain presents.
+  for (int i = 0; i < 60 * 40 && appletMainLoop(); ++i) {
+    const bool blit = i >= 60 * 20;
+    if (i == 60 * 20) {
+      Log("gl-control: switching to blit present\n");
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, blit ? fbo : 0);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    if (blit) {
+      glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+      glBlitFramebuffer(0, 0, W, H, 0, H, W, 0, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    }
     eglSwapBuffers(d, surf);
   }
+  Log("gl error 0x%x\n", glGetError());
   Log("gl-control done\n");
   eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
   eglDestroyContext(d, ctx);

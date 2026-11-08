@@ -1,6 +1,20 @@
 --- a/src/dawn/native/opengl/SwapChainEGL.cpp
 +++ b/src/dawn/native/opengl/SwapChainEGL.cpp
-@@ -245,6 +245,12 @@
+@@ -120,6 +120,13 @@
+                           "getting surface width"));
+         DAWN_TRY(CheckEGL(egl, egl.QuerySurface(display, mEGLSurface, EGL_HEIGHT, &surfaceHeight),
+                           "getting surface height"));
++#if DAWN_PLATFORM_IS(SWITCH)
++        // Mesa's Switch EGL reports 0x0 for an NWindow surface; the window is the configured size.
++        if (surfaceWidth <= 0 || surfaceHeight <= 0) {
++            surfaceWidth = static_cast<EGLint>(mTexture->GetWidth(Aspect::Color));
++            surfaceHeight = static_cast<EGLint>(mTexture->GetHeight(Aspect::Color));
++        }
++#endif  // DAWN_PLATFORM_IS(SWITCH)
+ 
+         const OpenGLFunctions& gl = device->GetGL(/*makeCurrent=*/false);
+ 
+@@ -245,6 +252,12 @@
                      eglDisplay, config, uint32_t(surface->GetXWindow()), attribs.data());
                  return {};
  #endif  // defined(DAWN_USE_X11)
