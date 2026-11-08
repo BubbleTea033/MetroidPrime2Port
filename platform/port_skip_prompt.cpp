@@ -3,7 +3,6 @@
 
 #include "port_overlay.h"
 
-
 namespace PortSkipPrompt {
 namespace {
 // Never destroyed: a box deleted while the program exits waits on a renderer already gone (its
@@ -25,6 +24,7 @@ void Draw() {
         .style = PortGameUi::Style::Scan,
         .fill = PortGameUi::Fill::None,
         .text = "Skip cutscene?",
+        .scale = 0.75f,
         .placement = {PortGameUi::Anchor::Bottom, 0.f, 0.012f},
     });
   }
