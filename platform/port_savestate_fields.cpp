@@ -73,7 +73,13 @@ static uint32_t PutUid(const CStateManager& mgr, const CEntity& owner, TUniqueId
   if (target != nullptr && target == mgr.Player(0)) {
     return kUidPlayer;
   }
-  if (target != nullptr && eid.Value() != kInvalidEditorId.Value() &&
+  // An editor id several live objects share (each Lightbringer's own copy of one generated safe
+  // zone, #108) names none of them: on load it resolves to the first copy for every owner, and the
+  // others' copies are left behind. The rebuilt owner made its own copy again, so keep that one.
+  const CStateManager::TIdListResult copies = mgr.GetIdListForScript(eid);
+  CStateManager::TIdList::const_iterator second = copies.first;
+  const bool shared = second != copies.second && ++second != copies.second;
+  if (target != nullptr && eid.Value() != kInvalidEditorId.Value() && !shared &&
       !PortSaveState::IsScriptGeneratedCopy(mgr, *target)) {
     return eid.Value();
   }
