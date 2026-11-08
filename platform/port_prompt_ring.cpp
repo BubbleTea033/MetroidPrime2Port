@@ -742,6 +742,8 @@ void Apply(const CCubeModel* model, Patch& patch, bool active) {
   for (size_t k = 0; k < patch.bytes.size(); ++k) {
     *patch.bytes[k] = active ? patch.newBytes[k] : patch.oldBytes[k];
   }
+  // A model keeps its arrays on the GPU from when it is made: the writes reach it only so.
+  model->PortUpdateResidentData();
   patch.applied = active;
   sApplied += active ? 1 : -1;
 }
@@ -1030,6 +1032,7 @@ bool EndBatch() {
       continue;
     }
     uint* positions = const_cast< uint* >(static_cast< const uint* >(first.model->GetPositions()));
+    bool moved = false;
     for (const LineEnd& end : ends->second) {
       const float dz = end.z - centre.GetZ();
       const float r = end.radius;
@@ -1053,10 +1056,15 @@ bool EndBatch() {
         bool ok;
         const int sx = ScreenX(invView, piece.xf * CVector3f(x, end.y, end.z), ok);
         if (ok && InScissor(sx, piece.scissor, 1)) {
+          moved = moved || positions[end.index * 3] != WordOf(x);
           positions[end.index * 3] = WordOf(x);
           break;
         }
       }
+    }
+    // The model's arrays are on the GPU: a moved end reaches it only so (once, while it settles).
+    if (moved) {
+      first.model->PortUpdateResidentData();
     }
   }
   GXSetScissor(scissor[0], scissor[1], scissor[2], scissor[3]);

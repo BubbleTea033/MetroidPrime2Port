@@ -110,6 +110,26 @@ void CCubeModel::PortSetResidentData(bool retain) {
   }
 }
 
+void CCubeModel::PortUpdateResidentData() const {
+  if ((mPortResident & kPortResidentArrays) == 0) {
+    return;
+  }
+  // As PortSetResidentData retained them: an empty array is skipped (its pointer is the next one's).
+  const auto update = [](const void* data, uint size) {
+    if (data != nullptr && size != 0) {
+      GXPortUpdateResident(data);
+    }
+  };
+  update(mInstance.GetVertexPointer(), mInstance.GetVertexSize());
+  update(mInstance.GetNormalPointer(), mInstance.GetNormalSize());
+  update(mInstance.GetColorPointer(), mInstance.GetColorSize());
+  update(mInstance.GetTCPointer(), mInstance.GetTCSize());
+  update(mInstance.GetPackedTCPointer(), mInstance.GetPackedTCSize());
+  for (int i = 0; i < mPortResidentLists.size(); ++i) {
+    GXPortUpdateResident(mPortResidentLists[i]);
+  }
+}
+
 const uchar* CCubeModel::PortNeutralMaterial() {
   // Flags 0x8000 (big-endian, like the disc's): sSkippedMaterialFlags always holds that bit, so
   // DrawSurface and DrawSurfaceFlat return before touching the surface. No textures, zero mask.
