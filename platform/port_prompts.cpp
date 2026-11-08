@@ -595,6 +595,13 @@ const IconSource* StablePath(const std::string& path, uint8_t style = kIcon) {
   return &*sPaths.emplace(path, style).first;
 }
 
+// A symbol's coverage (tools/make_prompt_glyphs.py's <stem>_symbol.dds).
+struct Coverage {
+  int width = 0;
+  int height = 0;
+  std::vector<float> values; // 0..1, rows as the file stores them (bottom up, as the icon's)
+};
+
 // Port: the boxes' lit A from an icon: a disc where the game's teal one is (dark grey for kDisc, the
 // game's teal for kTealDisc), 26/32 of the texture across, on black (the game adds it onto the
 // screen), with the icon's symbol on it in white at the size of the game's own letter. `ring` makes
@@ -604,8 +611,12 @@ const IconSource* StablePath(const std::string& path, uint8_t style = kIcon) {
 // an Xbox button's hole all come out white. Only the icon's core counts, inside its own outline by
 // more than its rim, so the edge of a shape that is no circle (a Deck trigger) stays out. `orb`
 // makes the main menu orb's (kOrb): a smaller disc, centred, blended rather than added. `bytes` is
-// one of tools/make_prompt_glyphs.py's DDS files: a 128-byte header, then 8-bit RGBA.
-void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool orb = false) {
+// one of tools/make_prompt_glyphs.py's DDS files: a 128-byte header, then 8-bit RGBA. `symbol`, when
+// given, is the icon's symbol made by that tool (<stem>_symbol.dds, its coverage, large and sharp):
+// drawn instead of the one found in the icon, which a two-letter label (R2, RT, ZR) is too small in
+// to enlarge cleanly. A disc comes out `outSize` square when given (its header rewritten).
+void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool orb = false,
+                 const Coverage* symbol = nullptr, uint32_t outSize = 0) {
   constexpr size_t kHeader = 128;
   if (bytes.size() <= kHeader) {
     return;
@@ -621,89 +632,105 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool
   const auto at = [&](int x, int y) { return src.data() + (size_t(y) * w + x) * 4; };
   const auto luma = [](const uint8_t* p) { return (p[0] * 77 + p[1] * 150 + p[2] * 29) >> 8; };
   const auto opaque = [&](int x, int y) { return at(x, y)[3] >= 128; };
+  // The symbol's coverage, in its own texels (the icon's, or the made symbol's).
+  int mw = w, mh = h;
   std::vector<float> mask(size_t(w) * h, 0.f);
   int sx0 = w, sy0 = h, sx1 = -1, sy1 = -1;
-  // Outside: clear texels reachable from the border. A clear texel it doesn't reach is a hole in
-  // the icon (a cut-out symbol). Then each texel's distance in from the outside.
-  constexpr int kFar = 1 << 20;
-  std::vector<int> dist(size_t(w) * h, kFar);
-  std::vector<int> queue;
-  queue.reserve(size_t(w) * h);
-  const auto seed = [&](int x, int y) {
-    int& d = dist[size_t(y) * w + x];
-    if (d != 0 && !opaque(x, y)) {
-      d = 0;
-      queue.push_back(y * w + x);
-    }
-  };
-  for (int x = 0; x < w; ++x) {
-    seed(x, 0);
-    seed(x, h - 1);
-  }
-  for (int y = 0; y < h; ++y) {
-    seed(0, y);
-    seed(w - 1, y);
-  }
-  for (size_t q = 0; q < queue.size(); ++q) { // the outside, through clear texels
-    const int x = queue[q] % w, y = queue[q] / w;
-    const int n[4][2] = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
-    for (const auto& c : n) {
-      if (c[0] >= 0 && c[1] >= 0 && c[0] < w && c[1] < h) {
-        seed(c[0], c[1]);
-      }
-    }
-  }
-  for (size_t q = 0; q < queue.size(); ++q) { // then inwards, by steps of one texel either way
-    const int x = queue[q] % w, y = queue[q] / w;
-    const int d = dist[size_t(y) * w + x] + 1;
-    for (int dy = -1; dy <= 1; ++dy) {
-      for (int dx = -1; dx <= 1; ++dx) {
-        const int nx = x + dx, ny = y + dy;
-        if (nx >= 0 && ny >= 0 && nx < w && ny < h && dist[size_t(ny) * w + nx] > d) {
-          dist[size_t(ny) * w + nx] = d;
-          queue.push_back(ny * w + nx);
+  if (symbol != nullptr) {
+    mw = symbol->width;
+    mh = symbol->height;
+    mask = symbol->values;
+    sx0 = mw, sy0 = mh;
+    for (int y = 0; y < mh; ++y) {
+      for (int x = 0; x < mw; ++x) {
+        if (mask[size_t(y) * mw + x] > 0.25f) {
+          sx0 = std::min(sx0, x); sy0 = std::min(sy0, y); sx1 = std::max(sx1, x); sy1 = std::max(sy1, y);
         }
       }
     }
-  }
-  int x0 = w, y0 = h, x1 = -1, y1 = -1;
-  for (int y = 0; y < h; ++y) {
+  } else {
+    // Outside: clear texels reachable from the border. A clear texel it doesn't reach is a hole in
+    // the icon (a cut-out symbol). Then each texel's distance in from the outside.
+    constexpr int kFar = 1 << 20;
+    std::vector<int> dist(size_t(w) * h, kFar);
+    std::vector<int> queue;
+    queue.reserve(size_t(w) * h);
+    const auto seed = [&](int x, int y) {
+      int& d = dist[size_t(y) * w + x];
+      if (d != 0 && !opaque(x, y)) {
+        d = 0;
+        queue.push_back(y * w + x);
+      }
+    };
     for (int x = 0; x < w; ++x) {
-      if (dist[size_t(y) * w + x] > 0) {
-        x0 = std::min(x0, x); y0 = std::min(y0, y); x1 = std::max(x1, x); y1 = std::max(y1, y);
+      seed(x, 0);
+      seed(x, h - 1);
+    }
+    for (int y = 0; y < h; ++y) {
+      seed(0, y);
+      seed(w - 1, y);
+    }
+    for (size_t q = 0; q < queue.size(); ++q) { // the outside, through clear texels
+      const int x = queue[q] % w, y = queue[q] / w;
+      const int n[4][2] = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
+      for (const auto& c : n) {
+        if (c[0] >= 0 && c[1] >= 0 && c[0] < w && c[1] < h) {
+          seed(c[0], c[1]);
+        }
       }
     }
-  }
-  if (x1 < 0) {
-    return;
-  }
-  // The core: inside the icon's own outline by more than its rim, whatever its shape (a Deck
-  // trigger is no circle; a circle around it caught its edge and drew that as a stroke).
-  const int rim = std::max(2, static_cast<int>(std::lround(0.12f * std::min(x1 - x0 + 1, y1 - y0 + 1))));
-  const auto core = [&](int x, int y) { return dist[size_t(y) * w + x] > rim; };
-  int histogram[32] = {};
-  for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-      if (core(x, y) && opaque(x, y)) {
-        ++histogram[luma(at(x, y)) >> 3];
+    for (size_t q = 0; q < queue.size(); ++q) { // then inwards, by steps of one texel either way
+      const int x = queue[q] % w, y = queue[q] / w;
+      const int d = dist[size_t(y) * w + x] + 1;
+      for (int dy = -1; dy <= 1; ++dy) {
+        for (int dx = -1; dx <= 1; ++dx) {
+          const int nx = x + dx, ny = y + dy;
+          if (nx >= 0 && ny >= 0 && nx < w && ny < h && dist[size_t(ny) * w + nx] > d) {
+            dist[size_t(ny) * w + nx] = d;
+            queue.push_back(ny * w + nx);
+          }
+        }
       }
     }
-  }
-  const int face = static_cast<int>(std::max_element(std::begin(histogram), std::end(histogram)) -
-                                    std::begin(histogram)) * 8 + 4;
-  for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-      if (!core(x, y)) {
-        continue;
+    int x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (int y = 0; y < h; ++y) {
+      for (int x = 0; x < w; ++x) {
+        if (dist[size_t(y) * w + x] > 0) {
+          x0 = std::min(x0, x); y0 = std::min(y0, y); x1 = std::max(x1, x); y1 = std::max(y1, y);
+        }
       }
-      const uint8_t* p = at(x, y);
-      // A symbol cut out of the face (Kenney's Xbox letters) is a hole: clear texels count too.
-      const float alpha = p[3] / 255.f;
-      const float m = std::max(std::clamp((std::abs(luma(p) - face) - 40) / 64.f, 0.f, 1.f) * alpha,
-                               1.f - alpha);
-      mask[size_t(y) * w + x] = m;
-      if (m > 0.25f) {
-        sx0 = std::min(sx0, x); sy0 = std::min(sy0, y); sx1 = std::max(sx1, x); sy1 = std::max(sy1, y);
+    }
+    if (x1 < 0) {
+      return;
+    }
+    // The core: inside the icon's own outline by more than its rim, whatever its shape (a Deck
+    // trigger is no circle; a circle around it caught its edge and drew that as a stroke).
+    const int rim = std::max(2, static_cast<int>(std::lround(0.12f * std::min(x1 - x0 + 1, y1 - y0 + 1))));
+    const auto core = [&](int x, int y) { return dist[size_t(y) * w + x] > rim; };
+    int histogram[32] = {};
+    for (int y = 0; y < h; ++y) {
+      for (int x = 0; x < w; ++x) {
+        if (core(x, y) && opaque(x, y)) {
+          ++histogram[luma(at(x, y)) >> 3];
+        }
+      }
+    }
+    const int face = static_cast<int>(std::max_element(std::begin(histogram), std::end(histogram)) -
+                                      std::begin(histogram)) * 8 + 4;
+    for (int y = 0; y < h; ++y) {
+      for (int x = 0; x < w; ++x) {
+        if (!core(x, y)) {
+          continue;
+        }
+        const uint8_t* p = at(x, y);
+        // A symbol cut out of the face (Kenney's Xbox letters) is a hole: clear texels count too.
+        const float alpha = p[3] / 255.f;
+        const float m = std::max(std::clamp((std::abs(luma(p) - face) - 40) / 64.f, 0.f, 1.f) * alpha,
+                                 1.f - alpha);
+        mask[size_t(y) * w + x] = m;
+        if (m > 0.25f) {
+          sx0 = std::min(sx0, x); sy0 = std::min(sy0, y); sx1 = std::max(sx1, x); sy1 = std::max(sy1, y);
+        }
       }
     }
   }
@@ -731,7 +758,7 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool
     const int iy = static_cast<int>(std::floor(fy));
     const float tx = fx - ix, ty = fy - iy;
     const auto m = [&](int x, int y) {
-      return x < 0 || y < 0 || x >= w || y >= h ? 0.f : mask[size_t(y) * w + x];
+      return x < 0 || y < 0 || x >= mw || y >= mh ? 0.f : mask[size_t(y) * mw + x];
     };
     return (m(ix, iy) * (1 - tx) + m(ix + 1, iy) * tx) * (1 - ty) +
            (m(ix, iy + 1) * (1 - tx) + m(ix + 1, iy + 1) * tx) * ty;
@@ -745,6 +772,20 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool
   // box back its look.
   const float kFace[3] = {teal ? 0.f : 40.f, teal ? 107.f : 40.f, teal ? 121.f : 40.f};
   constexpr float kLetter[3] = {240.f, 255.f, 255.f};
+  // The output: `outSize` square, or the icon's own size. `k` is icon texels per output texel; the
+  // geometry above is in icon texels.
+  const int outW = !ring && outSize > 0 ? static_cast<int>(outSize) : w;
+  const int outH = !ring && outSize > 0 ? static_cast<int>(outSize) : h;
+  const float k = static_cast<float>(w) / static_cast<float>(outW);
+  if (outW != w || outH != h) {
+    // The icon's header, with the new height, width and pitch.
+    const std::vector<uint8_t> header(bytes.begin(), bytes.begin() + kHeader);
+    bytes.assign(kHeader + size_t(outW) * outH * 4, 0);
+    std::copy(header.begin(), header.end(), bytes.begin());
+    const uint32_t dims[3] = {static_cast<uint32_t>(outH), static_cast<uint32_t>(outW),
+                              static_cast<uint32_t>(outW) * 4};
+    std::memcpy(bytes.data() + 12, dims, sizeof(dims));
+  }
   uint8_t* out = bytes.data() + kHeader;
   if (ring) {
     // The game's ring starts 13 of 32 from the centre, in white (the game tints it). It runs out
@@ -768,20 +809,21 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool
     }
     return;
   }
-  for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-      const float dx = x + 0.5f - w * 0.5f, dy = y + 0.5f - cy;
-      const float disc = std::clamp(discR - std::sqrt(dx * dx + dy * dy) + 0.5f, 0.f, 1.f);
+  for (int y = 0; y < outH; ++y) {
+    for (int x = 0; x < outW; ++x) {
+      // In icon texels: the output texel's centre, and its width for the disc's edge.
+      const float dx = (x + 0.5f) * k - w * 0.5f, dy = (y + 0.5f) * k - cy;
+      const float disc = std::clamp((discR - std::sqrt(dx * dx + dy * dy)) / k + 0.5f, 0.f, 1.f);
       float letter = 0.f;
       if (scale > 0.f) {
         // Supersampled 2x2 when shrinking, so a thin stroke keeps its weight.
-        for (int k = 0; k < 4; ++k) {
-          const float px = x + 0.25f + 0.5f * (k & 1), py = y + 0.25f + 0.5f * (k >> 1);
+        for (int s = 0; s < 4; ++s) {
+          const float px = (x + 0.25f + 0.5f * (s & 1)) * k, py = (y + 0.25f + 0.5f * (s >> 1)) * k;
           letter += sample(sx0 + (px - ox) / scale, sy0 + (py - oy) / scale) * 0.25f;
         }
         letter *= disc;
       }
-      uint8_t* p = out + (size_t(y) * w + x) * 4;
+      uint8_t* p = out + (size_t(y) * outW + x) * 4;
       if (orb) {
         // Blended, not added: the disc's coverage is its alpha, its colour the face's.
         for (int c = 0; c < 3; ++c) {
@@ -798,9 +840,57 @@ void DiscVariant(std::vector<uint8_t>& bytes, bool ring, bool teal = false, bool
   }
 }
 
-void ApplyStyle(std::vector<uint8_t>& bytes, uint8_t style) {
+// The symbol tools/make_prompt_glyphs.py made for an icon, beside it: `<stem>_symbol.dds` for
+// `<stem>.dds` or `<stem>_<w>x<h>.dds`, an 8-bit one-channel DDS. False when there is none (a
+// texture pack's own icons), and the disc finds the symbol in the icon.
+bool ReadSymbol(const std::string& iconPath, Coverage& out) {
+  std::string stem = iconPath;
+  if (stem.size() > 4 && stem.compare(stem.size() - 4, 4, ".dds") == 0) {
+    stem.resize(stem.size() - 4);
+  }
+  const size_t underscore = stem.rfind('_');
+  if (underscore != std::string::npos) {
+    const std::string tail = stem.substr(underscore + 1);
+    const size_t x = tail.find('x');
+    if (x != std::string::npos && x > 0 && x + 1 < tail.size() &&
+        tail.find_first_not_of("0123456789x") == std::string::npos) {
+      stem.resize(underscore);
+    }
+  }
+  std::vector<uint8_t> bytes;
+  constexpr size_t kHeader = 128;
+  if (!ReadIconFile(stem + "_symbol.dds", bytes) || bytes.size() <= kHeader ||
+      std::memcmp(bytes.data(), "DDS ", 4) != 0) {
+    return false;
+  }
+  uint32_t dims[2] = {};
+  uint32_t bits = 0;
+  std::memcpy(dims, bytes.data() + 12, sizeof(dims));
+  std::memcpy(&bits, bytes.data() + 88, sizeof(bits));
+  if (bits != 8 || dims[0] == 0 || dims[1] == 0 || bytes.size() - kHeader != size_t(dims[0]) * dims[1]) {
+    return false;
+  }
+  out.height = static_cast<int>(dims[0]);
+  out.width = static_cast<int>(dims[1]);
+  out.values.resize(size_t(out.width) * out.height);
+  for (size_t i = 0; i < out.values.size(); ++i) {
+    out.values[i] = bytes[kHeader + i] / 255.f;
+  }
+  return true;
+}
+
+void ApplyStyle(std::vector<uint8_t>& bytes, uint8_t style, const std::string& iconPath) {
+  // A disc draws the icon's symbol from the one made for it when there is one, and comes out at
+  // 128x128 (4x the game's 32) whatever the icon's size, so that symbol stays sharp on a large
+  // screen.
+  constexpr uint32_t kDiscSize = 128;
+  Coverage symbol;
+  const Coverage* made = nullptr;
+  if ((style == kOrb || style == kDisc || style == kTealDisc) && ReadSymbol(iconPath, symbol)) {
+    made = &symbol;
+  }
   if (style == kOrb) {
-    DiscVariant(bytes, false, false, true);
+    DiscVariant(bytes, false, false, true, made, kDiscSize);
   } else if (style == kRingDrawn) {
     // A clean white ring, centred, at 256x256 whatever the icon's size (it is only sampled by the
     // drawn ring's mesh, which can be large on screen): the DDS header's height, width and pitch.
@@ -813,10 +903,12 @@ void ApplyStyle(std::vector<uint8_t>& bytes, uint8_t style) {
     const uint32_t dims[3] = {kSize, kSize, kSize * 4};
     std::memcpy(bytes.data() + 12, dims, sizeof(dims));
     DiscVariant(bytes, true, true);
-  } else if (style == kDisc || style == kRing) {
-    DiscVariant(bytes, style == kRing);
+  } else if (style == kRing) {
+    DiscVariant(bytes, true);
+  } else if (style == kDisc) {
+    DiscVariant(bytes, false, false, false, made, kDiscSize);
   } else if (style == kTealDisc) {
-    DiscVariant(bytes, false, true);
+    DiscVariant(bytes, false, true, false, made, kDiscSize);
   }
 }
 
@@ -832,7 +924,7 @@ bool ReadIconBytes(void* userData, const char* path, std::vector<uint8_t>& out) 
   if (!ReadIconFile(source.first, out)) {
     return false;
   }
-  ApplyStyle(out, source.second);
+  ApplyStyle(out, source.second, source.first);
   return true;
 }
 
@@ -1154,7 +1246,7 @@ const IconPixels* StablePixels(const IconSource* source) {
       std::memcmp(bytes.data(), "DDS ", 4) != 0) {
     return nullptr;
   }
-  ApplyStyle(bytes, source->second);
+  ApplyStyle(bytes, source->second, source->first);
   uint32_t both[2] = {};
   std::memcpy(both, bytes.data() + 12, sizeof(both));
   if (both[0] == 0 || both[1] == 0 || bytes.size() - kHeader != size_t(both[0]) * both[1] * 4) {

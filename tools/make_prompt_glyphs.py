@@ -42,6 +42,9 @@ import os
 import re
 import struct
 import sys
+from collections import deque
+
+import numpy as np
 from PIL import Image
 
 SIZE = 32
@@ -292,6 +295,108 @@ def write_dds(img, path):
         f.write(header + pf + caps + img.tobytes())
 
 
+# The boxes' button disc (platform/port_prompts.cpp DiscVariant) draws the bound icon's symbol in
+# white. Cut out of a 64px icon at run time a two-letter symbol (R2, RT, ZR) is a few texels tall and
+# came out soft and stepped once enlarged onto the disc, so each icon's symbol is cut here once, from
+# the source art, and written large and sharp beside it as <stem>_symbol.dds: one 8-bit channel, its
+# coverage. SYMBOL_HEIGHT is its height, SYMBOL_WIDTH the most a wide one may take.
+SYMBOL_HEIGHT = 96
+SYMBOL_WIDTH = 132
+
+
+def symbol_coverage(icon):
+    """The icon's symbol as coverage 0..1, as DiscVariant finds it: what stands out from the face
+    (the commonest shade) inside the icon's own outline by more than its rim, light, dark or cut
+    out. None when the icon has no inside."""
+    px = np.asarray(icon.convert("RGBA"), dtype=np.float32)
+    h, w = px.shape[:2]
+    alpha = px[..., 3] / 255.0
+    opaque = px[..., 3] >= 128
+    luma = (px[..., 0] * 77 + px[..., 1] * 150 + px[..., 2] * 29) / 256.0
+    far = 1 << 20
+    dist = np.full((h, w), far, dtype=np.int32)
+    queue = deque()
+    def seed(x, y):
+        if dist[y, x] != 0 and not opaque[y, x]:
+            dist[y, x] = 0
+            queue.append((x, y))
+    for x in range(w):
+        seed(x, 0)
+        seed(x, h - 1)
+    for y in range(h):
+        seed(0, y)
+        seed(w - 1, y)
+    outside = []
+    while queue:  # the outside, through clear texels
+        x, y = queue.popleft()
+        outside.append((x, y))
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if 0 <= nx < w and 0 <= ny < h:
+                seed(nx, ny)
+    queue = deque(outside)
+    while queue:  # then inwards, a step of one texel either way
+        x, y = queue.popleft()
+        d = dist[y, x] + 1
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and dist[ny, nx] > d:
+                    dist[ny, nx] = d
+                    queue.append((nx, ny))
+    inside = np.argwhere(dist > 0)
+    if inside.size == 0:
+        return None
+    (y0, x0), (y1, x1) = inside.min(axis=0), inside.max(axis=0)
+    rim = max(2, int(round(0.12 * min(x1 - x0 + 1, y1 - y0 + 1))))
+    core = dist > rim
+    hist = np.bincount((luma[core & opaque] / 8).astype(int).clip(0, 31), minlength=32)
+    face = int(hist.argmax()) * 8 + 4
+    cover = np.maximum(np.clip((np.abs(luma - face) - 40) / 64.0, 0, 1) * alpha, 1 - alpha)
+    return np.where(core, cover, 0.0).astype(np.float32)
+
+
+def make_symbol(icon):
+    """The symbol, cropped and enlarged to SYMBOL_HEIGHT (or SYMBOL_WIDTH), its edge sharpened back
+    to about one texel; an 8-bit coverage image, or None."""
+    cover = symbol_coverage(icon)
+    if cover is None:
+        return None
+    ys, xs = np.nonzero(cover > 0.25)
+    if ys.size == 0:
+        return None
+    pad = 2
+    y0, y1 = max(0, ys.min() - pad), min(cover.shape[0], ys.max() + 1 + pad)
+    x0, x1 = max(0, xs.min() - pad), min(cover.shape[1], xs.max() + 1 + pad)
+    crop = cover[y0:y1, x0:x1]
+    sh, sw = ys.max() - ys.min() + 1, xs.max() - xs.min() + 1
+    fit = min(SYMBOL_HEIGHT / sh, SYMBOL_WIDTH / sw)
+    size = (max(1, round(crop.shape[1] * fit)), max(1, round(crop.shape[0] * fit)))
+    big = np.asarray(Image.fromarray(crop, mode="F").resize(size, Image.BICUBIC), dtype=np.float32)
+    if fit > 1:
+        # Enlarged, the edge is `fit` texels soft: back to one, about the middle (as an enlarged font
+        # glyph's).
+        big = (big - 0.5) * fit + 0.5
+    return Image.fromarray((np.clip(big, 0, 1) * 255 + 0.5).astype(np.uint8), mode="L")
+
+
+def write_coverage_dds(img, path):
+    """An 8-bit, one-channel DDS (rows bottom up, as write_dds's)."""
+    img = img.convert("L").transpose(Image.FLIP_TOP_BOTTOM)
+    w, h = img.size
+    header = b"DDS " + struct.pack("<7I44x", 124, 0x1 | 0x2 | 0x4 | 0x1000, h, w, 0, 0, 1)
+    pf = struct.pack("<2I4s5I", 32, 0x20000, b"\0\0\0\0", 8, 0xFF, 0, 0, 0)  # LUMINANCE
+    caps = struct.pack("<5I", 0x1000, 0, 0, 0, 0)
+    with open(path, "wb") as f:
+        f.write(header + pf + caps + img.tobytes())
+
+
+def write_symbol(icon_name, path):
+    symbol = make_symbol(load_icon(icon_name))
+    if symbol is not None:
+        write_coverage_dds(symbol, path)
+    return symbol is not None
+
+
 def load_icon(name):
     stem = name[:-4] if name.endswith(".png") else name
     m = re.fullmatch(r"(steamdeck_(?:left|right)_stick)_(up|down|left|right)", stem)
@@ -432,6 +537,7 @@ def main():
     # The prompt textures bound by asset id (kAssets) come in these sizes; kKeys
     # now holds only the few matched by hash, so it no longer lists them all.
     sizes = sorted({(SIZE, SIZE), (64, 32), (64, 64)} | {(w, h) for _, w, h, _, _ in keys})
+    symbolCount = 0
     for device, icons in PAD_ICONS.items():
         for key, icon in icons.items():
             for w, h in sizes:
@@ -439,6 +545,7 @@ def main():
                 write_dds(make_icon(icon, w, h),
                           os.path.join(bindings, f"{device}_{key}{suffix}.dds"))
                 padCount += 1
+            symbolCount += write_symbol(icon, os.path.join(bindings, f"{device}_{key}_symbol.dds"))
     missing = []
     for stem in BINDING_ICONS:
         src = os.path.join(ICONS_DIR, stem + ".png")
@@ -454,7 +561,10 @@ def main():
             suffix = "" if (w, h) == (SIZE, SIZE) else f"_{w}x{h}"
             write_dds(make_icon(stem + ".png", w, h),
                       os.path.join(bindings, f"{stem}{suffix}.dds"))
-    print(f"bindings: {len(BINDING_ICONS) - len(missing)} key icons, {padCount} pad icons -> {bindings}")
+        if stem not in COMPOSITES:
+            symbolCount += write_symbol(stem + ".png", os.path.join(bindings, f"{stem}_symbol.dds"))
+    print(f"bindings: {len(BINDING_ICONS) - len(missing)} key icons, {padCount} pad icons, "
+          f"{symbolCount} disc symbols -> {bindings}")
     if missing:
         print("  missing from tools/prompt_icons: " + ", ".join(missing))
 
