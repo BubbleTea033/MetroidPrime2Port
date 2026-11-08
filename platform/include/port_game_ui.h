@@ -74,12 +74,17 @@ struct BoxSpec {
   // padding. A box keeps at least the size its corners need.
   float width = 0.f;
   float height = 0.f;
+  // How big it draws against the game's own size, line, text and button alike (0.75 is three
+  // quarters); placement and sizes given above stay in screen heights.
+  float scale = 1.f;
   Placement placement;
 };
 
 struct TextSpec {
   // UTF-8; the game's text tags work. One line, however long, unless a \n breaks it.
   std::string text;
+  // Its size against the game's own text (as BoxSpec::scale).
+  float scale = 1.f;
   Placement placement;
 };
 

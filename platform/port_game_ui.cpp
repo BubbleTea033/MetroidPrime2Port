@@ -309,6 +309,32 @@ struct Box::Impl {
     }
     cameraHome = camera->GetLocalPosition();
     textHome = text->GetLocalPosition();
+    Scale();
+  }
+
+  // The scale: the frame's own camera sees more (a wider field of view, a larger orthographic
+  // view) about its centre, so everything draws smaller, and ViewHalf, which reads the same
+  // parameters, places it where it was asked to go. The camera is this element's own.
+  void Scale() {
+    const float scale = spec.scale > 0.f ? spec.scale : 1.f;
+    if (scale == 1.f) {
+      return;
+    }
+    CGuiCamera* cam = static_cast< CGuiCamera* >(camera);
+    CGuiCamera::UCameraParms parms = cam->GetParms();
+    if (cam->IsPerspective()) {
+      const float halfTan = std::tan(0.5f * parms.mPerspective.mFov * 3.14159265f / 180.f) / scale;
+      parms.mPerspective.mFov = 2.f * std::atan(halfTan) * 180.f / 3.14159265f;
+    } else {
+      auto widen = [scale](float& a, float& b) {
+        const float mid = 0.5f * (a + b);
+        a = mid + (a - mid) / scale;
+        b = mid + (b - mid) / scale;
+      };
+      widen(parms.mOrthographic.mLeft, parms.mOrthographic.mRight);
+      widen(parms.mOrthographic.mTop, parms.mOrthographic.mBottom);
+    }
+    cam->SetParms(parms);
   }
 
   bool Loaded() const {
@@ -637,6 +663,7 @@ BoxSpec TextBoxSpec(const TextSpec& spec) {
   box.fill = Fill::None;
   box.button = false;
   box.text = spec.text;
+  box.scale = spec.scale;
   box.placement = spec.placement;
   return box;
 }

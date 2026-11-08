@@ -1782,16 +1782,16 @@ void CmdHintShow(CStateManager&, const Args&, std::string& out) {
 // memo <0|1> <text...>: a HUD memo; 1 makes it a hint memo (the framed box with the button ring).
 // `{` and `}` in the text stand for `&` and `;`, so a tag (`{image=SI,1,1,F1FA8D68}`) gets past the
 // `;` that splits console commands.
-// gameui <message|hint|scan> [nofill] [nobutton] [anchor] [x y] <text...> | gameui text [anchor] [x y]
-// <text...> | gameui off | gameui dump <FRME_name>: a box or text from the port's game UI kit
-// (port_game_ui.h), to try a style, text and placement, or a frame's parts listed. The anchor is one
-// of topleft top topright left centre right bottomleft bottom bottomright (default centre); x and y,
-// when given, are its offsets in screen heights. `{` and `}` stand for `&` and `;`, as for memo.
+// gameui <message|hint|scan> [nofill] [nobutton] [scale=<f>] [anchor] [x y] <text...> | gameui text
+// [scale=<f>] [anchor] [x y] <text...> | gameui off | gameui dump <FRME_name>: a box or text from
+// the port's game UI kit (port_game_ui.h), to try a style, size, text and placement, or a frame's
+// parts listed. The anchor is one of topleft top topright left centre right bottomleft bottom
+// bottomright (default centre); x and y, when given, are its offsets in screen heights. `{` and `}` stand for `&` and `;`, as for memo.
 void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
   (void)mgr;
   const char* usage =
-      "usage: gameui <message|hint|scan> [nofill] [nobutton] [anchor] [x y] <text...> | gameui text [anchor] "
-      "[x y] <text...> | gameui off | gameui dump <FRME_name>";
+      "usage: gameui <message|hint|scan> [nofill] [nobutton] [scale=<f>] [anchor] [x y] <text...> | gameui text "
+      "[scale=<f>] [anchor] [x y] <text...> | gameui off | gameui dump <FRME_name>";
   if (args.size() == 2 && args[1] == "off") {
     PortGameUi::Dev::Hide();
     out += "hidden\n";
@@ -1819,11 +1819,20 @@ void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
     return;
   }
   size_t at = 2;
-  for (; at < args.size() && !textOnly; ++at) {
-    if (args[at] == "nofill") {
+  for (; at < args.size(); ++at) {
+    const std::string option(args[at]);
+    if (!textOnly && option == "nofill") {
       spec.fill = PortGameUi::Fill::None;
-    } else if (args[at] == "nobutton") {
+    } else if (!textOnly && option == "nobutton") {
       spec.button = false;
+    } else if (option.rfind("scale=", 0) == 0) {
+      char* end = nullptr;
+      const float scale = std::strtof(option.c_str() + 6, &end);
+      if (end == option.c_str() + 6 || *end != '\0' || !(scale > 0.f)) {
+        Fail(usage);
+        return;
+      }
+      spec.scale = scale;
     } else {
       break;
     }
@@ -1861,7 +1870,7 @@ void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
     c = c == '{' ? '&' : c == '}' ? ';' : c;
   }
   if (textOnly) {
-    PortGameUi::Dev::ShowText({.text = text, .placement = spec.placement});
+    PortGameUi::Dev::ShowText({.text = text, .scale = spec.scale, .placement = spec.placement});
   } else {
     spec.text = text;
     PortGameUi::Dev::ShowBox(spec);
@@ -5828,8 +5837,8 @@ const CommandSpec kCommands[] = {
     {"hintshow", CmdHintShow,
       "hintshow                    show the hint the game would show next (F1 Show current hint)\n"},
     {"gameui", CmdGameUi,
-      "gameui <message|hint|scan> [nofill] [nobutton] [anchor] [x y] <text...>  a test box from the game UI kit\n"
-      "gameui text [anchor] [x y] <text...>  a test text; gameui off hides either\n"
+      "gameui <message|hint|scan> [nofill] [nobutton] [scale=<f>] [anchor] [x y] <text...>  a test box from the game UI kit\n"
+      "gameui text [scale=<f>] [anchor] [x y] <text...>  a test text; gameui off hides either\n"
       "gameui dump <FRME_name>     log a frame's widgets, model extents and kit zones\n"},
     {"memo", CmdMemo, "memo <0|1> <text...>        show a HUD memo; 1 = hint memo (framed, button ring)\n"
       "memo pause <strg>           show a string table as the boxed memo a paused HUDMemo opens\n"},

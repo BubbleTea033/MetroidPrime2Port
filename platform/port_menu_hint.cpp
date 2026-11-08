@@ -38,6 +38,7 @@ void Draw() {
     // Where the overlay's toast was: the top left corner.
     sText = new PortGameUi::Text(PortGameUi::TextSpec{
         .text = HintText(),
+        .scale = 0.7f,
         .placement = {PortGameUi::Anchor::TopLeft, 0.025f, 0.025f},
     });
   }
