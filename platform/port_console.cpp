@@ -755,6 +755,10 @@ void CmdStatus(CStateManager& mgr, const Args& args, std::string& out) {
                   aurora_get_resident_geometry_mib(),
                   stats != nullptr && stats->drawCallCount < 40 ? "  <- almost nothing drawn" : "");
     out += line;
+    const PortOverlay::FrameWorkStats work = PortOverlay::LastFrameWork();
+    std::snprintf(line, sizeof(line), "work last second: %d frames, %.2f ms mean, %.2f ms worst, %d over 16.7 ms\n",
+                  work.frames, static_cast< double >(work.avgMs), static_cast< double >(work.maxMs), work.slow);
+    out += line;
     AuroraPipelineStats pipes{};
     aurora_get_pipeline_stats(&pipes);
     std::snprintf(line, sizeof(line),

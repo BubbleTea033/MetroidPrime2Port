@@ -14,6 +14,7 @@
 #include "port_video.h"
 #include "port_env.h"
 #include "port_overlay_internal.h"
+#include "port_harness.h"
 #include "port_logfile.h"
 #include "port_mouse.h"
 #include "port_radial.h"
@@ -330,6 +331,12 @@ uint64_t sFpsWindowStart = 0;
 int sFpsFrames = 0;
 // CPU time of the iterations in the current window, measured before PortPaceFrame sleeps.
 uint64_t sFpsWorkNs = 0;
+// The window's slowest iteration and how many overran a 60 Hz period; published as sFrameWork.
+uint64_t sFpsWorkMaxNs = 0;
+int sFpsWorkSlow = 0;
+PortOverlay::FrameWorkStats sFrameWork;
+// Pacing sleeps of the iteration in progress (NotePacingWait), not counted as its work.
+uint64_t sPacingWaitNs = 0;
 
 // Handed to aurora_set_graphics_quality only when they change; 0 means "never applied yet".
 int sAppliedMsaa = 0;
@@ -451,7 +458,13 @@ void TickFps() {
     sThroughputFps = sFpsWorkNs > 0
                          ? static_cast< float >(sFpsFrames) / (static_cast< float >(sFpsWorkNs) / 1e9f)
                          : 0.f;
+    sFrameWork.frames = sFpsFrames;
+    sFrameWork.avgMs = sFpsFrames > 0 ? static_cast< float >(sFpsWorkNs) / 1e6f / sFpsFrames : 0.f;
+    sFrameWork.maxMs = static_cast< float >(sFpsWorkMaxNs) / 1e6f;
+    sFrameWork.slow = sFpsWorkSlow;
     sFpsWorkNs = 0;
+    sFpsWorkMaxNs = 0;
+    sFpsWorkSlow = 0;
     sFpsFrames = 0;
     sFpsWindowStart = now;
   }
@@ -489,8 +502,26 @@ std::string PlainWorldName(const wchar_t* text) {
 namespace PortOverlay {
 
 void NoteFrameWork(uint64_t ns) {
+  // MP2_SLOW_FRAME_MS=<ms>: log every iteration whose work took longer, with the game update it
+  // ended on, to tie a hitch to what happened then (logcat on Android).
+  static const int sSlowLogMs = port::EnvInt("MP2_SLOW_FRAME_MS", 0);
+  constexpr uint64_t kPeriodNs = 16666667ull;
+  ns -= std::min(ns, sPacingWaitNs);
+  sPacingWaitNs = 0;
   sFpsWorkNs += ns;
+  sFpsWorkMaxNs = std::max(sFpsWorkMaxNs, ns);
+  if (ns > kPeriodNs) {
+    ++sFpsWorkSlow;
+  }
+  if (sSlowLogMs > 0 && ns > static_cast< uint64_t >(sSlowLogMs) * 1000000ull) {
+    std::fprintf(stderr, "[perf] slow frame %.1f ms at update %u\n", static_cast< double >(ns) / 1e6,
+                 PortHarness::GameUpdates());
+  }
 }
+
+void NotePacingWait(uint64_t ns) { sPacingWaitNs += ns; }
+
+FrameWorkStats LastFrameWork() { return sFrameWork; }
 
 
 void SetAreaLayers(const CWorldLayerState* layers, int areaId) {

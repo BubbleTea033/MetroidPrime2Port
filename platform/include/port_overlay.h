@@ -682,6 +682,18 @@ void SetFrameLimit(bool enabled);
 // The time one main-loop iteration spent working, before PortPaceFrame's sleep; feeds the F1
 // Frame rate row "Throughput" (frames per second with the pacing wait left out).
 void NoteFrameWork(uint64_t ns);
+// A pacing sleep inside the iteration (CGraphics::EndScene's 60 Hz or FPS-cap wait): taken off the
+// iteration's work when NoteFrameWork runs.
+void NotePacingWait(uint64_t ns);
+// The last full second of that work: iterations, mean and slowest in ms, and how many took longer
+// than a 60 Hz period (console `status`). MP2_SLOW_FRAME_MS=<ms> logs each slower iteration.
+struct FrameWorkStats {
+  int frames = 0;
+  float avgMs = 0.f;
+  float maxMs = 0.f;
+  int slow = 0;
+};
+FrameWorkStats LastFrameWork();
 // MP1's smooth frames (`MP2_SMOOTH_FRAMES=0|1`, F1 > Video > Frame rate, console `interp`); on by
 // default. With the cap off, the camera is drawn between the last two 60 Hz ticks.
 bool SmoothFrames();
