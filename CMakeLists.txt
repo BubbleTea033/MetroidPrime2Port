@@ -623,7 +623,7 @@ if(AURORA_SDL3_TARGET)
         platform/port_radial.cpp
         platform/port_warp.cpp platform/port_freecam.cpp platform/port_third_person.cpp platform/port_photo.cpp platform/port_console.cpp platform/port_overlay.cpp platform/port_map_pickups.cpp platform/port_disc_replace.cpp
         platform/port_gyro_motion.cpp platform/port_steam_triton.cpp
-        platform/port_dynamic_res.cpp platform/port_video.cpp platform/port_gpu_driver.cpp
+        platform/port_dynamic_res.cpp platform/port_video.cpp platform/port_gpu_driver.cpp platform/port_imgui_fonts.cpp
         platform/port_data_folder.cpp
         platform/port_json.cpp platform/port_ws.cpp platform/port_update_check.cpp
         platform/debug_ui/audio.cpp platform/debug_ui/card_data.cpp platform/debug_ui/cheats.cpp platform/debug_ui/controls.cpp platform/debug_ui/multiplayer.cpp platform/debug_ui/debug.cpp

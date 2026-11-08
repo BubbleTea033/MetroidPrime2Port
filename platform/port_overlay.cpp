@@ -144,6 +144,8 @@ bool sCardBackup = false;
 float sFirstPersonFov = 0.f;
 // The arm cannon is drawn at the world's FOV (gun_follows_fov), else at its own (gun_fov).
 bool sGunFollowsFov = false;
+// The morph ball's cameras widen or narrow with the first-person FOV (ball_follows_fov).
+bool sBallFollowsFov = true;
 float sGunFov = PortOverlay::kGunFovRetail;
 // Draw the world without the HUD's view overlays (`MP2_NO_HELMET`, `MP2_NO_VISOR_FX`): for
 // screenshots of an area, and for looking at what a visor effect covers.

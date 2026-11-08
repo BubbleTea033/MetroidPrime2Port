@@ -46,10 +46,6 @@
 #include <mutex>
 #include <sstream>
 
-namespace aurora {
-void request_screenshot() noexcept;
-}
-
 namespace PortInputDevices {
 namespace {
 
@@ -1632,10 +1628,8 @@ void PollPortActions() {
       raw.keys.set(w * 64 + static_cast<size_t>(bit));
     }
   }
-  // F12 already has Aurora's window screenshot key, so this path takes it only when the user
-  // bound it to something else and leaves the default to that handler rather than firing twice.
-  // F1 is the Port menu's default binding and has no other handler.
-  raw.keys.reset(SDL_SCANCODE_F12);
+  // F12 (the Screenshot default) and F1 (the Port menu's) have no other handler: Aurora's own F12
+  // capture went with the 2026-10-23 re-vendor, as in MP1.
   const uint16_t contexts = GameContexts();
   const PortInput::Output& out = sRuntime.Poll(raw, contexts, static_cast<double>(SDL_GetTicksNS()) / 1e6, 0);
   // The F1 Controls page is recording an input: a bound PortMenu would close it.
@@ -1677,7 +1671,7 @@ void PollPortActions() {
   };
   out.ForEachCustomPressed([&](Action action) { runCustom(action, false); });
   out.ForEachCustomReleased([&](Action action) { runCustom(action, true); });
-  if (out.Pressed(Action::Screenshot)) aurora::request_screenshot();
+  if (out.Pressed(Action::Screenshot)) PortPhoto::RequestScreenshot();
   if (out.Pressed(Action::PhotoMode)) {
     PortPhoto::RequestToggle();
   }

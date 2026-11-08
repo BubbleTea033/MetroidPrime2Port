@@ -1881,8 +1881,9 @@ void CmdBeamSwitch(CStateManager&, const Args& args, std::string& out) {
   out += "beamswitch " + std::to_string(PortOverlay::BeamSwitchSpeed()) + "\n";
 }
 
-// fov [30..120|retail] | gun [0|1] | cannon [45..120]: the first-person FOV (fov), whether the arm
-// cannon follows it (gun_follows_fov), the cannon's own FOV (gun_fov); no value prints it.
+// fov [30..120|retail] | gun [0|1] | ball [0|1] | cannon [45..120]: the first-person FOV (fov),
+// whether the arm cannon follows it (gun_follows_fov), whether the morph ball's cameras do
+// (ball_follows_fov), the cannon's own FOV (gun_fov); no value prints it.
 void CmdFov(CStateManager&, const Args& args, std::string& out) {
   char line[96];
   if (args.size() > 1 && args[1] == "gun") {
@@ -1890,6 +1891,13 @@ void CmdFov(CStateManager&, const Args& args, std::string& out) {
       PortOverlay::SetGunFollowsFov(args[2] != "0");
     }
     out += PortOverlay::GunFollowsFov() ? "gun follows fov\n" : "gun own fov\n";
+    return;
+  }
+  if (args.size() > 1 && args[1] == "ball") {
+    if (args.size() > 2) {
+      PortOverlay::SetBallFollowsFov(args[2] != "0");
+    }
+    out += PortOverlay::BallFollowsFov() ? "ball follows fov\n" : "ball retail fov\n";
     return;
   }
   if (args.size() > 1 && args[1] == "cannon") {
@@ -5423,7 +5431,7 @@ void CmdSave(CStateManager&, const Args& args, std::string& out) {
   Fail("save <info|export|import|backup|backups> ...");
 }
 
-// screenshot: the F12 capture. Aurora writes it under the working directory and logs the exact path.
+// screenshot: a BMP of the frame (F12 and F1 > Game save a PNG through PortPhoto). Aurora writes it under the working directory and logs the exact path.
 void CmdScreenshot(CStateManager&, const Args&, std::string& out) {
   aurora::request_screenshot();
   out +=
@@ -5750,8 +5758,9 @@ const CommandSpec kCommands[] = {
     {"scanspeed", CmdScanSpeed,
       "scanspeed [50..400]         scan speed in percent (scan_speed); no argument prints it\n"},
     {"fov", CmdFov,
-      "fov [30..120|retail]|gun [0|1]|cannon [45..120]  first-person FOV (fov); gun 1: the arm cannon\n"
-      "                            follows it (gun_follows_fov); cannon: its own FOV (gun_fov)\n"},
+      "fov [30..120|retail]|gun [0|1]|ball [0|1]|cannon [45..120]  first-person FOV (fov); gun 1: the\n"
+      "                            arm cannon follows it (gun_follows_fov); ball 1: the morph ball's\n"
+      "                            cameras do (ball_follows_fov); cannon: its own FOV (gun_fov)\n"},
     {"beamswitch", CmdBeamSwitch,
       "beamswitch [100..400]       beam switch speed in percent (beam_switch_speed); no argument prints it\n"},
     {"language", CmdLanguage,
@@ -5898,7 +5907,7 @@ const CommandSpec kCommands[] = {
     {"cstick", CmdCstick,
       "cstick <x> <y> [updates]    hold the C-stick (Spring Ball in Morph Ball), -127..127\n"},
     {"screenshot", CmdScreenshot,
-      "screenshot                  the F12 capture; the log names the file it wrote\n"},
+      "screenshot                  a BMP of the frame (F12 saves a PNG); the log names the file\n"},
     {"at", CmdAt,
       "at <update> <command>       run one command on that game update (`frame`), not on arrival,\n"
       "                            so runs at different speeds act on the same tick\n"},

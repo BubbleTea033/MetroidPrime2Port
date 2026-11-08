@@ -110,6 +110,7 @@ extern void* gPortGameHeapHi;
 #include "port_touch.h"
 #include "port_tweaks.h"
 #include "port_video.h"
+#include "port_imgui_fonts.h"
 
 // The decompilation's exported entry point; see src/MetroidPrime/main.cpp.
 namespace port {
@@ -1262,6 +1263,8 @@ int main(int argc, char** argv) {
       .windowPosY = -1,
       .windowWidth = static_cast< uint32_t >(widescreen ? 1280 : 960),
       .windowHeight = 720u,
+      // A system font merged into the overlay's for the game text ProggyClean lacks (MP1 d0c5cce42).
+      .imGuiInitCallback = PortImGuiFonts::Init,
       .mem1Size = MEM1_DEFAULT_SIZE,
       .mem2Size = ARAM_DEFAULT_SIZE,
       // An embedded seed wins over a stale initial_pipeline_cache.db beside the executable.

@@ -233,6 +233,10 @@ void DrawVideoDisplay() {
   }
   ImGui::EndDisabled();
   ImGui::SetItemTooltip("Back to the retail 55 deg.");
+  CheckboxTip("Morph ball follows FOV", &sBallFollowsFov,
+                  "On: the morph ball's cameras widen or narrow in step with the field of\n"
+                  "view (retail 60 at FOV 55). Off: they keep their retail FOVs.\n"
+                  "Off under Original experience.");
   CheckboxTip("Arm cannon follows FOV", &sGunFollowsFov,
                   "Off: the arm cannon is drawn at its own FOV (below) whatever the field\n"
                   "of view, so it keeps its size and place. On: it shares the world's\n"

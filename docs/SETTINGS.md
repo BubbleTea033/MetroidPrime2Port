@@ -507,6 +507,10 @@ Video > Display:
   ignores them.
 - `fov`: HUD and view > Field of view (30..120; 0, the **Retail** button, keeps the game's own);
   env `MP2_FOV`. Console `fov [30..120|retail]`.
+- `ball_follows_fov`: HUD and view > Morph ball follows FOV (default on; env `MP2_BALL_FOLLOWS_FOV`):
+  the ball, path and spindle cameras and camera hints' FOVs scale by the ratio of `fov`'s view
+  tangent to retail's 55 (the ball's 60 is ~86 at 80); a change mid-roll rescales the live cameras.
+  Console `fov ball [0|1]`. Original experience: off. Cutscene cameras never follow.
 - `gun_fov`: HUD and view > Arm cannon FOV (45..120, default the retail 55; env `MP2_GUN_FOV`): the
   FOV the arm cannon is drawn at whatever the view's, like a view-model FOV; higher draws it smaller
   and further into the corner. `gun_follows_fov` (Arm cannon follows FOV, default off; env

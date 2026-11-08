@@ -60,6 +60,8 @@ PORT_SET_CLAMP(SetCrosshairSize, int, sCrosshairSize, kCrosshairSizeMin, kCrossh
 PORT_GET_INT_IN(CrosshairOpacity, "MP2_CROSSHAIR_OPACITY", sCrosshairOpacity, kCrosshairOpacityMin, kCrosshairOpacityMax)
 PORT_SET_CLAMP(SetCrosshairOpacity, int, sCrosshairOpacity, kCrosshairOpacityMin, kCrosshairOpacityMax)
 PORT_SET(SetGunFollowsFov, bool, sGunFollowsFov)
+PORT_GET_BOOL_RETAIL(BallFollowsFov, false, "MP2_BALL_FOLLOWS_FOV", sBallFollowsFov)
+PORT_SET(SetBallFollowsFov, bool, sBallFollowsFov)
 PORT_GET_INT_IN(Anisotropy, "MP2_ANISO", sAnisotropy, 1, 16)
 PORT_SET_CLAMP(SetAnisotropy, int, sAnisotropy, 1, 16)
 PORT_SET_CLAMP(SetHudScale, int, sHudScale, kHudScaleMin, kHudScaleMax)

@@ -80,7 +80,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `scanspeed [50..400]`, `elevator [original|fast|skip]`, `portal [original|fast|skip]`, `rooms [original|fast]`, `original [0|1]`, `igt [0|1]`, `language [0..6]` — the Game page's
   scan speed, elevator ride, Original experience and on-screen time (`scan_speed`, `elevator_ride`,
   `original_experience`, `igt_timer` in SETTINGS.md); no argument prints the value
-- `fov [30..120|retail] | gun [0|1] | cannon [45..120]` — first-person FOV (`fov`), whether the arm cannon follows it (`gun_follows_fov`), the cannon's own FOV (`gun_fov`); no value prints it
+- `fov [30..120|retail] | gun [0|1] | ball [0|1] | cannon [45..120]` — first-person FOV (`fov`), whether the arm cannon follows it (`gun_follows_fov`), whether the morph ball's cameras do (`ball_follows_fov`), the cannon's own FOV (`gun_fov`); no value prints it
 - `beamswitch [100..400]` — beam switch speed in percent (`beam_switch_speed`); no argument prints it
 - `walkspeed [50..200|on|off]` — walk speed in percent, or `on`/`off` for the Custom walk speed switch (off is retail speed; shows the speed in effect with no argument); `walk_speed` and `walk_speed_enabled` in SETTINGS.md
 - `pointer <x> <y> move|click|dclick|tap|dtap|down|up [l|r|touch]|drag <x1> <y1> [l|r|touch]|wheel <n>|pinch <ratio>`, `pointer back|where|hits` — scripted mouse/touch input for the pointer menus, in GUI (EFB) pixels as screenshots show them; `where` prints the position and the widget rects under it, `hits` lists the recorded rects
@@ -150,7 +150,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `stick <x> <y> [updates]` — hold the main stick, -127..127
 - `cstick <x> <y> [updates]` — hold the C-stick (Spring Ball in Morph Ball), -127..127
 - `credits [1|2]` — end the game into the credits (1: the <75% route, 2: the <100% route)
-- `screenshot` — the F12 capture; the log names the file it wrote
+- `screenshot` — a BMP of the frame (F12 and F1 > Game save a PNG under `screenshots/`, with a toast); the log names the file it wrote
 - `at <update> <command>` — run one command on that game update (`frame`), not on arrival, so runs at different speeds act on the same tick
 - `gallery [mask]` — the slideshow gallery unlock mask (0..63): print, or set via PercentScans/mode flags
 - `help` — this list

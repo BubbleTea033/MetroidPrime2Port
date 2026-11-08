@@ -50,10 +50,6 @@
 #include <SDL3/SDL_system.h>
 #endif
 
-namespace aurora {
-void request_screenshot() noexcept;
-}
-
 namespace PortDebug {
 
 // Screenshot, photo mode and exit; the top of the Game page (settings are on System).
@@ -64,7 +60,7 @@ void DrawGameSection() {
   const std::string shotLabel =
       (shotKeys.empty() ? std::string("Screenshot") : "Screenshot (" + shotKeys + ")") + "###screenshot";
   if (ImGui::Button(shotLabel.c_str())) {
-    aurora::request_screenshot();
+    PortPhoto::RequestScreenshot();
   }
   ImGui::SameLine();
   const std::string photoKeys = PortInputRemap::BindingsText(PortInput::Action::PhotoMode, " / ");

@@ -541,6 +541,11 @@ void SetLogFile(bool enabled);
 float FirstPersonFov();
 // 30..120, or 0 for the game's own.
 void SetFirstPersonFov(float degrees);
+// The morph ball's cameras (ball, path, spindle; camera hints' FOVs) widen or narrow in step with
+// FirstPersonFov (`ball_follows_fov`, `MP2_BALL_FOLLOWS_FOV`, default on; retail 60 at 55); off and
+// under Original experience they keep retail's (CCameraManager::PortFollowFovSetting).
+bool BallFollowsFov();
+void SetBallFollowsFov(bool enabled);
 // The arm cannon is drawn at its own FOV (GunFov, `gun_fov`, `MP2_GUN_FOV`, retail 55) whatever the
 // view's, like a view-model FOV, unless GunFollowsFov (`gun_follows_fov`, `MP2_GUN_FOLLOWS_FOV`):
 // then it shares the world's projection. Both are retail's under Original experience.

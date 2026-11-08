@@ -2454,7 +2454,11 @@ void CBallCamera::OverrideCameraInfo(CStateManager& mgr) {
     mClampAzimuth = false;
   }
   if (info.GetOverrideFlags() & 0x10) {
+#ifdef TARGET_PC
+    InterpolateFOV(CCameraManager::PortFollowFovSetting(info.GetFov()), 1.f, 0.f);
+#else
     InterpolateFOV(info.GetFov(), 1.f, 0.f);
+#endif
   }
   if (info.GetOverrideFlags() & 0x80) {
     mTargetAnglePerSecond = info.GetAnglePerSecond();

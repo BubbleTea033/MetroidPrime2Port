@@ -519,6 +519,7 @@ const SettingKey kSettingKeys[] = {
      },
      [](std::ostream& out) { out << sFirstPersonFov; }, false, "45", "72.5"},
     BoolKey< &sGunFollowsFov >("gun_follows_fov"),
+    BoolKey< &sBallFollowsFov >("ball_follows_fov"),
     RANGE_KEY("gun_fov", sGunFov, PortOverlay::kGunFovMin, PortOverlay::kGunFovMax, "45", "72.5"),
     {"gun_offset",
      [](const std::string& value) {

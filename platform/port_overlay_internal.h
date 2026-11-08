@@ -96,6 +96,7 @@ extern bool sMenuStandardButtons;
 extern bool sCardBackup;
 extern float sFirstPersonFov;
 extern bool sGunFollowsFov;
+extern bool sBallFollowsFov;
 extern float sGunFov;
 extern bool sHideHelmet;
 extern bool sHideVisorEffects;

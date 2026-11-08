@@ -172,6 +172,7 @@
 {"Video", "Display", "HUD and view", "Crosshair in Echo Visor", "crosshair reticle visor echo hide per visor"},
 {"Video", "Display", "HUD and view", "Secondary crosshairs", "next target reticle seeker lock-on hide"},
 {"Video", "Display", "HUD and view", "Field of view", "fov zoom camera angle"},
+{"Video", "Display", "HUD and view", "Morph ball follows FOV", "morph ball camera fov field of view wide"},
 {"Video", "Display", "HUD and view", "Arm cannon follows FOV", "arm cannon gun fov field of view viewmodel perspective scale"},
 {"Video", "Display", "HUD and view", "Arm cannon FOV", "arm cannon gun fov field of view viewmodel size slider"},
 {"Video", "Display", "HUD and view", "Arm cannon right", "gun weapon offset position x"},
