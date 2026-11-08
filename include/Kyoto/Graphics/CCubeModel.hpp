@@ -111,6 +111,10 @@ public:
   // Whether a model made from now on keeps its vertex arrays (and its display lists) on the GPU
   // (GXPortRetainResident) while it exists; main.cpp sets it once Aurora has the room for them.
   static void PortSetResident(bool arrays, bool displayLists);
+  // After writing into this model's arrays or display lists (the drawn button ring moves a box's
+  // frame line and empties its quad): the GPU's copies of what it retained are taken again, so the
+  // next draw sees the writes (GXPortUpdateResident). Nothing when it retained nothing.
+  void PortUpdateResidentData() const;
 #endif
 
   static void SetRenderModelBlack(bool v);
