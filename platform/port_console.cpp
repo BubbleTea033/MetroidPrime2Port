@@ -29,6 +29,7 @@
 #include "port_input_bindings.h"
 #include "input/port_input_devices.h"
 #include "port_logfile.h"
+#include "port_game_ui.h"
 #include "port_overlay.h"
 #include "port_map_pickups.h"
 #include "port_rando_world.h"
@@ -1781,6 +1782,93 @@ void CmdHintShow(CStateManager&, const Args&, std::string& out) {
 // memo <0|1> <text...>: a HUD memo; 1 makes it a hint memo (the framed box with the button ring).
 // `{` and `}` in the text stand for `&` and `;`, so a tag (`{image=SI,1,1,F1FA8D68}`) gets past the
 // `;` that splits console commands.
+// gameui <message|hint|scan> [nofill] [nobutton] [anchor] [x y] <text...> | gameui text [anchor] [x y]
+// <text...> | gameui off | gameui dump <FRME_name>: a box or text from the port's game UI kit
+// (port_game_ui.h), to try a style, text and placement, or a frame's parts listed. The anchor is one
+// of topleft top topright left centre right bottomleft bottom bottomright (default centre); x and y,
+// when given, are its offsets in screen heights. `{` and `}` stand for `&` and `;`, as for memo.
+void CmdGameUi(CStateManager& mgr, const Args& args, std::string& out) {
+  (void)mgr;
+  const char* usage =
+      "usage: gameui <message|hint|scan> [nofill] [nobutton] [anchor] [x y] <text...> | gameui text [anchor] "
+      "[x y] <text...> | gameui off | gameui dump <FRME_name>";
+  if (args.size() == 2 && args[1] == "off") {
+    PortGameUi::Dev::Hide();
+    out += "hidden\n";
+    return;
+  }
+  if (args.size() == 3 && args[1] == "dump") {
+    PortGameUi::Dev::DumpFrame(Str(args[2]));
+    out += "dumping " + Str(args[2]) + " (logged as [gameui] lines once it is loaded)\n";
+    return;
+  }
+  if (args.size() < 3) {
+    Fail(usage);
+    return;
+  }
+  const bool textOnly = args[1] == "text";
+  PortGameUi::BoxSpec spec;
+  if (args[1] == "message") {
+    spec.style = PortGameUi::Style::Message;
+  } else if (args[1] == "hint") {
+    spec.style = PortGameUi::Style::Hint;
+  } else if (args[1] == "scan") {
+    spec.style = PortGameUi::Style::Scan;
+  } else if (!textOnly) {
+    Fail(usage);
+    return;
+  }
+  size_t at = 2;
+  for (; at < args.size() && !textOnly; ++at) {
+    if (args[at] == "nofill") {
+      spec.fill = PortGameUi::Fill::None;
+    } else if (args[at] == "nobutton") {
+      spec.button = false;
+    } else {
+      break;
+    }
+  }
+  static const std::pair< const char*, PortGameUi::Anchor > kAnchors[] = {
+      {"topleft", PortGameUi::Anchor::TopLeft},     {"top", PortGameUi::Anchor::Top},
+      {"topright", PortGameUi::Anchor::TopRight},   {"left", PortGameUi::Anchor::Left},
+      {"centre", PortGameUi::Anchor::Centre},       {"center", PortGameUi::Anchor::Centre},
+      {"right", PortGameUi::Anchor::Right},         {"bottomleft", PortGameUi::Anchor::BottomLeft},
+      {"bottom", PortGameUi::Anchor::Bottom},       {"bottomright", PortGameUi::Anchor::BottomRight}};
+  for (const auto& [name, anchor] : kAnchors) {
+    if (at < args.size() && args[at] == name) {
+      spec.placement.anchor = anchor;
+      ++at;
+      break;
+    }
+  }
+  if (at + 2 < args.size()) {
+    char* endX = nullptr;
+    char* endY = nullptr;
+    const std::string sx(args[at]), sy(args[at + 1]);
+    const float x = std::strtof(sx.c_str(), &endX);
+    const float y = std::strtof(sy.c_str(), &endY);
+    if (endX != sx.c_str() && *endX == '\0' && endY != sy.c_str() && *endY == '\0') {
+      spec.placement.x = x;
+      spec.placement.y = y;
+      at += 2;
+    }
+  }
+  std::string text;
+  for (; at < args.size(); ++at) {
+    text += (text.empty() ? "" : " ") + Str(args[at]);
+  }
+  for (char& c : text) {
+    c = c == '{' ? '&' : c == '}' ? ';' : c;
+  }
+  if (textOnly) {
+    PortGameUi::Dev::ShowText({.text = text, .placement = spec.placement});
+  } else {
+    spec.text = text;
+    PortGameUi::Dev::ShowBox(spec);
+  }
+  out += "shown (its size is logged as a [gameui] line once it is loaded)\n";
+}
+
 // memo pause <strg>: the boxed memo a paused HUDMemo opens (CMessageScreen), as for "Map data acquired".
 void CmdMemo(CStateManager& mgr, const Args& args, std::string& out) {
   if (args.size() == 3 && args[1] == "pause") {
@@ -5739,6 +5827,10 @@ const CommandSpec kCommands[] = {
     {"maptap", CmdMapTap, "maptap                      tap the minimap: opens the map screen\n"},
     {"hintshow", CmdHintShow,
       "hintshow                    show the hint the game would show next (F1 Show current hint)\n"},
+    {"gameui", CmdGameUi,
+      "gameui <message|hint|scan> [nofill] [nobutton] [anchor] [x y] <text...>  a test box from the game UI kit\n"
+      "gameui text [anchor] [x y] <text...>  a test text; gameui off hides either\n"
+      "gameui dump <FRME_name>     log a frame's widgets, model extents and kit zones\n"},
     {"memo", CmdMemo, "memo <0|1> <text...>        show a HUD memo; 1 = hint memo (framed, button ring)\n"
       "memo pause <strg>           show a string table as the boxed memo a paused HUDMemo opens\n"},
     {"walkspeed", CmdWalkSpeed,
