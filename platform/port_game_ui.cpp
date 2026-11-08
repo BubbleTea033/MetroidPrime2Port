@@ -142,11 +142,11 @@ std::vector< Point > PointsOf(const CCubeModel* model) {
   return points;
 }
 
-// The vertices a model draws: those its display lists index (a model may hold others no triangle
-// uses: the scan box's bracket keeps some far above its top line). All of them when its lists can't
-// be read (a format the parser leaves alone).
-std::vector< Point > DrawnPointsOf(const CCubeModel* model) {
-  const std::vector< Point > all = PointsOf(model);
+// The indices of the vertices a model draws: those its display lists index (a model may hold
+// others no triangle uses: the scan box's bracket keeps some far above its top line). All of them
+// when its lists can't be read (a format the parser leaves alone).
+std::vector< uint > DrawnIndicesOf(const CCubeModel* model) {
+  const uint count = model->GetModelInstance().GetVertexSize() / (3 * sizeof(uint));
   std::set< uint > used;
   for (int list = 0; list < 2; ++list) {
     CCubeSurface surface = list == 0 ? model->GetNormalSurfaces() : model->GetAlphaSurfaces();
@@ -158,19 +158,30 @@ std::vector< Point > DrawnPointsOf(const CCubeModel* model) {
       for (const PortPromptRingMath::Command& c : PortPromptRingMath::ParseDisplayList(
                dl, surface.GetDisplayListSize(), model->GetMaterial(surface).GetVertexDesc())) {
         for (const uint32_t v : c.vertices) {
-          used.insert((uint(dl[v]) << 8) | dl[v + 1]);
+          const uint i = (uint(dl[v]) << 8) | dl[v + 1];
+          if (i < count) {
+            used.insert(i);
+          }
         }
       }
     }
   }
   if (used.empty()) {
+    std::vector< uint > all(count);
+    for (uint i = 0; i < count; ++i) {
+      all[i] = i;
+    }
     return all;
   }
+  return std::vector< uint >(used.begin(), used.end());
+}
+
+// The vertices a model draws, in its own (x, z) plane.
+std::vector< Point > DrawnPointsOf(const CCubeModel* model) {
+  const std::vector< Point > all = PointsOf(model);
   std::vector< Point > drawn;
-  for (const uint i : used) {
-    if (i < all.size()) {
-      drawn.push_back(all[i]);
-    }
+  for (const uint i : DrawnIndicesOf(model)) {
+    drawn.push_back(all[i]);
   }
   return drawn;
 }
@@ -211,9 +222,12 @@ void AddWorldExtent(CGuiWidget* widget, Extent& extent) {
   if (model == nullptr) {
     return;
   }
+  // Every coordinate, depth too: a model may be built away from its widget along the view, and its
+  // depth sets where an offset on screen lands.
   const CTransform4f& xf = widget->GetWorldTransform();
-  for (const Point& p : DrawnPointsOf(model)) {
-    extent.Add(xf * CVector3f(p.x, 0.f, p.z));
+  const uint* pos = static_cast< const uint* >(model->GetPositions());
+  for (const uint i : DrawnIndicesOf(model)) {
+    extent.Add(xf * CVector3f(ReadFloat(pos, i * 3), ReadFloat(pos, i * 3 + 1), ReadFloat(pos, i * 3 + 2)));
   }
 }
 
