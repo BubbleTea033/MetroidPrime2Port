@@ -34,6 +34,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // The kTagFields block: a script object's own fields (enemies, cutscene actors, keyframes, fades...),
@@ -1151,7 +1152,7 @@ bool GetField(CStateManager& mgr, CEntity& ent, const PortSchemaField& f, BlockR
 // A class's block fingerprint: the class's layout (the schema's fingerprint) and the names and kinds
 // of the fields SavedField keeps, in order. A block's fields are by position, so a block written
 // while the list differed (a field added or taken out of SavedField) must not be read with this one.
-uint64_t BlockFingerprint(const PortSchemaClass& cls) {
+uint64_t ComputeBlockFingerprint(const PortSchemaClass& cls) {
   uint64_t h = cls.fingerprint ^ 0xcbf29ce484222325ull;
   const auto mix = [&h](unsigned char c) {
     h ^= c;
@@ -1169,6 +1170,23 @@ uint64_t BlockFingerprint(const PortSchemaClass& cls) {
     mix(0xff); // between names
   }
   return h;
+}
+
+// ComputeBlockFingerprint, taken once per class: every block of every object compares each class of
+// its chain in every pass, and SavedField walks names with strcmp/strstr.
+uint64_t BlockFingerprint(const PortSchemaClass& cls) {
+  static const std::unordered_map< const PortSchemaClass*, uint64_t > sFingerprints = [] {
+    std::unordered_map< const PortSchemaClass*, uint64_t > table;
+    int count = 0;
+    const PortSchemaClass* const* classes = PortEntitySchema::Classes(count);
+    table.reserve(count);
+    for (int i = 0; i < count; ++i) {
+      table.emplace(classes[i], ComputeBlockFingerprint(*classes[i]));
+    }
+    return table;
+  }();
+  const auto found = sFingerprints.find(&cls);
+  return found != sFingerprints.end() ? found->second : ComputeBlockFingerprint(cls);
 }
 
 // One pass over the classes of a kTagFields block (GetField's `pass`).
