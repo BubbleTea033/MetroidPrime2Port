@@ -192,6 +192,38 @@ void CPlayerGun::PortFireStackedBeams(float dt, CStateManager& mgr, const CTrans
   }
 }
 
+void CPlayerGun::PortCheatPhazonCharge(CStateManager& mgr) {
+  const int max = gpTweakPlayerGun->GetMaxAbsorbedPhazonShots();
+  if (!PortOverlay::PhazonShot() || mAbsorbedPhazonShots == max ||
+      GetPlayerFromAll(mgr)->GetPlayerState()->GetChargeBeamFactor() != 1.f) {
+    return;
+  }
+  // As the last absorbed shot in Update: the charge effect and loop turn to Phazon.
+  mAbsorbedPhazonShots = max;
+  mPortPhazonCheat = true;
+  if (!mPhazonChargeGenerator.get()) {
+    const TCachedToken< CGenDescription > description = gpSimplePool->GetObj("PhazonCharge");
+    mPhazonChargeGenerator = rstl::auto_ptr< CElementGen >(rs_new CElementGen(description));
+    mCurrentBeam->ActivateCharge(false, false);
+    if (mChargeSfx) {
+      CSfxManager::SfxStop(mChargeSfx);
+      mChargeSfx = PlaySfxForPlayer(nullptr, SFXsam_a_phazcharge_lp_00_looped, mSoundVolume,
+                                    kInvalidAreaId.Value(), mUnderwater, true);
+    }
+  }
+}
+
+void CPlayerGun::PortPayPhazonShot(CStateManager& mgr) {
+  if (!mPortPhazonCheat || PortOverlay::GodMode()) {
+    return;
+  }
+  // The cheat's energy cost never kills: it leaves at least 1 energy.
+  CHealthInfo* health = GetPlayerFromAll(mgr)->GetPlayerState()->HealthInfo();
+  const float hp = health->GetHP();
+  const float cost = float(PortOverlay::PhazonShotCost());
+  health->SetHP(hp - cost < 1.f ? rstl::min_val(hp, 1.f) : hp - cost);
+}
+
 void CPlayerGun::PortReleaseStackedBeams() {
   for (int i = 0; i < mSelectableBeams.size(); ++i) {
     if (mSelectableBeams[i] != nullptr) {
@@ -280,6 +312,9 @@ void CPlayerGun::UpdateNormalShotCycle(float dt, CStateManager& mgr) {
       mCurrentBeam->CGunWeapon::Fire(phazonBallToken, mUnderwater, dt, chargeState, xf, mgr,
                                      homingTarget, attributes, 0x1c4, nullptr, nullptr,
                                      chargeFactor1, chargeFactor1);
+#ifdef TARGET_PC
+      PortPayPhazonShot(mgr);
+#endif
 
     } else {
 #ifdef TARGET_PC
@@ -1898,6 +1933,9 @@ void CPlayerGun::Update(float dt, CStateManager& mgr) {
         }
       }
     }
+#ifdef TARGET_PC
+    PortCheatPhazonCharge(mgr);
+#endif
     if (mPhazonAbsorbFlashGenerator.get()) {
       if (!mPhazonAbsorbFlashGenerator->IsSystemDeletable()) {
         mPhazonAbsorbFlashGenerator->SetGlobalTranslation(mBeamLocalXf.GetTranslation());
@@ -2149,6 +2187,7 @@ void CPlayerGun::ResetCharge(CStateManager& mgr, bool playAnimation) {
   mChargeRumbleTimer = 0.f;
   mAbsorbedPhazonShots = 0;
 #ifdef TARGET_PC
+  mPortPhazonCheat = false;
   mPortRapidCharge = false;
 #endif
   if (mCurrentBeam != nullptr) {

@@ -263,6 +263,9 @@ static bool sBoostAnywhere = false;
 static bool sBoostSteer = false;
 uint32_t sWorldId = 0;
 int sAreaId = -1;
+// The Phazon shot cheat (PortOverlay::PhazonShot); never saved, as sGodMode.
+static bool sPhazonShot = false;
+static int sPhazonShotCost = 10;
 std::vector< SRoomEntry > sRooms;
 uint32_t sRoomsWorld = 0; // the asset id the entries were taken from, 0 before any world
 std::vector< SLayerEntry > sLayers;
@@ -980,6 +983,13 @@ bool BoostSteer() { return sBoostSteer && !OriginalExperience(); }
 void SetBoostSteer(bool enabled) { sBoostSteer = enabled; }
 
 unsigned InfiniteAmmoKind(int itemType) {
+bool PhazonShotSet() { return sPhazonShot; }
+bool PhazonShot() { return sPhazonShot && !OriginalExperience(); }
+void SetPhazonShot(bool enabled) { sPhazonShot = enabled; }
+int PhazonShotCost() { return sPhazonShotCost; }
+void SetPhazonShotCost(int energy) {
+  sPhazonShotCost = energy < 0 ? 0 : energy > kPhazonShotCostMax ? kPhazonShotCostMax : energy;
+}
   switch (itemType) {
   case CPlayerState::kIT_Missile:
     return kInfAmmoMissile;

@@ -1222,6 +1222,37 @@ void CmdBoostCheats(const Args& args, std::string& out) {
   out += line;
 }
 
+// phazon [0|1] [cost <energy>]: the F1 Cheats "Phazon shot anywhere" row.
+void CmdPhazon(CStateManager&, const Args& args, std::string& out) {
+  bool on = PortOverlay::PhazonShotSet();
+  int cost = PortOverlay::PhazonShotCost();
+  size_t i = 1;
+  if (i < args.size() && std::string(args[i]) != "cost") {
+    if (!ParseSwitch(std::string(args[i]), on)) {
+      Usage();
+      return;
+    }
+    ++i;
+  }
+  if (i < args.size()) {
+    const std::string value = i + 1 < args.size() ? std::string(args[i + 1]) : std::string();
+    char* end = nullptr;
+    const long number = std::strtol(value.c_str(), &end, 10);
+    if (i + 2 != args.size() || end == value.c_str() || *end != '\0') {
+      Usage();
+      return;
+    }
+    cost = int(number < 0 ? 0 : number > PortOverlay::kPhazonShotCostMax ? PortOverlay::kPhazonShotCostMax
+                                                                         : number);
+  }
+  PortOverlay::SetPhazonShot(on);
+  PortOverlay::SetPhazonShotCost(cost);
+  char line[96];
+  std::snprintf(line, sizeof(line), "phazon %d cost %d%s\n", on ? 1 : 0, PortOverlay::PhazonShotCost(),
+                CheatRefused(on, PortOverlay::PhazonShot()));
+  out += line;
+}
+
 // infammo [all|missile|powerbomb|dark|light] [0|1]: the F1 Cheats "Infinite" boxes; no 0|1 flips.
 void CmdInfiniteAmmo(CStateManager&, const Args& args, std::string& out) {
   struct Kind {
@@ -5889,6 +5920,9 @@ const CommandSpec kCommands[] = {
       "livesplit [0|1|addr <host:port>|send <line>]  the LiveSplit link (the F1 setting); no argument: status\n"},
     {"touchact", CmdTouchAct,
       "touchact <actor id> <other id>  run an actor's touch handler for the other actor (coverage)\n"},
+    {"phazon", CmdPhazon,
+      "phazon [0|1] [cost <0..99>] cheat: a full charge fires the final fight's Phazon shot, for that\n"
+      "                            much energy a shot; no argument prints it\n"},
     {"trigcall", CmdTrigCall,
       "trigcall <id> <trigger name> [arg]  run one named trigger function of an actor once\n"},
     {"uevent", CmdUEvent,

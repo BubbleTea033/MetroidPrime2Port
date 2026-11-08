@@ -180,6 +180,9 @@ public:
   float PortChargeAnimStart(float retail) const;
   float PortChargeFxStart(float retail) const;
   float PortChargeRate(float retail) const;
+  // Phazon shot cheat: a full charge holds the Phazon shot the final fight's absorbed shots give.
+  void PortCheatPhazonCharge(CStateManager& mgr);
+  void PortPayPhazonShot(CStateManager& mgr);
 #endif
   void ResetSeeker(CStateManager& mgr);
   void UpdateSeeker(float dt, CStateManager& mgr);
@@ -393,6 +396,9 @@ private:
   // and whether that holds R's free-look pose (left hand on the cannon).
   float mPortStillTime = 0.f;
   bool mPortHandOnCannon = false;
+  // Whether the absorbed Phazon shots came from the Phazon shot cheat (PortOverlay::PhazonShot),
+  // whose shot costs energy; ResetCharge clears it.
+  bool mPortPhazonCheat = false;
   bool mPortRapidCharge;
   int mPortRapidShots;
   float mPortRapidTimer;
