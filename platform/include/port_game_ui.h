@@ -126,6 +126,8 @@ public:
   void Draw();
   // True once it has drawn its first frame (its size is set).
   bool Ready() const;
+  // Its frame couldn't be loaded: it never draws (the owner falls back).
+  bool Failed() const;
   // Where it last drew.
   ScreenRect LastRect() const;
 

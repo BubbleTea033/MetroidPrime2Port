@@ -789,6 +789,7 @@ void Box::SetAlpha(float alpha) { mImpl->alpha = std::clamp(alpha, 0.f, 1.f); }
 void Box::SetPlacement(const Placement& placement) { mImpl->spec.placement = placement; }
 void Box::Draw() { mImpl->Draw(); }
 bool Box::Ready() const { return mImpl->shaped; }
+bool Box::Failed() const { return mImpl->failed; }
 ScreenRect Box::LastRect() const { return mImpl->rect; }
 
 namespace {

@@ -247,6 +247,7 @@ extern "C" void AIPortPoll(void);
 #include "port_menu_hint.h"
 #include "port_resume_prompt.h"
 #include "port_shader_toast.h"
+#include "port_skip_prompt.h"
 
 #include "MetroidPrime/PortSkipFrontEnd.hpp"
 
@@ -892,6 +893,7 @@ int CMain::RsMain(int argc, const char* const* argv) {
         // (port_shader_toast.h) and the launch hint "Press F1 for settings" (port_menu_hint.h) in
         // the game's own boxes and text, over the boot screens, the title screen or the game.
         PortResumePrompt::Draw();
+        PortSkipPrompt::DrawLate(); // the game loader's intro text has no CInGameGuiManager
         PortShaderToast::Draw();
         PortMenuHint::Draw();
         CCameraManager::SetPresentationInterpolation(-1.f);

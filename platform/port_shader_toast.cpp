@@ -11,8 +11,8 @@
 
 namespace PortShaderToast {
 namespace {
-// Never destroyed (see port_game_ui.h: one deleted while the program exits hangs it). Text, as the
-// launch hint is: it only draws once its shaders are, and the font's are among the first compiled.
+// Not a unique_ptr (see port_game_ui.h: one deleted while the program exits hangs it); freed once
+// the startup compile is done. Text, as the launch hint is: it only draws once its shaders are, and the font's are among the first compiled.
 PortGameUi::Text* sText = nullptr;
 bool sStartupDone = false;
 bool sQueued = false;
@@ -24,6 +24,8 @@ void Draw() {
   const AuroraStats* stats = aurora_get_stats();
   if (stats != nullptr && stats->queuedPipelines == 0) {
     sStartupDone = true;
+    delete sText;
+    sText = nullptr;
   }
   if (!PortOverlay::ShowShaderCompilation() || stats == nullptr || sStartupDone) {
     return;

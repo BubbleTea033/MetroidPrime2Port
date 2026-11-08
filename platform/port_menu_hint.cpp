@@ -14,11 +14,18 @@ namespace {
 constexpr double kShowSeconds = 8.0;
 constexpr double kFadeSeconds = 1.0;
 
-// Never destroyed (see port_game_ui.h: a text deleted while the program exits hangs it).
+// Not a unique_ptr (see port_game_ui.h: a text deleted while the program exits hangs it); freed
+// once the hint is done.
 PortGameUi::Text* sText = nullptr;
 bool sDone = false;
 bool sShowing = false;
 std::chrono::steady_clock::time_point sShownAt;
+
+void Finish() {
+  sDone = true;
+  delete sText;
+  sText = nullptr;
+}
 
 std::string HintText() {
   const std::string keys = PortInputRemap::BindingsText(PortInput::Action::PortMenu);
@@ -31,7 +38,7 @@ void Draw() {
     return;
   }
   if (!PortOverlay::ShowMenuHint() || PortOverlay::Visible()) {
-    sDone = true;
+    Finish();
     return;
   }
   if (sText == nullptr) {
@@ -47,7 +54,7 @@ void Draw() {
   if (sShowing) {
     age = std::chrono::duration< double >(std::chrono::steady_clock::now() - sShownAt).count();
     if (age > kShowSeconds) {
-      sDone = true;
+      Finish();
       return;
     }
   }

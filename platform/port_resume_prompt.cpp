@@ -10,7 +10,8 @@
 
 namespace PortResumePrompt {
 namespace {
-// Never destroyed (see port_game_ui.h: one deleted while the program exits hangs it).
+// Not a unique_ptr (see port_game_ui.h: one deleted while the program exits hangs it); freed once
+// the prompt is answered.
 PortGameUi::Question* sQuestion = nullptr;
 std::atomic< bool > sUnavailable{false};
 // Read by the overlay's pointer handling.
@@ -51,6 +52,8 @@ void Draw() {
   bool yes = true;
   if (!PortSaveState::ResumePromptShown(info, yes)) {
     SetRects({}, {});
+    delete sQuestion;
+    sQuestion = nullptr;
     return;
   }
   if (sQuestion == nullptr) {

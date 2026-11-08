@@ -431,6 +431,11 @@ void DrawResumePrompt() {
   if (!PortResumePrompt::Unavailable()) {
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     const ImVec2 mouse = ImGui::GetIO().MousePos;
+    // The choice a press started on: a release answers only over that one.
+    static int sPressed = -1;
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+      sPressed = -1;
+    }
     for (int choice = 0; choice < 2; ++choice) {
       const PortGameUi::ScreenRect rect = PortResumePrompt::ChoiceRect(choice);
       if (!rect.valid) {
@@ -447,7 +452,10 @@ void DrawResumePrompt() {
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         PortSaveState::SelectResumePrompt(choice == 0);
       }
-      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+      if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        sPressed = choice;
+      }
+      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && sPressed == choice) {
         PortSaveState::AnswerResumePrompt(choice == 0);
       }
     }
@@ -571,7 +579,7 @@ void DrawSkipConfirm() {
   if (ImGui::GetCurrentContext() == nullptr || alpha <= 0.f) {
     return;
   }
-  if (PortOverlay::SkipPromptBox()) {
+  if (PortOverlay::SkipPromptBox() && !PortSkipPrompt::Unavailable()) {
     // The game draws the prompt (port_skip_prompt.h); this only takes a tap or click on it.
     const PortGameUi::ScreenRect rect = PortSkipPrompt::LastRect();
     if (!rect.valid) {
