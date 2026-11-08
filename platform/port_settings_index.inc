@@ -238,6 +238,7 @@
 {"Debug", "", "Cheats", "Boost Ball duration", "boost ball longer time cheat"},
 {"Debug", "", "Cheats", "Boost anywhere", "boost ball air midair spring bomb jump cheat"},
 {"Debug", "", "Cheats", "Steer while boosting", "boost ball turn steer cheat"},
+{"Debug", "", "Cheats", "Phazon shot anywhere", "phazon beam charge shot dark samus final fight cheat"},
 {"Debug", "", "Cheats", "Full health", "heal energy refill"},
 {"Debug", "", "Cheats", "Grant everything", "items all upgrades"},
 {"Debug", "", "Cheats", "Combo beam ammo cost", "super combo beam ammo cost cheat reset"},
