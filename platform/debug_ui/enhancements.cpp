@@ -32,6 +32,10 @@ void DrawEnhancementsTab() {
   ImGui::SeparatorText("Pace");
   // The game reads this every frame in its cinematic flow state.
   Changed(ImGui::Checkbox("Skippable cutscenes", &sSkipCinematics));
+  Changed(ImGui::Checkbox("Game-style skip prompt", &sSkipPromptBox));
+  ItemHelp("The first press while a cutscene plays asks \"Skip cutscene?\" in a box drawn like the "
+           "game's own, at the bottom of the screen; a second press skips. Off: a plain "
+           "\"Press [A] to skip\" label.");
   // Read when a pickup is touched and when a map station's message box comes up.
   int seamless = sSeamlessPickups;
   if (ImGui::Combo("Seamless item pickups", &seamless, "Off\0" "All\0" "Repeats only\0")) {

@@ -49,6 +49,7 @@
 #include "port_third_person.h"
 #include "port_overlay.h"
 #include "port_game_ui.h"
+#include "port_skip_prompt.h"
 #include "port_pointer.h"
 #include "GuiSys/CGuiModel.hpp"
 #include <algorithm>
@@ -467,6 +468,8 @@ void CInGameGuiManager::Draw(const CStateManager& mgr) const {
     mMessageScreen->Draw();
   }
 #ifdef TARGET_PC
+  // Port: the armed cinematic skip's "Skip cutscene?" box, over a playing cutscene (port_skip_prompt.h).
+  PortSkipPrompt::Draw();
   PortGameUi::Dev::Draw(); // the console's `gameui` test box (port_game_ui.h)
 #endif
   if (!mPauseScreen.null()) {

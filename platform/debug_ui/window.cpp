@@ -6,6 +6,7 @@
 
 #include "port_build_info.h"
 #include "port_env.h"
+#include "port_skip_prompt.h"
 #include "port_input_remap_ui.h"
 #include "port_mouse.h"
 #include "port_overlay.h"
@@ -540,6 +541,29 @@ ImTextureID SkipConfirmIcon(float& aspect) {
 void DrawSkipConfirm() {
   const float alpha = PortOverlay::SkipConfirmAlpha();
   if (ImGui::GetCurrentContext() == nullptr || alpha <= 0.f) {
+    return;
+  }
+  if (PortOverlay::SkipPromptBox()) {
+    // The game draws the prompt (port_skip_prompt.h); this only takes a tap or click on it.
+    const PortGameUi::ScreenRect rect = PortSkipPrompt::LastRect();
+    if (!rect.valid) {
+      return;
+    }
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(vp->Pos.x + rect.x0 * vp->Size.x, vp->Pos.y + rect.y0 * vp->Size.y));
+    ImGui::SetNextWindowSize(ImVec2((rect.x1 - rect.x0) * vp->Size.x, (rect.y1 - rect.y0) * vp->Size.y));
+    ImGui::SetNextWindowBgAlpha(0.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+    if (ImGui::Begin("##skip-confirm-box", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav |
+                         ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings |
+                         ImGuiWindowFlags_NoBackground)) {
+      if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+        PortOverlay::SkipConfirmTap();
+      }
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
     return;
   }
   float aspect = 1.f;

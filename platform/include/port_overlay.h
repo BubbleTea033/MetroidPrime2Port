@@ -76,6 +76,10 @@ void SkipConfirmArm();
 void SkipConfirmDisarm();
 // 0..1 for the prompt's draw (fades out over its last half second), 0 when not armed.
 float SkipConfirmAlpha();
+// Enhancements > Pace > Game-style skip prompt (`skip_prompt_box`, `MP2_SKIP_PROMPT_BOX`; on by
+// default): the armed skip's prompt is a compact game message box at the bottom of the screen
+// (port_skip_prompt.h); off, the overlay's "Press [A] to skip".
+bool SkipPromptBox();
 // A tap/click on the prompt happened since the last call (the game then counts it as the second press).
 void SkipConfirmTap();
 bool TakeSkipConfirmTap();

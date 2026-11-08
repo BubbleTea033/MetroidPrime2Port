@@ -322,6 +322,7 @@ bool sGameOptionsRestored = false;
 const SettingKey kSettingKeys[] = {
     BoolKey< &sOriginalExperience >("original_experience"),
     BoolKey< &sSkipCinematics >("skip_cinematics"),
+    BoolKey< &sSkipPromptBox >("skip_prompt_box"),
     // 0/1 (or a flag, as the checkbox it was wrote) and 2 or `repeats` (PortOverlay::ESeamlessPickups).
     {"seamless_pickups",
      [](const std::string& value) {

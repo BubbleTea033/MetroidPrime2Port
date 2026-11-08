@@ -59,6 +59,7 @@ extern "C" void AIPortSetOutputGain(float gain);
 namespace PortOverlayState {
 
 bool sSkipCinematics = false;
+bool sSkipPromptBox = true;
 int sSeamlessPickups = PortOverlay::kSeamlessPickups_Off;
 // `MP2_LOG_FILE`: whether stdout and stderr also go to a file (F1 > Testing, console `logfile`).
 // PortLogFile::Start reads it before Aurora comes up, so the row only reports the state the next

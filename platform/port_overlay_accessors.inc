@@ -46,6 +46,7 @@
 
 PORT_GET_BOOL_RETAIL(SkipCinematics, false, "MP2_SKIP_CINEMATICS", sSkipCinematics)
 PORT_SET(SetSkipCinematics, bool, sSkipCinematics)
+PORT_GET_BOOL(SkipPromptBox, "MP2_SKIP_PROMPT_BOX", sSkipPromptBox)
 PORT_GET_BOOL(HideHelmet, "MP2_NO_HELMET", sHideHelmet)
 PORT_GET_BOOL(HideVisorEffects, "MP2_NO_VISOR_FX", sHideVisorEffects)
 PORT_GET_BOOL_RETAIL(CinemaBars, true, "MP2_CINEMA_BARS", sCinemaBars)

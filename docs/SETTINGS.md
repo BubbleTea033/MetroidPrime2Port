@@ -81,6 +81,10 @@ Game page:
   charge, auto-aim (on). Your saved values are kept and return when it is switched off. Mods, input,
   video and audio settings are not affected.
 - `skip_cinematics`: Enhancements > Pace > Skippable cutscenes.
+- `skip_prompt_box`: Enhancements > Pace > Game-style skip prompt (default on; env
+  `MP2_SKIP_PROMPT_BOX`). The armed skip asks "Skip cutscene?" in a compact game message box at the
+  bottom of the screen (platform/port_skip_prompt.cpp, built with platform/port_game_ui.cpp); off,
+  the overlay's "Press [A] to skip".
 - `seamless_pickups`: Enhancements > Pace > Seamless item pickups: 0 Off (default), 1 All,
   2 Repeats only (a saved checkbox's 0/1 reads the same); env `MP2_SEAMLESS_PICKUPS` (a flag, or
   `2`/`repeats`), console `seamlesspickups`. Repeats only applies it to a pickup whose item the
