@@ -224,6 +224,13 @@ to the Xbox layout (Z=rb, L/R=lt/rt, C stick=right stick, D-pad=dpad). `v1.DETAC
 rad/s, positive yaw turns right; no commas, they separate tokens) and holds it until the next GYRO token;
 the console equivalent is `vpad 1 gyro 0.8 0`. Logged as `[vpad-input]`. Every virtual pad has a gyro (no accel).
 
+Physical-controller and keyboard paths (presets, Aurora mappings, prompts), which virtual pads skip:
+`tools/drivers/uinput_pad.py <log> "800:lt+rt+a;1000:lt+rs+b"` creates an Xbox 360-style uinput pad (needs
+`/dev/uinput` access, the `input` group; SDL sees a real controller, so `padpreset` applies) and holds those
+inputs when the run log shows the console's `[at 800]` line (put a console command at `@f800`).
+`tools/drivers/xtest_keys.py :<display> <log> "700:q+e+z"` does the same with XTEST keys on the run's Xvfb.
+Start them before the run; `HOLD=<s>` sets the hold (0.6). The uinput pad is system-wide while it lives.
+
 ## Area regression sweep (any world, shards, START-free)
 
     USERDIR=/tmp/opencode/u_a10 tools/sweep_areas.sh            # TAG/SHARDS/DWELL/COUNT to taste
