@@ -251,14 +251,6 @@ void DrawCheatsSection() {
   ImGui::SetItemTooltip("A full charge turns into the Phazon shot of the final fight against Dark Samus, "
                         "in any room and with any beam, at no ammo cost. Needs the Charge Beam. "
                         "Not saved.");
-  ImGui::BeginDisabled(!PortOverlay::PhazonShotSet());
-  int phazonCost = PortOverlay::PhazonShotCost();
-  if (CheatSlider("Phazon shot energy cost", phazonCost, PortOverlay::kPhazonShotCostMax)) {
-    PortOverlay::SetPhazonShotCost(phazonCost);
-  }
-  ImGui::SetItemTooltip("Energy each Phazon shot takes. It never takes the last unit, and costs nothing "
-                        "in God mode. Not saved.");
-  ImGui::EndDisabled();
   ImGui::EndDisabled();
 
   CPlayerState* ps = gpGameState != nullptr ? gpGameState->GetPlayerState().GetPtr() : nullptr;

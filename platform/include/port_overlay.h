@@ -128,15 +128,11 @@ bool BoostSteerSet();
 bool BoostSteer();
 void SetBoostSteer(bool enabled);
 // Cheat (F1 > Cheats, console `phazon`): a full charge turns into the final fight's Phazon shot
-// (the one absorbed Phazon shots give, CPlayerGun::PortCheatPhazonCharge), anywhere, for
-// PhazonShotCost energy a shot (0 to kPhazonShotCostMax; never below 1 energy, free in God mode).
-// Never saved; off in the Original experience.
-constexpr int kPhazonShotCostMax = 99;
+// (the one absorbed Phazon shots give, CPlayerGun::PortCheatPhazonCharge), anywhere. Never saved;
+// off in the Original experience.
 bool PhazonShotSet();
 bool PhazonShot();
 void SetPhazonShot(bool enabled);
-int PhazonShotCost();
-void SetPhazonShotCost(int energy);
 // Cheat (F1 > Cheats, a checkbox per counter; `MP2_INFINITE_AMMO=1` turns on all four): firing
 // spends none of the chosen ammo (CPlayerState::DecrementAmmoAndDisplayAlertIfOut). Never saved.
 enum : unsigned {

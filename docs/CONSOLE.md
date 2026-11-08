@@ -30,7 +30,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `nodarkair <0|1>` — no Dark Aether air damage (the F1 cheat)
 - `moonjump [0|1]` — moon jump (the F1 cheat): holding jump in the air keeps Samus rising, on foot only; no argument prints it. Not saved; set but inactive under Original experience (`(refused: Original experience)`)
 - `boost [speed <1..10>] [time <1..10>] [air 0|1] [steer 0|1]` — the F1 Boost Ball cheats: push and boosted-time scales, boosting in the air (and through bomb/spring jumps), steering a boosted ball; prints all four. Not saved; refused as `moonjump`. Bare `boost` releases a boost (below)
-- `phazon [0|1] [cost <0..99>]` — Phazon shot anywhere (the F1 cheat, issue #100): a full charge fires the final Dark Samus fight's Phazon shot with any beam, at no ammo cost, for `cost` energy a shot (default 10; never takes the last unit, free in God mode); no argument prints it. Not saved; refused as `moonjump`
+- `phazon [0|1]` — Phazon shot anywhere (the F1 cheat, issue #100): a full charge fires the final Dark Samus fight's Phazon shot with any beam, at no ammo cost; no argument prints it. Not saved; refused as `moonjump`
 - `combocost [0..30]`, `combomissiles [0..5]`, `beamammo [50..100]` — combo beam ammo cost, combo missile cost, Dark/Light ammo per capacity pickup (F1 Cheats, each with a Reset); no argument prints it
 - `infammo [all|missile|powerbomb|dark|light] [0|1]` — infinite ammo per counter (fire at zero, HUD shows ∞, real counts and pickups kept; F1 Cheats); no 0|1 flips
 - `mpforce <0|1>` — IsMultiplayer reports true (multiplayer-only arms)

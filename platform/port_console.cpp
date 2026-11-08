@@ -1222,35 +1222,23 @@ void CmdBoostCheats(const Args& args, std::string& out) {
   out += line;
 }
 
-// phazon [0|1] [cost <energy>]: the F1 Cheats "Phazon shot anywhere" row.
+// phazon [0|1]: the F1 Cheats "Phazon shot anywhere" box.
 void CmdPhazon(CStateManager&, const Args& args, std::string& out) {
-  bool on = PortOverlay::PhazonShotSet();
-  int cost = PortOverlay::PhazonShotCost();
-  size_t i = 1;
-  if (i < args.size() && std::string(args[i]) != "cost") {
-    if (!ParseSwitch(std::string(args[i]), on)) {
+  if (args.size() > 2) {
+    Usage();
+    return;
+  }
+  if (args.size() == 2) {
+    bool on = false;
+    if (!ParseSwitch(std::string(args[1]), on)) {
       Usage();
       return;
     }
-    ++i;
+    PortOverlay::SetPhazonShot(on);
   }
-  if (i < args.size()) {
-    const std::string value = i + 1 < args.size() ? std::string(args[i + 1]) : std::string();
-    char* end = nullptr;
-    const long number = std::strtol(value.c_str(), &end, 10);
-    if (i + 2 != args.size() || end == value.c_str() || *end != '\0') {
-      Usage();
-      return;
-    }
-    cost = int(number < 0 ? 0 : number > PortOverlay::kPhazonShotCostMax ? PortOverlay::kPhazonShotCostMax
-                                                                         : number);
-  }
-  PortOverlay::SetPhazonShot(on);
-  PortOverlay::SetPhazonShotCost(cost);
-  char line[96];
-  std::snprintf(line, sizeof(line), "phazon %d cost %d%s\n", on ? 1 : 0, PortOverlay::PhazonShotCost(),
-                CheatRefused(on, PortOverlay::PhazonShot()));
-  out += line;
+  out += PortOverlay::PhazonShotSet() ? "phazon 1" : "phazon 0";
+  out += CheatRefused(PortOverlay::PhazonShotSet(), PortOverlay::PhazonShot());
+  out += '\n';
 }
 
 // infammo [all|missile|powerbomb|dark|light] [0|1]: the F1 Cheats "Infinite" boxes; no 0|1 flips.
@@ -5920,6 +5908,9 @@ const CommandSpec kCommands[] = {
       "                            to it and turns it off\n"},
     {"moonjump", CmdMoonJump,
       "moonjump [0|1]              cheat: holding jump in the air keeps rising; no argument prints it\n"},
+    {"phazon", CmdPhazon,
+      "phazon [0|1]                cheat: a full charge fires the final fight's Phazon shot, anywhere;\n"
+      "                            no argument prints it\n"},
     {"thirdperson", CmdThirdPerson,
       "thirdperson [on|off] [distance <m>] [shoulder <m>] [height <m>]\n"
       "                            third-person camera (single player; F1 Video, third_person* settings)\n"},
@@ -5929,9 +5920,6 @@ const CommandSpec kCommands[] = {
       "livesplit [0|1|addr <host:port>|send <line>]  the LiveSplit link (the F1 setting); no argument: status\n"},
     {"touchact", CmdTouchAct,
       "touchact <actor id> <other id>  run an actor's touch handler for the other actor (coverage)\n"},
-    {"phazon", CmdPhazon,
-      "phazon [0|1] [cost <0..99>] cheat: a full charge fires the final fight's Phazon shot, for that\n"
-      "                            much energy a shot; no argument prints it\n"},
     {"trigcall", CmdTrigCall,
       "trigcall <id> <trigger name> [arg]  run one named trigger function of an actor once\n"},
     {"uevent", CmdUEvent,
