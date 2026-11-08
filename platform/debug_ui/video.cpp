@@ -291,9 +291,10 @@ void DrawVideoQuality() {
     sMsaa = msaa == 1 ? 4 : 1;
     Changed(true);
   }
-  // The two toasts are drawn by DrawUI (overlays.cpp), with the panel open or closed.
+  // The shader count and the F1 hint are drawn in the game's own box and text (port_shader_toast.h,
+  // port_menu_hint.h), with the panel open or closed.
   CheckboxTip("Show shader compilation", &sShowShaderCompilation,
-                  "A small progress bar while the shader cache compiles at startup (longest on the first\n"
+                  "A count at the top of the screen while the shader cache compiles at startup (longest on the first\n"
                   "start after an install or update). Draws whose shader isn't ready yet are skipped.");
   CheckboxTip("Show F1 hint at launch", &sShowMenuHint,
                   "A note in the top left corner for the first seconds of each launch saying how to\n"
@@ -783,50 +784,6 @@ void PlaceTopToast(const ImGuiViewport* viewport) {
 // Call between Begin and End of a toast placed with PlaceTopToast.
 void TopToastPlaced(const ImGuiViewport* viewport) {
   sTopToastNextY = ImGui::GetWindowPos().y - viewport->Pos.y + ImGui::GetWindowSize().y + 8.f;
-}
-
-// While the startup compile runs (the pipeline cache, queued before the first frame): after half a
-// second, a count and a bar since the toast opened. Once that queue has drained, shaders met in
-// game compile without it. From MP1's overlays.cpp, top centre.
-void DrawShaderCompilationToast() {
-  static double sQueuedSince = -1.0;
-  static uint32_t sBase = 0; // createdPipelines when the toast opened
-  static bool sStartupDone = false;
-  const AuroraStats* stats = aurora_get_stats();
-  if (stats != nullptr && stats->queuedPipelines == 0) {
-    sStartupDone = true;
-  }
-  if (!PortOverlay::ShowShaderCompilation() || stats == nullptr || sStartupDone) {
-    sQueuedSince = -1.0;
-    return;
-  }
-  const double now = ImGui::GetTime();
-  if (sQueuedSince < 0.0) {
-    sQueuedSince = now;
-    sBase = stats->createdPipelines;
-  }
-  if (now - sQueuedSince < 0.5) {
-    return;
-  }
-  const uint32_t done = stats->createdPipelines >= sBase ? stats->createdPipelines - sBase : 0;
-  const uint32_t total = done + stats->queuedPipelines;
-  const ImGuiViewport* viewport = ImGui::GetMainViewport();
-  PlaceTopToast(viewport);
-  ImGui::SetNextWindowBgAlpha(0.7f);
-  if (ImGui::Begin("##shader-compilation-toast", nullptr,
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
-                       ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings |
-                       ImGuiWindowFlags_AlwaysAutoResize)) {
-    TopToastPlaced(viewport);
-    char label[64];
-    std::snprintf(label, sizeof(label), "Compiling shaders %u / %u", total, total); // widest, so the count doesn't jitter
-    const float width = ImGui::CalcTextSize(label).x;
-    std::snprintf(label, sizeof(label), "Compiling shaders %u / %u", done, total);
-    ImGui::TextUnformatted(label);
-    ImGui::ProgressBar(total != 0 ? static_cast< float >(done) / static_cast< float >(total) : 0.f,
-                       ImVec2(width, std::max(6.f, ImGui::GetFontSize() * 0.4f)), "");
-  }
-  ImGui::End();
 }
 
 // Once per launch, for 12 s: a newer release than this build is out (MP1's DrawUpdateToast).

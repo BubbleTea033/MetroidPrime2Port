@@ -668,7 +668,6 @@ void DrawUI() {
   DrawDiscReadFailedAlert();
   DrawIgtTimer();
   DrawSkipConfirm();
-  DrawShaderCompilationToast();
   DrawUpdateToast();
   DrawNoteToast();
   DrawPhotoUI();
