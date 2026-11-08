@@ -35,6 +35,7 @@ extern int sLanguage;
 extern int sElevatorRide;
 extern int sPortalTransition;
 extern int sRotatingRooms;
+extern int sTravelCutscenes;
 extern int sComboBeamCost;
 extern int sComboMissileCost;
 extern int sBeamAmmoPerExpansion;

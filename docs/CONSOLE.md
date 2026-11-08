@@ -78,7 +78,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `noise <type> [x y z]` — InformListeners at the player (6 = safe-zone noise)
 - `gameevent <ev> [src] [tgt] [value] [as <proxyType>]` — deliver a game event to every CScriptPlayerProxy listener (ev: score kill generic scan damage stop spawn; value: float for damage, state for generic)
 - `fastmorph <0|1>` — fast morph: the morph transition takes 0.2 s, not a second
-- `scanspeed [50..400]`, `elevator [original|fast|skip]`, `portal [original|fast|skip]`, `rooms [original|fast]`, `original [0|1]`, `igt [0|1]`, `language [0..6]` — the Game page's
+- `scanspeed [50..400]`, `elevator [original|fast|skip]`, `portal [original|fast|skip]`, `rooms [original|fast]`, `travel [original|fast]`, `original [0|1]`, `igt [0|1]`, `language [0..6]` — the Game page's
   scan speed, elevator ride, Original experience and on-screen time (`scan_speed`, `elevator_ride`,
   `original_experience`, `igt_timer` in SETTINGS.md); no argument prints the value
 - `fov [30..120|retail] | gun [0|1] | ball [0|1] | cannon [45..120]` — first-person FOV (`fov`), whether the arm cannon follows it (`gun_follows_fov`), whether the morph ball's cameras do (`ball_follows_fov`), the cannon's own FOV (`gun_fov`); no value prints it

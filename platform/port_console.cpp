@@ -2009,6 +2009,26 @@ void CmdRooms(CStateManager&, const Args& args, std::string& out) {
   out += std::string("rooms ") + kNames[PortOverlay::RotatingRooms()] + "\n";
 }
 
+// travel [original|fast]: the elevators' and light beam teleporters' cutscenes (travel_cutscenes);
+// no argument prints it.
+void CmdTravel(CStateManager&, const Args& args, std::string& out) {
+  static const char* const kNames[] = {"original", "fast"};
+  if (args.size() > 1) {
+    int mode = -1;
+    for (int i = 0; i < 2; ++i) {
+      if (args[1] == kNames[i]) {
+        mode = i;
+      }
+    }
+    if (mode < 0) {
+      Usage();
+      return;
+    }
+    PortOverlay::SetTravelCutscenes(mode);
+  }
+  out += std::string("travel ") + kNames[PortOverlay::TravelCutscenes()] + "\n";
+}
+
 void CmdPortal(CStateManager&, const Args& args, std::string& out) {
   static const char* const kNames[] = {"original", "fast", "skip"};
   if (args.size() > 1) {
@@ -5807,6 +5827,8 @@ const CommandSpec kCommands[] = {
       "beamammo [50..100]          Dark/Light ammo per capacity pickup (beam_ammo_per_expansion); no argument prints it\n"},
     {"rooms", CmdRooms,
       "rooms [original|fast]      the energy controller rooms' turning-room cutscene (rotating_rooms); no argument prints it\n"},
+    {"travel", CmdTravel,
+      "travel [original|fast]     elevator and light beam teleporter cutscenes (travel_cutscenes); no argument prints it\n"},
     {"portal", CmdPortal,
       "portal [original|fast|skip] the light/dark world portal ride (portal_transition); no argument prints it\n"},
     {"elevator", CmdElevator,

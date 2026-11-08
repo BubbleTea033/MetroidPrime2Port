@@ -4423,6 +4423,13 @@ void CStateManager::Update(float inputDt, CArchitectureQueue& queue) {
 #endif
   float dt = inputDt;
   float cameraDt = inputDt;
+#ifdef TARGET_PC
+  // Port: Elevator and light beam cutscenes = Fast runs an elevator's or a light beam teleporter's
+  // departure and arrival cutscenes at the game's own double speed. Asked every update: it also
+  // times out an arrival that starts no cutscene.
+  const bool portTravelFast = PortOverlay::TravelSequenceActive(mUpdateFrameIdx, inputDt) &&
+                              PortOverlay::TravelCutscenes() == PortOverlay::kTravelCutscenes_Fast;
+#endif
   if (mCameraManagers[0]->IsInCinematicCamera()) {
     const CCinematicCamera* camera = mCameraManagers[0]->GetCinematicCamera();
     if ((camera->GetFlags() & 0x200) != 0) {
@@ -4434,6 +4441,7 @@ void CStateManager::Update(float inputDt, CArchitectureQueue& queue) {
         // game's own double speed.
         || (PortOverlay::RotatingRooms() == PortOverlay::kRotatingRooms_Fast &&
             PortOverlay::RotatingSequenceActive(mUpdateFrameIdx))
+        || portTravelFast
 #endif
     ) {
       dt *= 2.f;

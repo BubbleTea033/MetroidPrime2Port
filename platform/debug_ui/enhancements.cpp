@@ -94,6 +94,16 @@ void DrawEnhancementsTab() {
                                 static_cast< int >(PortOverlay::kRotatingRooms_Fast));
     Changed(true);
   }
+  int travelCutscenes = sTravelCutscenes;
+  ImGui::SetNextItemWidth(rideWidth);
+  if (ImGui::Combo("Elevator and light beam cutscenes", &travelCutscenes, "Original\0" "Fast\0")) {
+    sTravelCutscenes = std::clamp(travelCutscenes,
+                                  static_cast< int >(PortOverlay::kTravelCutscenes_Original),
+                                  static_cast< int >(PortOverlay::kTravelCutscenes_Fast));
+    Changed(true);
+  }
+  ItemHelp("Fast plays the cutscenes in the room as you leave or arrive by elevator or light beam "
+           "teleporter at double speed. The ride between the worlds is Elevator ride's.");
 
   ImGui::SeparatorText("Morph Ball");
   Changed(ImGui::Checkbox("Fast Morph", &sFastMorph));

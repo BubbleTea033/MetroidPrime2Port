@@ -385,6 +385,8 @@ const SettingKey kSettingKeys[] = {
         "elevator_ride", "0", "2"),
     IntKey< &sRotatingRooms, PortOverlay::kRotatingRooms_Original, PortOverlay::kRotatingRooms_Fast >(
         "rotating_rooms", "0", "1"),
+    IntKey< &sTravelCutscenes, PortOverlay::kTravelCutscenes_Original, PortOverlay::kTravelCutscenes_Fast >(
+        "travel_cutscenes", "0", "1"),
     IntKey< &sComboBeamCost, 0, PortOverlay::kComboBeamCostMax >("combo_beam_cost", "0", "30"),
     IntKey< &sComboMissileCost, 0, PortOverlay::kComboMissileCostMax >("combo_missile_cost", "0",
                                                                        "5"),

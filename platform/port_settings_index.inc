@@ -218,6 +218,7 @@
 {"Enhancements", "", "Pace", "Elevator ride cutscene", "world transition skip fast loading speed"},
 {"Enhancements", "", "Pace", "Portal transition", "light dark world portal ride skip fast speed"},
 {"Enhancements", "", "Pace", "Energy controller access cutscene", "rotating rooms energy controller bomb slot cutscene rotate turn fast speed"},
+{"Enhancements", "", "Pace", "Elevator and light beam cutscenes", "elevator light beam teleporter transport travel sun generator sky temple departure arrival cutscene fast speed"},
 {"Enhancements", "", "Morph Ball", "Fast Morph", "morph ball speed quick transform"},
 {"Enhancements", "", "Morph Ball", "Spring Ball", "morph ball jump bomb c-stick cstick"},
 {"Enhancements", "", "Hints", "Hints", "hints help enable disable toggle"},

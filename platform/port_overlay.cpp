@@ -86,6 +86,7 @@ int sLanguage = 0;
 int sElevatorRide = PortOverlay::kElevatorRide_Original;
 int sPortalTransition = PortOverlay::kPortalTransition_Original;
 int sRotatingRooms = PortOverlay::kRotatingRooms_Original;
+int sTravelCutscenes = PortOverlay::kTravelCutscenes_Original;
 int sComboBeamCost = PortOverlay::kComboBeamCostMax;
 int sComboMissileCost = PortOverlay::kComboMissileCostMax;
 int sBeamAmmoPerExpansion = PortOverlay::kBeamAmmoPerExpansionDefault;
@@ -1763,6 +1764,84 @@ void NoteRotatingSequence(unsigned frame) {
 
 bool RotatingSequenceActive(unsigned frame) {
   return sRotatingSequenceSeen && frame - sRotatingSequenceFrame <= 2;
+}
+
+int TravelCutscenes() {
+  ReadEnv();
+  if (OriginalExperience()) {
+    return kTravelCutscenes_Original;
+  }
+  const char* env = port::EnvString("MP2_TRAVEL_CUTSCENES");
+  if (env != nullptr && std::strcmp(env, "original") == 0) {
+    return kTravelCutscenes_Original;
+  }
+  if (env != nullptr && std::strcmp(env, "fast") == 0) {
+    return kTravelCutscenes_Fast;
+  }
+  return EnvIntIn("MP2_TRAVEL_CUTSCENES", sTravelCutscenes, kTravelCutscenes_Original,
+                  kTravelCutscenes_Fast);
+}
+
+void SetTravelCutscenes(int mode) {
+  ReadEnv();
+  sTravelCutscenes = std::clamp(mode, static_cast< int >(kTravelCutscenes_Original),
+                                static_cast< int >(kTravelCutscenes_Fast));
+  Persist();
+}
+
+static unsigned sTravelSequenceFrame = 0;
+static bool sTravelSequenceSeen = false;
+static bool sTravelArrivalPending = false;
+static float sTravelArrivalWait = 0.f;
+static bool sTravelArrivalSet = false;
+static unsigned short sTravelArrivalUid = 0;
+// Game seconds an arrival waits for its cutscene; the arrival sequences start on the first updates.
+static const float kTravelArrivalWait = 3.f;
+
+void NoteTravelSequence(unsigned frame) {
+  sTravelSequenceFrame = frame;
+  sTravelSequenceSeen = true;
+}
+
+void NoteTravelDeparture() {
+  // The next world's update count and uids start again: nothing noted here may match there.
+  sTravelSequenceSeen = false;
+  sTravelArrivalSet = false;
+  sTravelArrivalPending = true;
+  sTravelArrivalWait = 0.f;
+}
+
+bool TravelArrivalPending() { return sTravelArrivalPending; }
+
+void SetTravelArrival(unsigned short uid, unsigned frame) {
+  sTravelArrivalPending = false;
+  sTravelArrivalSet = true;
+  sTravelArrivalUid = uid;
+  // Counts as noted now, so the sequence keeps the uid until its first Think notes it.
+  NoteTravelSequence(frame);
+}
+
+bool IsTravelArrival(unsigned short uid) { return sTravelArrivalSet && sTravelArrivalUid == uid; }
+
+bool TravelSequenceActive(unsigned frame, float dt) {
+  if (sTravelArrivalPending) {
+    sTravelArrivalWait += dt;
+    if (sTravelArrivalWait > kTravelArrivalWait) {
+      sTravelArrivalPending = false;
+    }
+  }
+  const bool active = sTravelSequenceSeen && frame - sTravelSequenceFrame <= 2;
+  // The arrival sequence has stopped (or the setting is Original): its uid may be reused.
+  if (!active) {
+    sTravelArrivalSet = false;
+  }
+  static bool sWasActive = false;
+  if (active != sWasActive) {
+    std::fprintf(stderr, "[travel] a travel cutscene sequence %s at update %u\n",
+                 active ? "runs" : "ended", frame);
+    sWasActive = active;
+  }
+  return active;
 }
 
 int PortalTransition() {

@@ -77,7 +77,7 @@ Game page:
 - `original_experience`: Cutscenes > Original experience (default off); env
   `MP2_ORIGINAL_EXPERIENCE`, console `original`. While on, the port's gameplay and cutscene tweaks read
   as retail and their rows are greyed: skippable cutscenes, seamless item pickups, world name on load, walk speed, hint
-  delay, scan speed, elevator ride, portal transition, rotating rooms, fast morph, spring ball, the Enhancements page, toggle lock-on, sticky charge, remastered
+  delay, scan speed, elevator ride, portal transition, rotating rooms, travel cutscenes, fast morph, spring ball, the Enhancements page, toggle lock-on, sticky charge, remastered
   charge, auto-aim (on). Your saved values are kept and return when it is switched off. Mods, input,
   video and audio settings are not affected.
 - `skip_cinematics`: Enhancements > Pace > Skippable cutscenes.
@@ -123,6 +123,14 @@ Game page:
   room turning) at the game's own double speed: while a cinematic camera is active and a timed,
   one-shot CScriptActorRotate of 5 s or more plays (any such room, no list), `CStateManager::Update`
   doubles dt and the camera's dt. Other cutscenes and gameplay are unchanged.
+- `travel_cutscenes`: Enhancements > Pace > Elevator and light beam cutscenes (0 original, 1 fast);
+  env `MP2_TRAVEL_CUTSCENES` (`original|fast`), console `travel`. Fast runs the in-room departure
+  and arrival cutscenes of the elevators and the light beam teleporters (energy controllers, Great
+  Temple, Sky Temple Gateway; #86) at the game's own double speed, as rotating rooms does: under a
+  cinematic camera while a CScriptSequenceTimer runs that sends to a CScriptWorldTeleporter
+  (directly, or through one CScriptRelay), or that is the first camera sequence started after a
+  teleporter's world change (the light beam arrivals reach no teleporter; 3 s timeout). No room
+  list. The ride between the worlds is `elevator_ride`'s.
 - `combo_beam_cost`: Debug > Cheats > Combo beam ammo cost (0 to 30, default 30 = retail); env
   `MP2_COMBO_BEAM_COST`, console `combocost`. The beam ammo a combo (super missile) takes; a Reset button
   restores 30. Ignored with Original experience.

@@ -3,6 +3,19 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-08: #86 item 5, Elevator and light beam cutscenes Original/Fast
+
+- New `travel_cutscenes` (Enhancements > Pace; env `MP2_TRAVEL_CUTSCENES`, console `travel`): Fast doubles dt and
+  the camera's dt under a cinematic camera while a travel sequence runs, as Rotating rooms does. Departure = a
+  running CScriptSequenceTimer that sends to a CScriptWorldTeleporter directly (elevators) or through one
+  CScriptRelay (light beams' DoTeleportToChosenWorld). Arrival = the first camera SQTR started within 3 s after
+  the teleporter's world change (light-beam arrivals start from SPWN -> SRLY and reach no TEL1). No member on
+  CScriptSequenceTimer (it would change the save-state schema hash); the arrival is kept by packed uid.
+- Verified (MP2_NEW_GAME, SKIP_INTRO=0, console-driven): 00_elev_temple_sand_a departure, world change ~150
+  updates after the trigger vs ~310 Original, arrival window 193 updates; 00_sand_generator "Teleport In"
+  (`layer 6`, send SRLY 1827013d SetToZero): cinematic camera ~260 vs ~540 updates. Log: `[travel] ... runs|ended`.
+- #86 items 1-4 reported only, not implemented. No reply posted.
+
 ## 2026-11-08: #111 Rezbit virus reboot unreachable with the dual-stick presets
 
 - Retail breaks the virus on L + R + B (`CHintState.cpp` kBHT_TriggersAndB). Modern and Remastered put Fire on RT,

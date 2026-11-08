@@ -295,6 +295,24 @@ void SetRotatingRooms(int mode);
 // asks whether one played in the last updates (frame is CStateManager::GetUpdateFrameIdx).
 void NoteRotatingSequence(unsigned frame);
 bool RotatingSequenceActive(unsigned frame);
+// Elevator and light beam cutscenes (`MP2_TRAVEL_CUTSCENES`: original|fast): the in-room departure
+// and arrival cutscenes of the elevators and the light beam teleporters (energy controllers, Great
+// Temple, Sky Temple Gateway). Fast runs them at the game's own double speed under a cinematic
+// camera; the ride between the worlds is Elevator ride's.
+enum ETravelCutscenes { kTravelCutscenes_Original, kTravelCutscenes_Fast };
+int TravelCutscenes();
+void SetTravelCutscenes(int mode);
+// CScriptSequenceTimer::Think reports a running travel sequence each update (frame is
+// CStateManager::GetUpdateFrameIdx). CScriptWorldTeleporter reports a world change: the next
+// world's first camera sequence to start (TravelArrivalPending) is the arrival, kept by its packed
+// uid (SetTravelArrival, IsTravelArrival) until it stops running; an arrival that starts none
+// within a few seconds is dropped. CStateManager::Update asks TravelSequenceActive every update.
+void NoteTravelSequence(unsigned frame);
+void NoteTravelDeparture();
+bool TravelArrivalPending();
+void SetTravelArrival(unsigned short uid, unsigned frame);
+bool IsTravelArrival(unsigned short uid);
+bool TravelSequenceActive(unsigned frame, float dt);
 // Text language (`MP2_LANGUAGE`: 0 English, 1 German, 2 French, 3 Spanish, 4 Italian, 5 Dutch,
 // 6 Japanese): CMain::GetLanguage returns it at startup and the overlay re-applies it every frame
 // (CStringTable::SetLanguage), so a change shows at once in text read from then on; a screen that
