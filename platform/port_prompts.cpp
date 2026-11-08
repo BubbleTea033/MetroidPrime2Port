@@ -10,6 +10,7 @@
 #include "port_prompt_ring_math.h"
 
 #include "input/port_input_devices.h"
+#include "port_input_bindings.h"
 #include "port_textures.h"
 
 #include <dolphin/gx.h>
@@ -1533,22 +1534,24 @@ bool PadActive() {
   return sActiveInput.load(std::memory_order_relaxed) == ActiveInput::Pad && PADGetIndexForPort(PAD_CHAN0) >= 0;
 }
 
-bool PadRThumbButton() {
-  const u32 native = PadNativeForButton(PAD_TRIGGER_R);
-  return native == SDL_GAMEPAD_BUTTON_RIGHT_STICK ||
-         (native >= SDL_GAMEPAD_BUTTON_SOUTH && native <= SDL_GAMEPAD_BUTTON_NORTH);
-}
-
-const wchar_t* RezbitRebootText(const wchar_t* text) {
-  static std::wstring out;
-  static constexpr wchar_t kR[] = L"&image=D89B9F7C;";
-  if (text == nullptr || !PadActive() || !PadRThumbButton()) return text;
-  out = text;
-  const size_t at = out.find(kR);
-  if (at == std::wstring::npos) return text;
-  // The A image with the crop the disc's other A prompts use; it is re-iconed to the Fire button.
-  out.replace(at, std::size(kR) - 1, L"&image=SI,0.70,0.68,D523DE3B;");
-  return out.c_str();
+std::string DescribeAsset(uint32_t id) {
+  const PromptAsset* asset = FindAsset(id);
+  if (asset == nullptr) return "not a prompt image";
+  const char* device = ActiveDevice();
+  const u32 native = asset->prompt < PROMPT_STICK ? PadNativeForButton(static_cast<PADButton>(asset->prompt))
+                                                  : PAD_NATIVE_BUTTON_INVALID;
+  char line[160];
+  std::snprintf(line, sizeof(line), "prompt 0x%X, device %s, pad native %d, icon ", asset->prompt, device,
+                static_cast<int>(native));
+  const std::string stem = IconStemForPrompt(asset->prompt, device);
+  std::string out = line + (stem.empty() ? std::string("(static art)") : stem);
+  PortInput::Input in;
+  if (asset->prompt < PROMPT_STICK &&
+      PortInputDevices::PromptButtonInput(asset->prompt, PortInput::Family::Pad, in)) {
+    out += ", pad binding " + PortInput::InputToText(in);
+  }
+  if (asset->prompt < PROMPT_STICK) out += "\n    " + PortInputDevices::DescribePromptBindings(asset->prompt);
+  return out;
 }
 
 void NoteTouchInput(bool xboxLayout) {

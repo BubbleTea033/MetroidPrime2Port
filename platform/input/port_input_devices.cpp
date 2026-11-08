@@ -1369,6 +1369,18 @@ bool PromptButtonInput(unsigned padButton, PortInput::Family family, Input& out)
   return PromptInputFor({menu->menu, game}, family, out);
 }
 
+std::string DescribePromptBindings(unsigned padButton) {
+  const Action game = PadBitAction(padButton);
+  std::string out = "contexts " + PortInput::ContextsToText(GameContexts());
+  std::lock_guard lock(sPromptMutex);
+  for (const Binding& b : sPromptBindings) {
+    if (b.action != game) continue;
+    out += "; " + PortInput::InputToText(b.inputs[0]) + " in " + PortInput::ContextsToText(b.contexts);
+    if (b.blocked != 0) out += " blocked " + PortInput::ContextsToText(b.blocked);
+  }
+  return out;
+}
+
 bool PromptAxisInput(PADAxis axis, PortInput::Family family, Input& out) {
   // On the map a bound map row (rotate on the control stick, pan on the C-stick) comes first.
   const Action game = PadAxisAction(axis);
@@ -1446,16 +1458,37 @@ static void AddExtButtons(PADStatus& status, uint32_t padButtons) {
 // gets in the way, most of all with Fire moved onto RT (issue #12): out of the Morph Ball, where R
 // is the Spider Ball, the controller's R trigger stops pressing R and pulling the R analog. Free
 // look on any other input (the presets' right stick click, a key) stays.
+static bool RightTrigger(const Input& in) {
+  if (in.device == Device::PadAxis) return in.code == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER;
+  return in.device == Device::PadButton &&
+         (in.code == PAD_RAW_BUTTON_TRIGGER_RIGHT || in.code == PAD_RAW_BUTTON_TRIGGER_RIGHT_CLICK);
+}
+
+// The Rezbit virus breaks on L + R + B (CHintState's kBHT_TriggersAndB) and its memo draws R's
+// prompt. While the suit is infected the pad's R trigger presses R whatever the layout does with it:
+// Twin Stick Aim's block below would leave R with no input at all (the memo still drew RT), and the
+// dual-stick presets' R on the right stick click can't be held with Jump on a face button (#111).
+// The row goes first, so the memo's R prompt shows the trigger. The gun is off meanwhile, so the
+// trigger's own action (Fire there) does nothing.
+static void ApplyRezbitReboot(Profile& p, int player) {
+  if (!PortTouch::RezbitInfected(player)) return;
+  for (const Binding& b : p.bindings) {
+    if (b.action == Action::PadR && b.count == 1 && RightTrigger(b.inputs[0])) return;
+  }
+  Binding r;
+  r.action = Action::PadR;
+  r.inputs[0] = Make(Device::PadButton, PAD_RAW_BUTTON_TRIGGER_RIGHT_CLICK);
+  r.count = 1;
+  r.contexts = PortInput::kCtxAll;
+  p.bindings.insert(p.bindings.begin(), r);
+}
+
 static void ApplyTwinStickFreeAim(Profile& p, uint16_t contexts, int player = 0) {
   if (!PortMouse::StickEnabled(player) || (contexts & PortInput::kCtxMorphBall) != 0) return;
-  const auto rTrigger = [](const Input& in) {
-    if (in.device == Device::PadAxis) return in.code == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER;
-    return in.device == Device::PadButton &&
-           (in.code == PAD_RAW_BUTTON_TRIGGER_RIGHT || in.code == PAD_RAW_BUTTON_TRIGGER_RIGHT_CLICK);
-  };
+  if (PortTouch::RezbitInfected(player)) return; // ApplyRezbitReboot
   for (Binding& b : p.bindings) {
     if (b.action != Action::PadR && b.action != Action::RAnalog) continue;
-    if (std::any_of(b.inputs.begin(), b.inputs.begin() + b.count, rTrigger)) b.blocked |= PortInput::kCtxGameplay;
+    if (std::any_of(b.inputs.begin(), b.inputs.begin() + b.count, RightTrigger)) b.blocked |= PortInput::kCtxGameplay;
   }
 }
 
@@ -1508,6 +1541,7 @@ SPoll Poll(unsigned mouseHeld, bool focused) {
   PortInput::ApplyTargetRows(next);
   const uint16_t contexts = GameContexts();
   ApplyTwinStickFreeAim(next, contexts);
+  ApplyRezbitReboot(next, 0);
   if (!sInit || next != sProfile) {
     UpdatePromptBindings(next);
     sProfile = std::move(next);
@@ -1572,6 +1606,7 @@ bool PollPlayer(int port, PADStatus& status) {
   PortInput::ApplyTargetRows(next);
   const uint16_t contexts = GameContexts(port);
   ApplyTwinStickFreeAim(next, contexts, port);
+  ApplyRezbitReboot(next, port);
   if (!sInit[port] || next != profile) {
     profile = std::move(next);
     runtime.SetProfile(&profile);

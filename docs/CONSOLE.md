@@ -41,6 +41,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `pads` — the controller on each pad port 0-3 (players 1-4: `port N: <index> <name>` or `port N: none`) and the controller count; the F1 page's Player rows set it
 - `padport <index> <port>` / `padport clear <port>` — give controller `<index>` (see `pads`) pad port 0-3, or free a port (what the F1 Player combos call)
 - `padpreset <name> [port]` — apply a pad preset (`gamecube`, `remastered`, `modern`, `southpaw`) to the controller on pad port 0-3 (default 0; what the F1 remap page's Presets button does for its Player selector). Reports `no controller` for an empty port and a no-op for a virtual pad (Aurora ignores their mappings); only port 0 gets the keyboard/mouse overlay
+- `prompticon <hexid...>` — for each prompt image id (the hex in a string's `&image=`, see `strg ... raw`): the GameCube button it stands for, the device, the pad native button the bindings give it and the icon it is drawn with now
 - `keypreset <classic|mouse>` — apply a keyboard preset, as the F1 remap page's Presets buttons do
 - `remapport [port]` — the player (port 0-3) the F1 remap page's Player selector points at, which `padpreset` ignores (it takes its own port); no argument prints it
 - `padmap <port> [<btn> <in>]` — a port's GameCube buttons on its controller's Aurora mapping; with a button (`a`..`z`, `start`, `up`..`right`) and an input (`a`, `lb`, `lt`, `none`, an SDL number) binds it, swapping with the button that had it
@@ -143,7 +144,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `items` — power-up amounts and capacities
 - `world <world> [area]` — load another world (the MP1 console's `warp <world>`)
 - `worlds` — the memory card's world ids, areas and name tables
-- `strg <id|name> [index]` — a string table as the game loads it
+- `strg <id|name> [index [raw]]` — a string table as the game loads it; `raw` prints the string with its `&image=`/`&font=` tags
 - `give <item> [n] | take` — add an item (capacity and amount), or remove capacity (also `take`)
 - `press <a+b+...> [updates]` — hold pad buttons (0 updates: until the next press/stick)
 - `grapple <id> [d]` — wake a grapple point, stand d (8) units from it facing it, hold L

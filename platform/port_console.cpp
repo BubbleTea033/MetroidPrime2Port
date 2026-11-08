@@ -39,6 +39,7 @@
 #include "port_statedump.h"
 #include "port_env.h"
 #include "port_overlay_internal.h"
+#include "port_prompts.h"
 #include "port_video.h"
 #include "port_warp.h"
 #ifdef MP_PORT_COVERAGE
@@ -1120,7 +1121,19 @@ void CmdStrg(CStateManager&, const Args& args, std::string& out) {
     }
     std::snprintf(line, sizeof(line), "STRG %u [%d]: ", id, index);
     out += line;
-    out += Narrow(table->GetString(index));
+    if (args.size() > 3 && Str(args[3]) == "raw") {
+      // The text with its &image= / &font= tags, which Narrow strips (ASCII; others as \uXXXX).
+      for (const wchar_t* c = table->GetString(index); *c != 0; ++c) {
+        if (*c >= 0x20 && *c < 0x7f) {
+          out += static_cast< char >(*c);
+        } else {
+          std::snprintf(line, sizeof(line), "\\u%04X", static_cast< unsigned >(*c));
+          out += line;
+        }
+      }
+    } else {
+      out += Narrow(table->GetString(index));
+    }
     out += '\n';
     return;
   }
@@ -1471,6 +1484,20 @@ void CmdPadPreset(CStateManager&, const Args& args, std::string& out) {
   // Remap's path: the controller's mapping, plus that player's own pad rows and Morph Ball rows.
   PortInputRemap::ApplyPreset(PortInput::Family::Pad, name, static_cast<unsigned>(port));
   out += "port " + std::to_string(port) + " (" + info.name + "): preset " + Str(args[1]) + " applied\n";
+}
+
+// `prompticon <hexid...>`: what each prompt image (an &image= id in a string) stands for and the
+// icon it is drawn with now, on the device in use.
+void CmdPromptIcon(CStateManager&, const Args& args, std::string& out) {
+  if (args.size() < 2) {
+    Usage();
+    return;
+  }
+  for (size_t i = 1; i < args.size(); ++i) {
+    const std::string text = Str(args[i]);
+    const uint32_t id = static_cast< uint32_t >(std::strtoul(text.c_str(), nullptr, 16));
+    out += text + ": " + PortPrompts::DescribeAsset(id) + "\n";
+  }
 }
 
 // `keypreset <classic|mouse>`: the keyboard's preset, as the F1 remap page's Presets buttons apply it.
@@ -5708,6 +5735,8 @@ const CommandSpec kCommands[] = {
       "padport <index> <port>      give controller <index> (see `pads`) pad port 0-3; `padport clear <port>` frees it\n"},
     {"padpreset", CmdPadPreset,
       "padpreset <name> [port]     apply a pad preset (gamecube, remastered, modern, southpaw) to a port's controller (default 0)\n"},
+    {"prompticon", CmdPromptIcon,
+      "prompticon <hexid...>       the icon a prompt image (&image= id) is drawn with now\n"},
     {"keypreset", CmdKeyPreset,
       "keypreset <classic|mouse>   apply a keyboard preset (the F1 remap page's Presets)\n"},
     {"remapport", CmdRemapPort,
@@ -5948,7 +5977,7 @@ const CommandSpec kCommands[] = {
     {"worlds", CmdWorlds,
       "worlds                      the memory card's world ids, areas and name tables\n"},
     {"strg", CmdStrg,
-      "strg <id|name> [index]      a string table as the game loads it\n"},
+      "strg <id|name> [index [raw]] a string table as the game loads it; raw keeps tags\n"},
     {"give", CmdGiveAdd,
       "give <item> [n] | take      add an item (capacity and amount), or remove capacity\n"},
     {"take", CmdGiveTake, ""},

@@ -1159,6 +1159,7 @@ void CPlayer::Update(float dt, CStateManager& mgr) {
     PortTouch::SetOrbitLocked(mOrbitState == kOS_OrbitObject || mOrbitState == kOS_ForcedOrbitObject ||
                                   mOrbitState == kOS_Grapple,
                               mOrbitState == kOS_OrbitObject, GetPlayerIndex());
+    PortTouch::SetRezbitInfected(GetRezbitState() == kRS_Infected, GetPlayerIndex());
   }
 #endif
   if (!mBeamParticleDescriptionsInitialized && NWeaponTypes::are_tokens_ready(mBeamEffectTokens)) {

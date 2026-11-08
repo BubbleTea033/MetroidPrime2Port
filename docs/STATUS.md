@@ -16,18 +16,20 @@ appended, dated as in the heading there.
   (`layer 6`, send SRLY 1827013d SetToZero): cinematic camera ~260 vs ~540 updates. Log: `[travel] ... runs|ended`.
 - #86 items 1-4 reported only, not implemented. No reply posted.
 
-## 2026-11-08: #111 Rezbit virus reboot unreachable with the dual-stick presets
+## 2026-11-08: #111 Rezbit virus reboot unreachable (Twin Stick Aim, dual-stick presets)
 
-- Retail breaks the virus on L + R + B (`CHintState.cpp` kBHT_TriggersAndB). Modern and Remastered put Fire on RT,
-  Jump (GC B) on A and R on the right stick click, so the prompt read LT + R3 + A: A and R3 both need the right thumb,
-  and the R3 glyph reads as "RT" (the reporter pressed LT+RT+A = L + Fire + Jump). Fix: with R on a right-thumb
-  button (`PortPrompts::PadRThumbButton`), Fire stands in for R and the memo's R image becomes A's (shows RT).
-  Default layout unchanged (LT+RT+A still doesn't recover; LT+RT+B does).
-- Ruled out: save states / quick resume (the virus isn't saved; loads come back uninfected), Toggle Lock-On (a second
-  press works), 0.13.0 release binary (real Rezbit recovers), keyboard Classic Q+E+Z and Mouse preset Q+LAlt+Space.
-- Harness: a uinput Xbox 360 pad (SDL sees a physical controller, so `padpreset` applies) and XTEST keys on the
-  run's Xvfb, both driven by `[at N]` console lines in the run log; scripts were scratch (/tmp/opencode/issue111).
-  Console `rezbit [start|stop]`, `keypreset <classic|mouse>`.
+- Retail breaks the virus on L + R + B (`CHintState.cpp` kBHT_TriggersAndB). Two port causes:
+  Twin Stick Aim (#12, `ApplyTwinStickFreeAim`) blocks the R trigger from pressing R in gameplay, so with R on RT
+  the memo showed RT but nothing pressed R (the reporter's "LT + RT + A": R on RT, Jump moved to A); and the
+  Modern/Remastered presets put R on the right stick click, unholdable with Jump on A.
+- Fix: CPlayer::Update publishes `PortTouch::RezbitInfected`; while infected the input layer skips the Twin Stick
+  block and puts a first PadR row on the R trigger (`ApplyRezbitReboot`), so the memo shows RT and it works.
+  The first attempt (a9b68323f: Fire stands in for R, memo image swap) is reverted by this commit.
+- Checked with the uinput pad: default + Twin Stick LT+RT+B, Modern and Remastered LT+RT+A recover; GameCube
+  preset without Twin Stick stays retail (LT+RT+A doesn't, LT+RT+B does). Keyboard (Q+E+Z, Mouse preset
+  RMB+Alt+Space) recovers without a WM; on a desktop Alt+Space may be a WM shortcut (unverified).
+- Debug: console `prompticon <hexid...>` (a prompt image's binding and icon), `strg <tbl> <idx> raw` (tags).
+  Gotcha: pressing X to wake the uinput pad morphs Samus (use `ls`).
 
 ## 2026-11-07: AGENTS.md Status snapshot (moved here when it was trimmed)
 

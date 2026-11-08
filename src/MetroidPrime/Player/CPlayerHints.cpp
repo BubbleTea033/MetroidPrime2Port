@@ -12,9 +12,6 @@
 #include "MetroidPrime/Player/CPlayerGun.hpp"
 #include "MetroidPrime/ScriptObjects/CScriptPlayerHint.hpp"
 #include "MetroidPrime/Tweaks/CTweakBall.hpp"
-#ifdef TARGET_PC
-#include "port_prompts.h"
-#endif
 
 void CPlayer::UpdatePlayerControlDirection(float dt, CStateManager& mgr) {
   const CVector3f oldDirection = mControlDir;
@@ -314,13 +311,7 @@ void CPlayer::UpdateRezbitState(float dt) {
     if (mRezbitVirusMemoTimer <= 0.f) {
       const int playerIndex = GetPlayerIndex();
       CSamusHud::DisplayHudMemo(
-#ifdef TARGET_PC
-          // Port: the dual-stick presets reboot with Fire for R; the memo shows it (#111).
-          rstl::wstring_l(
-              PortPrompts::RezbitRebootText(gpStringTable->GetString("RezbitSuitSoftwareVirus"))),
-#else
           rstl::wstring_l(gpStringTable->GetString("RezbitSuitSoftwareVirus")),
-#endif
           CHUDMemoParms(3.4028235e38f, true, false, false, 1 << playerIndex, false));
     }
   }

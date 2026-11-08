@@ -141,6 +141,8 @@ void BuildProfile(PortInput::Profile& out, int port = 0);
 // button or pushes a PAD axis from `family`, preferring one that applies in the current
 // context. False when none.
 bool PromptButtonInput(unsigned padButton, PortInput::Family family, PortInput::Input& out);
+// For the console's `prompticon`: the contexts in play and the single-input rows of a pad button's action.
+std::string DescribePromptBindings(unsigned padButton);
 bool PromptAxisInput(PADAxis axis, PortInput::Family family, PortInput::Input& out);
 // A pad input as the native button the prompts name (an SDL_GamepadButton or
 // PAD_NATIVE_BUTTON_TRIGGER_*), or PAD_NATIVE_BUTTON_INVALID.
