@@ -135,10 +135,11 @@ void RequestResumeLoad();     // console: load the resume file
 
 // The boot's resume prompt. ResumePromptTick runs once per splash tick (game thread) and is true
 // while the splash must be held; ResumePromptShown fills what the overlay draws (any thread);
-// AnswerResumePrompt is the overlay's Yes/No.
+// AnswerResumePrompt is a click's Yes/No, SelectResumePrompt a pointer hovering one (any thread).
 bool ResumePromptTick();
 bool ResumePromptShown(ResumeInfo& out, bool& yes);
 void AnswerResumePrompt(bool yes);
+void SelectResumePrompt(bool yes);
 
 // --- room state (platform/port_savestate_room.cpp), game thread only -------------------------
 

@@ -210,6 +210,7 @@
 {"Enhancements", "", "Ammo", "Infinite Light and Dark Ammo", "beam ammo unlimited light dark cheat"},
 {"Enhancements", "", "Music", "Light world music in Dark Aether", "dark world soundtrack theme bgm song track override"},
 {"Enhancements", "", "Pace", "Skippable cutscenes", "skip cinematics movies"},
+{"Enhancements", "", "Pace", "Game-style skip prompt", "skip cutscene prompt box confirm"},
 {"Enhancements", "", "Pace", "Seamless item pickups", "pickup item acquired cutscene cinematic message box textbox memo control lock jingle randomizer map station repeats expansion tank ammo"},
 {"Enhancements", "", "Pace", "Custom walk speed", "sprint run toggle hold movement speed retail"},
 {"Enhancements", "", "Pace", "Walk speed", "movement run fast slow strafe velocity samus"},
