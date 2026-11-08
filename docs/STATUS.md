@@ -3,6 +3,19 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-08: #111 Rezbit virus reboot unreachable with the dual-stick presets
+
+- Retail breaks the virus on L + R + B (`CHintState.cpp` kBHT_TriggersAndB). Modern and Remastered put Fire on RT,
+  Jump (GC B) on A and R on the right stick click, so the prompt read LT + R3 + A: A and R3 both need the right thumb,
+  and the R3 glyph reads as "RT" (the reporter pressed LT+RT+A = L + Fire + Jump). Fix: with R on a right-thumb
+  button (`PortPrompts::PadRThumbButton`), Fire stands in for R and the memo's R image becomes A's (shows RT).
+  Default layout unchanged (LT+RT+A still doesn't recover; LT+RT+B does).
+- Ruled out: save states / quick resume (the virus isn't saved; loads come back uninfected), Toggle Lock-On (a second
+  press works), 0.13.0 release binary (real Rezbit recovers), keyboard Classic Q+E+Z and Mouse preset Q+LAlt+Space.
+- Harness: a uinput Xbox 360 pad (SDL sees a physical controller, so `padpreset` applies) and XTEST keys on the
+  run's Xvfb, both driven by `[at N]` console lines in the run log; scripts were scratch (/tmp/opencode/issue111).
+  Console `rezbit [start|stop]`, `keypreset <classic|mouse>`.
+
 ## 2026-11-07: AGENTS.md Status snapshot (moved here when it was trimmed)
 
 

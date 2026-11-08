@@ -41,6 +41,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `pads` — the controller on each pad port 0-3 (players 1-4: `port N: <index> <name>` or `port N: none`) and the controller count; the F1 page's Player rows set it
 - `padport <index> <port>` / `padport clear <port>` — give controller `<index>` (see `pads`) pad port 0-3, or free a port (what the F1 Player combos call)
 - `padpreset <name> [port]` — apply a pad preset (`gamecube`, `remastered`, `modern`, `southpaw`) to the controller on pad port 0-3 (default 0; what the F1 remap page's Presets button does for its Player selector). Reports `no controller` for an empty port and a no-op for a virtual pad (Aurora ignores their mappings); only port 0 gets the keyboard/mouse overlay
+- `keypreset <classic|mouse>` — apply a keyboard preset, as the F1 remap page's Presets buttons do
 - `remapport [port]` — the player (port 0-3) the F1 remap page's Player selector points at, which `padpreset` ignores (it takes its own port); no argument prints it
 - `padmap <port> [<btn> <in>]` — a port's GameCube buttons on its controller's Aurora mapping; with a button (`a`..`z`, `start`, `up`..`right`) and an input (`a`, `lb`, `lt`, `none`, an SDL number) binds it, swapping with the button that had it
 - `players` — each player's position, yaw, aim, twin stick, direct aim, orbit and beam
@@ -105,6 +106,7 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `obj <id>` — one object (an id as `objs` prints it: u046e, or e<editor id>): health, fsm, messages, door beams
 - `send <id> <msg> [from <id>] deliver a script message to an object (name or number), from a sender`
 - `covdump` — coverage build: write the gcov counters now (and zero them)
+- `rezbit [start|stop]` — player 0's Rezbit virus state (0 none, 1 infected, 2 recovering, 3 recovered); `start` infects the suit as a Rezbit's virus attack does (L+R+B recovers), `stop` clears it
 - `hurt <id> <amount> [weapon] damage an object as a shot would (weapon 0 = power beam)`
 - `frame` — the game updates run so far (what MP2_FRAMES counts)
 - `fsm <id> <state>` — force a patterned actor's AI state by name (as `obj` prints it; FSM2 sub-machines too; an unknown name lists the valid ones)

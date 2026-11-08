@@ -1473,6 +1473,21 @@ void CmdPadPreset(CStateManager&, const Args& args, std::string& out) {
   out += "port " + std::to_string(port) + " (" + info.name + "): preset " + Str(args[1]) + " applied\n";
 }
 
+// `keypreset <classic|mouse>`: the keyboard's preset, as the F1 remap page's Presets buttons apply it.
+void CmdKeyPreset(CStateManager&, const Args& args, std::string& out) {
+  if (args.size() != 2) {
+    Usage();
+    return;
+  }
+  const std::string name = Str(args[1]);
+  if (name != "classic" && name != "mouse") {
+    Fail("unknown keyboard preset");
+    return;
+  }
+  PortInputRemap::ApplyPreset(PortInput::Family::Keyboard, name);
+  out += "keyboard: preset " + name + " applied\n";
+}
+
 // `remapport [port]`: the player the F1 remap page's Presets buttons change (its Player selector);
 // no argument prints it.
 void CmdRemapPort(CStateManager&, const Args& args, std::string& out) {
@@ -5673,6 +5688,8 @@ const CommandSpec kCommands[] = {
       "padport <index> <port>      give controller <index> (see `pads`) pad port 0-3; `padport clear <port>` frees it\n"},
     {"padpreset", CmdPadPreset,
       "padpreset <name> [port]     apply a pad preset (gamecube, remastered, modern, southpaw) to a port's controller (default 0)\n"},
+    {"keypreset", CmdKeyPreset,
+      "keypreset <classic|mouse>   apply a keyboard preset (the F1 remap page's Presets)\n"},
     {"remapport", CmdRemapPort,
       "remapport [port]            the player (port 0-3) the F1 remap page's Presets change; no argument prints it\n"},
     {"padmap", CmdPadMap,

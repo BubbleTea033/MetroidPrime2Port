@@ -3,6 +3,9 @@
 #include "Kyoto/Input/CFinalInput.hpp"
 #include "MetroidPrime/CControlMapper.hpp"
 #include "rstl/algorithm.hpp"
+#ifdef TARGET_PC
+#include "port_prompts.h"
+#endif
 
 CHintState::CHintState(TUniqueId hint, int priority, float timer,
                        CGameHint::EBreakHintType breakType, uint requiredPresses, float unknown30,
@@ -87,9 +90,18 @@ const bool CHintState::ProcessInput(const CFinalInput& input, const CControlMapp
     }
     break;
   case CGameHint::kBHT_TriggersAndB:
+#ifdef TARGET_PC
+    // Port: with R on the right stick click (the dual-stick presets) L + R + B needs the right
+    // thumb twice, so Fire (A, on RT there) stands in for R (#111).
+    if (input.DLTrigger() && (input.DRTrigger() || (input.DA() && PortPrompts::PadRThumbButton())) &&
+        input.DB()) {
+      broken = true;
+    }
+#else
     if (input.DLTrigger() && input.DRTrigger() && input.DB()) {
       broken = true;
     }
+#endif
     break;
   case CGameHint::kBHT_Unknown5:
   default:

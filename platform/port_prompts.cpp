@@ -1533,6 +1533,24 @@ bool PadActive() {
   return sActiveInput.load(std::memory_order_relaxed) == ActiveInput::Pad && PADGetIndexForPort(PAD_CHAN0) >= 0;
 }
 
+bool PadRThumbButton() {
+  const u32 native = PadNativeForButton(PAD_TRIGGER_R);
+  return native == SDL_GAMEPAD_BUTTON_RIGHT_STICK ||
+         (native >= SDL_GAMEPAD_BUTTON_SOUTH && native <= SDL_GAMEPAD_BUTTON_NORTH);
+}
+
+const wchar_t* RezbitRebootText(const wchar_t* text) {
+  static std::wstring out;
+  static constexpr wchar_t kR[] = L"&image=D89B9F7C;";
+  if (text == nullptr || !PadActive() || !PadRThumbButton()) return text;
+  out = text;
+  const size_t at = out.find(kR);
+  if (at == std::wstring::npos) return text;
+  // The A image with the crop the disc's other A prompts use; it is re-iconed to the Fire button.
+  out.replace(at, std::size(kR) - 1, L"&image=SI,0.70,0.68,D523DE3B;");
+  return out.c_str();
+}
+
 void NoteTouchInput(bool xboxLayout) {
   sActiveInput.store(xboxLayout ? ActiveInput::TouchXbox : ActiveInput::TouchGameCube,
                      std::memory_order_relaxed);

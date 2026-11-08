@@ -26,6 +26,15 @@ const char* ActiveDevice();
 // overlay's virtual one). Starts true: no key or click yet means no keyboard.
 bool PadActive();
 
+// Whether the pad's R is on a right-thumb button (the right stick click or a face button, as the
+// Modern and Remastered presets put it, with Fire on RT). The Rezbit reboot's L + R + B can't be
+// held there, so Fire also stands in for R (CHintState's kBHT_TriggersAndB, issue #111).
+bool PadRThumbButton();
+
+// The Rezbit virus memo ("L + R + B to reboot system") with its R image swapped for A's while a
+// pad with PadRThumbButton() is in use, so it shows the Fire button that recovers; else `text`.
+const wchar_t* RezbitRebootText(const wchar_t* text);
+
 // What the game's A button is called on the device in use ("A", "Cross", "Enter"...), for text
 // prompts such as the cinematic skip confirm.
 const char* ConfirmLabel();
