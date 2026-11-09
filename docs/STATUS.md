@@ -3,6 +3,16 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-09: #96, Hunter Ing doesn't fade out on death
+
+- `CMediumIng::UpdateMistState` (port-only, fn_41_6078) returned at once for a dead Ing; retail's `!mAlive` branch
+  (0x60AC beq 0x64A8) skips only the mist state switch and the visor flags, so the mist decay, light and model
+  alpha (`255 * (1 - 0.65 mist) * mFD0`) still run and Dead's mFD0 (-0.33/s) fades the model. Before: alpha stayed
+  255 until DeathDelete at LieOnGround (~5.5 s, then a pop); after: 255 -> 123 in 1.6 s. Console `var <id> ming.alpha`.
+- Repro (reporter's save state, slot 6 = Crypt Tunnel): `state load 6`, `warp 42` (Undertemple Shaft), `tp -167.6
+  -125 -70`, `send u0895 Activate`, after ~200 updates `damage u0895 140` then `damage u0895 20` (one 2000 hit
+  is a massive death: instant explode + delete). `tp` doesn't change the player's area; `warp` does.
+
 ## 2026-11-08: #86 item 5, Elevator and light beam cutscenes Original/Fast
 
 - New `travel_cutscenes` (Enhancements > Pace; env `MP2_TRAVEL_CUTSCENES`, console `travel`): Fast doubles dt and
