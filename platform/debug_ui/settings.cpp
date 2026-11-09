@@ -15,6 +15,7 @@
 #include "port_overlay.h"
 #include "port_photo.h"
 #include "port_save.h"
+#include "port_savestate.h"
 #include "port_settings.h"
 #include "port_suit_colours.h"
 #include "port_textures.h"
@@ -32,10 +33,12 @@
 #include <algorithm>
 #include <atomic>
 #include <cctype>
+#include <cerrno>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -63,8 +66,12 @@ using port::Trim;
 // A whole-string integer; false for anything else.
 bool ParseInt(const std::string& value, int& out) {
   char* end = nullptr;
+  errno = 0;
   const long parsed = std::strtol(value.c_str(), &end, 10);
   if (value.empty() || end == value.c_str() || *end != '\0')
+    return false;
+  // Not one that does not fit: it would wrap round to some other, valid-looking value.
+  if (errno == ERANGE || parsed < std::numeric_limits< int >::min() || parsed > std::numeric_limits< int >::max())
     return false;
   out = static_cast< int >(parsed);
   return true;
@@ -412,6 +419,15 @@ const SettingKey kSettingKeys[] = {
     RANGE_KEY("spring_ball_flick_rate", sSpringFlickRate, PortOverlay::kSpringFlickRateMin,
               PortOverlay::kSpringFlickRateMax, "2", "20"),
     BoolKey< &sQuickResume >("quick_resume"),
+    // The save state slot F5 / F9 act on (PortSaveState::SelectedSlot), kept between launches.
+    {"state_slot",
+     [](const std::string& value) {
+       int parsed = 0;
+       if (ParseInt(value, parsed)) {
+         PortSaveState::SetSelectedSlot(parsed); // out of range is ignored there
+       }
+     },
+     [](std::ostream& out) { out << PortSaveState::SelectedSlot(); }, false, "3", "7"},
     BoolKey< &sLockOnToggle >("lockon_toggle"),
     BoolKey< &sAimLockOn >("aim_lock_on"),
     BoolKey< &sScanShoot >("scan_shoot"),
