@@ -54,4 +54,6 @@ void Draw() {
   sText->SetText(text);
   sText->Draw();
 }
+
+bool Showing() { return sText != nullptr; }
 } // namespace PortShaderToast
