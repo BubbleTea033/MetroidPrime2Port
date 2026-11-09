@@ -233,6 +233,9 @@ bool PortPumpEvents();
 void PortPaceFrame();
 // Port: re-arms pad 0's input before each game tick's PADRead (platform/port_events.cpp).
 void PortRearmPad0();
+// Port: SDL's clock, and MP1's stall line for a loop iteration over 250 ms (platform/port_events.cpp).
+uint64_t PortNowNs();
+void PortLogFrameStall(uint64_t loopStartNs, uint64_t eventsDoneNs, uint64_t tickDoneNs, bool drawn);
 // Port: runs the registered AI DMA callback until the host stream is topped up
 // (platform/ai_dma.cpp).
 extern "C" void AIPortPoll(void);
@@ -802,10 +805,12 @@ int CMain::RsMain(int argc, const char* const* argv) {
       if (!IsMaxSpeed()) {
         PortPaceFrame();
       }
+      const uint64_t portLoopStartNs = PortNowNs();
       if (PortPumpEvents()) {
         mFinished = true;
         break;
       }
+      const uint64_t portEventsDoneNs = PortNowNs();
       // MP2_SKIP_FRONTEND=1: the boot's splash chain blocks the flow this loop is about to pump,
       // so it is dismissed here rather than from the skip's own hook (see PortSkipFrontEnd.cpp).
       PortSkipFrontEnd::DismissSplash();
@@ -821,6 +826,9 @@ int CMain::RsMain(int argc, const char* const* argv) {
       if (!architecture->UpdateTicks()) {
         mFinished = true;
       }
+#ifdef TARGET_PC
+      const uint64_t portTickDoneNs = PortNowNs();
+#endif
       const double tickTime = architecture->GetStopwatch2().GetElapsedTime();
       mTickTimes.AddValue(tickTime / (1.f / 60.f));
       mAverageTickTime = *mTickTimes.GetAverage();
@@ -937,6 +945,7 @@ int CMain::RsMain(int argc, const char* const* argv) {
 #ifdef TARGET_PC
       // Port: there is no AI interrupt; run the AI DMA callbacks (movie audio) on the main thread.
       AIPortPoll();
+      PortLogFrameStall(portLoopStartNs, portEventsDoneNs, portTickDoneNs, drawFrame);
 #endif
       if (CheckTerminate()) {
         gpGameState->AudioGroups().clear();

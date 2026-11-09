@@ -454,6 +454,41 @@ void PortRearmPad0() {
   }
 }
 
+// MP1's stall line (its CMain::RsMain, issue #278 there): a main-loop iteration over 250 ms says
+// where the time went, at most once every two seconds (the frames in between are counted). On
+// Android and for reporters' freezes this is the only trace a log has. The event pump's share
+// names the joystick update in it: on Windows a device change re-enumerates DirectInput and HID
+// devices there, on this thread. MP2_NO_STALL_LOG=1 turns it off.
+// PortPumpEvents' calls: the frame number the watchdog and the stall line give.
+static unsigned sPumpFrame = 0;
+
+uint64_t PortNowNs() { return SDL_GetTicksNS(); }
+
+void PortLogFrameStall(uint64_t loopStartNs, uint64_t eventsDoneNs, uint64_t tickDoneNs, bool drawn) {
+  static const bool sLogStalls = [] {
+    const char* v = std::getenv("MP2_NO_STALL_LOG");
+    return v == nullptr || *v == '\0' || *v == '0';
+  }();
+  static uint64_t sLastLogNs = 0;
+  static uint32_t sUnlogged = 0;
+  const uint64_t endNs = SDL_GetTicksNS();
+  if (!sLogStalls || endNs - loopStartNs <= 250000000ull) {
+    return;
+  }
+  if (sLastLogNs != 0 && endNs - sLastLogNs < 2000000000ull) {
+    ++sUnlogged;
+    return;
+  }
+  const auto ms = [](uint64_t ns) { return static_cast< unsigned long long >(ns / 1000000ull); };
+  std::fprintf(stderr,
+               "MP stall: frame %u took %llu ms (events %llu of it joysticks %llu, tick %llu, draw %llu)%s, "
+               "%u more since the last line\n",
+               sPumpFrame, ms(endNs - loopStartNs), ms(eventsDoneNs - loopStartNs), ms(aurora_joystick_update_ns()),
+               ms(tickDoneNs - eventsDoneNs), ms(endNs - tickDoneNs), drawn ? "" : ", not drawn", sUnlogged);
+  sLastLogNs = endNs;
+  sUnlogged = 0;
+}
+
 // MP1's frame pacing (src/MetroidPrime/main.cpp there), called once per main-loop iteration: under
 // the 60 FPS cap, sleeps to the next 60 Hz deadline. A frame that overran by more than a period
 // resets the deadline instead of racing to catch up.
@@ -518,8 +553,7 @@ bool ResumeEventWatch(void*, SDL_Event* event) {
 bool PortPumpEvents() {
   // The hang watchdog's heartbeat: the game loop asks this once per iteration, so a frame that
   // never returns here is the one the watchdog reports (phase and stack).
-  static unsigned sFrame = 0;
-  PortWatchdog::Heartbeat(++sFrame);
+  PortWatchdog::Heartbeat(++sPumpFrame);
   PortMemoryLog::Tick(SDL_GetTicksNS());
   static const bool sWatching = SDL_AddEventWatch(ResumeEventWatch, nullptr);
   (void)sWatching;

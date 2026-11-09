@@ -1327,7 +1327,7 @@ int main(int argc, char** argv) {
   // Lazy mode keeps built pipelines until memory runs short (MP1 issue #187), areas left long ago
   // included, so walking back is free. It trims on Android's memory warnings (port_memory_log.cpp)
   // and on the memory log's MemAvailable check every 5 s: under 1024 MiB available it releases
-  // what a minute of frames didn't draw, under 512 MiB all but what the last frames drew (GLOBAL
+  // what a minute of frames didn't draw, under 512 MiB what 30 s didn't (GLOBAL
   // pipelines stay: Samus, gun, HUD, visors). Android has no moderate level: a 3-4 GB phone sits
   // under 1024 MiB available all the time, and rebuilding pipelines costs up to 2 s each on a Mali
   // (issue #98). Overrides: MP2_PIPELINE_TRIM_MIB / MP2_PIPELINE_TRIM_SEVERE_MIB (0 turns a
