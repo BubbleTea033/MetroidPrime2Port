@@ -101,11 +101,11 @@ void ReadEnvOnce() {
     // `atoi` would read "" and "abc" as 0, which is a *slot* and would silently override the
     // card's own choice below; parse it properly and treat anything that is not 0..2 as "not given".
     char* end = nullptr;
-    const long value = std::strtol(slot, &end, 10);
-    if (end == slot || *end != '\0' || value < 0 || value > 2) {
+    const long number = std::strtol(slot, &end, 10);
+    if (end == slot || *end != '\0' || number < 0 || number > 2) {
       fprintf(stderr, "[skip] MP2_SLOT='%s' is not a save slot; using the card's own\n", slot);
     } else {
-      sSlot = static_cast< int >(value);
+      sSlot = static_cast< int >(number);
       sSlotGiven = true;
     }
   }

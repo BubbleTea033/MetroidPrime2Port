@@ -228,6 +228,10 @@ else()
         # rstl's smart pointers delete in headers: on an incomplete type that silently skips
         # the destructor, and which unit's copy survives the link is arbitrary.
         $<$<COMPILE_LANGUAGE:CXX>:-Werror=delete-incomplete>
+        # The decomp reads floats, colours and boxes through uint* as MWCC allowed (the stream
+        # writer, CGX colour compares, the collision cache); type-based alias analysis may
+        # reorder those loads. -fwrapv: its hashes and counters overflow signed ints, which wrapped on PowerPC.
+        -fno-strict-aliasing -fwrapv
         # The game's allocator API carries the literal "??(??)" call-stack tags
         # from the PowerPC build; they are trigraphs to the host compiler and
         # are intentional, so keep them out of the log.
@@ -251,7 +255,7 @@ foreach(m ${MP_MODULES})
         target_compile_options(mp_mod_${m} PRIVATE
             -Wformat -Wno-error=return-type -Wno-narrowing -Wno-multichar -Wno-write-strings
             $<$<COMPILE_LANGUAGE:CXX>:-Werror=delete-incomplete>
-            -Wno-trigraphs
+            -fno-strict-aliasing -fwrapv -Wno-trigraphs
             "$<$<COMPILE_LANGUAGE:CXX>:-include${CMAKE_CURRENT_SOURCE_DIR}/platform/compat.h>")
     else()
         target_compile_options(mp_mod_${m} PRIVATE ${MP_MSVC_GAME_OPTIONS})

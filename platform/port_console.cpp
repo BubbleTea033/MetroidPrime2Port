@@ -705,7 +705,7 @@ void CmdStatus(CStateManager& mgr, const Args& args, std::string& out) {
   }
   // What the renderer will walk: CStateManager::GatherVisibleAreas only takes areas whose occlusion
   // state is kOS_Visible, so a current area that is not visible is a blank world with a normal HUD.
-  if (CWorld* world = mgr.World()) {
+  if (world != nullptr) {
     int alive = 0;
     std::string visibleList;
     for (CGameArea::CConstChainIterator it = world->GetChainHead(CWorld::kC_Alive);

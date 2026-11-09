@@ -1,4 +1,5 @@
 #include "port_update_check.h"
+#include "port_worker.h"
 #include "port_utf8_path.h"
 
 #include "port_json.h"
@@ -184,25 +185,8 @@ struct Runtime {
   }
 
   void Shutdown() {
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      stop = true;
-    }
     cancel = true;
-    wake.notify_all();
-    if (!worker.joinable()) {
-      return;
-    }
-    bool done;
-    {
-      std::unique_lock<std::mutex> lock(mutex);
-      done = wake.wait_for(lock, std::chrono::seconds(2), [this] { return workerDone; });
-    }
-    if (done) {
-      worker.join();
-    } else {
-      worker.detach();
-    }
+    PortWorker::Stop(*this);
   }
 };
 
