@@ -74,6 +74,7 @@ constexpr size_t kGlobalOptionsSize = 32;
 constexpr size_t kSlotsStart =
     kSaveHeaderSize + kSystemDataSize + 3 * kGameOptionsSize + kGlobalOptionsSize;
 constexpr size_t kSlotStride = 0xa38;
+static_assert(kSlotsStart == PortSaveLayout::kSlotsStart && kSlotStride == PortSaveLayout::kSlotStride);
 // What a copy holds after its CRC and generation: 0x2000 (mAlignedUserDataSize) - 8.
 constexpr size_t kUserDataSize = 0x1ff8;
 

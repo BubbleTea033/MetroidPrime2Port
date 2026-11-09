@@ -20,8 +20,8 @@ namespace {
 // The .gci / save-data layout; the same numbers as port_save.cpp (they describe the same file).
 constexpr size_t kDirEntry = 0x40;
 constexpr size_t kBlock = 0x2000;
-constexpr size_t kSlotsStart = 15 + 192 + 3 * 32 + 32;
-constexpr size_t kSlotStride = 0xa38;
+using PortSaveLayout::kSlotsStart;
+using PortSaveLayout::kSlotStride;
 constexpr size_t kUserDataSize = 0x1ff8;
 
 using port::BitReader;

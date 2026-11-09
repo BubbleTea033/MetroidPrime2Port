@@ -17,10 +17,10 @@
 #include "port_prompts.h"
 
 #include <algorithm>
-#include <iterator>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -902,14 +902,16 @@ bool InScissor(int x, const u32* scissor, int slack) {
 // button's textures: the ring, which needs its texture, could not be drawn yet, so each opening
 // showed the box's notch for a moment before the ring. Held, they are in when the box is.
 void KeepButtonTexturesIn() {
-  static bool sHeld = false;
-  if (sHeld || gpSimplePool == nullptr || gpResourceFactory == nullptr) {
+  static const uint kIds[] = {0xDE5170B7u /* the ring */, 0xC96F93E3u /* the lit disc */};
+  static bool sHeld[2] = {};
+  if (gpSimplePool == nullptr || gpResourceFactory == nullptr) {
     return;
   }
-  sHeld = true;
-  for (const uint id : {0xDE5170B7u /* the ring */, 0xC96F93E3u /* the lit disc */}) {
-    const SObjectTag tag('TXTR', id);
-    if (gpResourceFactory->CanBuild(tag)) {
+  // Each one once it can be built (not before its pak is in), so a miss is tried again.
+  for (int i = 0; i < 2; ++i) {
+    const SObjectTag tag('TXTR', kIds[i]);
+    if (!sHeld[i] && gpResourceFactory->CanBuild(tag)) {
+      sHeld[i] = true;
       // Never freed (as the game UI kit's elements: one let go while the program exits hangs it).
       TToken< CTexture >* token = rs_new TToken< CTexture >(gpSimplePool->GetObj(tag));
       token->Lock();

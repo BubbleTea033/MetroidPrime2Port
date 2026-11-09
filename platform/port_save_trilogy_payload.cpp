@@ -35,8 +35,8 @@ constexpr size_t kUserHeader = 8; // CRC and generation ahead of the save data
 constexpr size_t kUserDataSize = 0x1ff8;
 constexpr size_t kSysOffset = 15;
 constexpr size_t kSysBytes = 192;
-constexpr size_t kSlotsStart = 15 + 192 + 3 * 32 + 32;
-constexpr size_t kSlotStride = 0xa38;
+using PortSaveLayout::kSlotsStart;
+using PortSaveLayout::kSlotStride;
 constexpr int kSysBits = 29;       // CPersistentOptions' environment variables
 constexpr int kWiiPrefixBits = 20 * 8;
 constexpr uint32_t kSigUsa = 0xfe44ecc0u; // part A's leading word on the Trilogy's USA / PAL discs
