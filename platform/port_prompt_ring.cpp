@@ -3,6 +3,9 @@
 #include "GuiSys/CGuiFrame.hpp"
 #include "GuiSys/CGuiModel.hpp"
 #include "Kyoto/Basics/CBasics.hpp"
+#include "Kyoto/CResFactory.hpp"
+#include "Kyoto/CSimplePool.hpp"
+#include "Kyoto/TToken.hpp"
 #include "Kyoto/Graphics/CCubeMaterial.hpp"
 #include "Kyoto/Graphics/CCubeModel.hpp"
 #include "Kyoto/Graphics/CGX.hpp"
@@ -14,6 +17,7 @@
 #include "port_prompts.h"
 
 #include <algorithm>
+#include <iterator>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -351,12 +355,15 @@ uint64_t IdentityOf(const CCubeModel* model) {
   return h;
 }
 
+void DropLastRings(const void* model); // the rings kept to draw again that use the model (below)
+
 // Everything recorded for a model, dropped without writing to it (its data is gone, or is another
 // model's now).
 void Drop(const void* model) {
   sRingModels.erase(static_cast< const CCubeModel* >(model));
   sDiscModels.erase(static_cast< const CCubeModel* >(model));
   sLineEnds.erase(static_cast< const CCubeModel* >(model));
+  DropLastRings(model);
   if (const auto patch = sPatches.find(static_cast< const CCubeModel* >(model));
       patch != sPatches.end()) {
     if (patch->second.applied) {
@@ -761,6 +768,77 @@ struct PendingRing {
   u32 scissor[4];
 };
 std::vector< PendingRing > sPending;
+
+// The ring stands in for the box's notch, so it fades with the box. The boxes fade their button
+// group (button, disc and ring) on a curve of its own: the message box takes it out ahead of the
+// rest (CMessageScreen::Update: (blur - 0.7) / 0.3), which left the box's last moments with its
+// notch empty and the ring gone, and brings it in after. While a box fades in or out, its ring is
+// at least as opaque as the box (the alpha the frame is drawn at, see AfterDraw), and while
+// it fades out the ring is drawn again as last queued once the button group stops drawing. A box is
+// fading for a few batches after its alpha last changed (with the frame rate uncapped, draws between
+// two game ticks repeat an alpha); a box at rest, however bright, keeps the game's own ring.
+constexpr int kFadeBatches = 12;
+struct BoxFade {
+  float alpha = 0.f; // this batch
+  float last = 0.f;  // when it last changed
+  int still = kFadeBatches; // batches since it last changed
+  bool falling = false;     // its last change was down
+  bool drawn = false;
+};
+std::unordered_map< const void*, BoxFade > sBoxes;
+// Each frame's rings as last queued (one per slice where the widescreen spread draws it in slices).
+std::unordered_map< const void*, std::vector< PendingRing > > sLastRings;
+
+void DropLastRings(const void* model) {
+  for (auto it = sLastRings.begin(); it != sLastRings.end();) {
+    const bool uses = std::any_of(it->second.begin(), it->second.end(),
+                                  [model](const PendingRing& p) { return p.model == model; });
+    it = uses ? sLastRings.erase(it) : std::next(it);
+  }
+}
+
+// Rings queued this batch are kept; a fading box with none gets its last ones back; rings of a
+// fading box are raised to its alpha.
+void FadeRingsWithBoxes() {
+  std::unordered_map< const void*, bool > queued;
+  for (const PendingRing& pending : sPending) {
+    queued[pending.frame] = true;
+  }
+  for (const auto& [frame, yes] : queued) {
+    std::vector< PendingRing >& last = sLastRings[frame];
+    last.clear();
+    for (const PendingRing& pending : sPending) {
+      if (pending.frame == frame) {
+        last.push_back(pending);
+      }
+    }
+  }
+  for (auto& [frame, box] : sBoxes) {
+    if (!box.drawn) {
+      continue;
+    }
+    box.drawn = false;
+    if (std::fabs(box.alpha - box.last) > 0.002f) {
+      box.falling = box.alpha < box.last;
+      box.last = box.alpha;
+      box.still = 0;
+    } else if (box.still < kFadeBatches) {
+      ++box.still;
+    }
+    if (box.still >= kFadeBatches) {
+      continue;
+    }
+    if (const auto last = sLastRings.find(frame);
+        box.falling && queued.count(frame) == 0 && last != sLastRings.end() && box.alpha > 0.f) {
+      sPending.insert(sPending.end(), last->second.begin(), last->second.end());
+    }
+    for (PendingRing& pending : sPending) {
+      if (pending.frame == frame) {
+        pending.color = pending.color.WithAlphaOf(std::max(pending.color.GetAlpha(), box.alpha));
+      }
+    }
+  }
+}
 // Where each frame's disc was drawn this batch, world space.
 std::unordered_map< const void*, CVector3f > sDiscCentres;
 // Each frame's disc widget, its quad's size and the batch it was drawn in: a ring drawn before its
@@ -818,6 +896,27 @@ bool InScissor(int x, const u32* scissor, int slack) {
   return x >= static_cast< int >(scissor[0]) - slack &&
          x < static_cast< int >(scissor[0] + scissor[2]) + slack;
 }
+
+// The boxes' button textures, held for the session. A box (the message box after a save station's
+// question, say) is loaded afresh each time, and its frame line came in a few frames before the
+// button's textures: the ring, which needs its texture, could not be drawn yet, so each opening
+// showed the box's notch for a moment before the ring. Held, they are in when the box is.
+void KeepButtonTexturesIn() {
+  static bool sHeld = false;
+  if (sHeld || gpSimplePool == nullptr || gpResourceFactory == nullptr) {
+    return;
+  }
+  sHeld = true;
+  for (const uint id : {0xDE5170B7u /* the ring */, 0xC96F93E3u /* the lit disc */}) {
+    const SObjectTag tag('TXTR', id);
+    if (gpResourceFactory->CanBuild(tag)) {
+      // Never freed (as the game UI kit's elements: one let go while the program exits hangs it).
+      TToken< CTexture >* token = rs_new TToken< CTexture >(gpSimplePool->GetObj(tag));
+      token->Lock();
+    }
+  }
+}
+
 } // namespace
 
 void ModelGone(const void* model) {
@@ -830,6 +929,8 @@ void FrameGone(const void* frame) {
   sRingOnScreen.erase(frame);
   sDiscCentres.erase(frame);
   sDiscWidgets.erase(frame);
+  sBoxes.erase(frame);
+  sLastRings.erase(frame);
   sPending.erase(std::remove_if(sPending.begin(), sPending.end(),
                                 [frame](const PendingRing& p) { return p.frame == frame; }),
                  sPending.end());
@@ -839,6 +940,9 @@ void BeforeDraw(const CGuiModel& widget) {
   const bool active = PortPrompts::AnyDrawnRing();
   if (!active && sApplied == 0) {
     return;
+  }
+  if (active) {
+    KeepButtonTexturesIn();
   }
   const CCubeModel* model = ModelOf(widget);
   if (model == nullptr) {
@@ -948,6 +1052,16 @@ bool AfterDraw(const CGuiModel& widget, const CColor& color) {
   if (model == nullptr) {
     return false;
   }
+  // The fade a box with a drawn ring is drawn at (the frame's draw alpha, the message box's blur):
+  // a model's colour as drawn over its own colour, which takes out the button group's own fade
+  // (set on its colour) and any model that is fainter or brighter than the rest by design.
+  if (const float own = widget.GetModifiedColor().GetAlpha();
+      own > 0.02f && sRingOnScreen.count(widget.GetParentFrame()) != 0) {
+    BoxFade& box = sBoxes[widget.GetParentFrame()];
+    const float fade = std::min(1.f, color.GetAlpha() / own);
+    box.alpha = box.drawn ? std::max(box.alpha, fade) : fade;
+    box.drawn = true;
+  }
   if (const auto fill = sPatches.find(model);
       fill != sPatches.end() && fill->second.applied && fill->second.holeSurface != nullptr) {
     DrawFillAroundHole(model, fill->second, color);
@@ -970,6 +1084,7 @@ bool AfterDraw(const CGuiModel& widget, const CColor& color) {
 
 bool EndBatch() {
   ++sBatch;
+  FadeRingsWithBoxes();
   if (sPending.empty()) {
     sDiscCentres.clear();
     return false;
