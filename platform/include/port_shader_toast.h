@@ -7,6 +7,7 @@
 namespace PortShaderToast {
 // Draws it over whatever the game drew, on the game thread after the IOWin draw.
 void Draw();
-// The count is up (the note toast, port_note_toast.h, goes below it).
-bool Showing();
+// The bottom of the count, in fractions of the screen's height from its top, or 0 when it is not up:
+// the update and note toasts (port_update_toast.h, port_note_toast.h) go below it.
+float Bottom();
 } // namespace PortShaderToast

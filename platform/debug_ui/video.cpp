@@ -6,12 +6,14 @@
 
 #include "port_gpu_driver.h"
 #include "port_input_remap_ui.h"
+#include "port_mouse.h"
 #include "port_overlay.h"
 #include "port_savestate.h"
 #include "port_suit_colours.h"
 #include "port_third_person.h"
 #include "port_build_info.h"
 #include "port_update_check.h"
+#include "port_update_toast.h"
 #include "port_video.h"
 
 #include <SDL3/SDL.h>
@@ -786,15 +788,18 @@ void TopToastPlaced(const ImGuiViewport* viewport) {
   sTopToastNextY = ImGui::GetWindowPos().y - viewport->Pos.y + ImGui::GetWindowSize().y + 8.f;
 }
 
-// Once per launch, for 12 s: a newer release than this build is out (MP1's DrawUpdateToast).
-// Taps arrive on Android's UI thread (TouchControlsView), so the rect is shared under a lock and
-// a hit only sets a flag; the page opens on the game thread.
+// Once per launch, for 12 s: a newer release than this build is out (MP1's DrawUpdateToast). The
+// game draws it (port_update_toast.h); this only takes a click on it, and keeps where it is for a
+// tap: taps arrive on Android's UI thread (TouchControlsView), so the rect is shared under a lock
+// and a hit only sets a flag; the page opens on the game thread.
 namespace {
-bool sUpdateToastDone = false;
 std::mutex sUpdateToastMutex;
 bool sUpdateToastShowing = false;
 ImVec4 sUpdateToastRect; // last drawn: x0, y0, x1, y1 as fractions of the window
 std::atomic< bool > sUpdateToastTapped{false};
+// The cursor is over it: the game drew it, so ImGui doesn't know, and a press there would also be
+// the game's (aim, fire). PortOverlay::PointerBlocked keeps it from the game.
+bool sUpdateToastHovered = false;
 
 void SetUpdateToastShowing(bool showing, const ImVec4& rect = ImVec4()) {
   std::lock_guard lock(sUpdateToastMutex);
@@ -804,54 +809,41 @@ void SetUpdateToastShowing(bool showing, const ImVec4& rect = ImVec4()) {
 
 void OpenUpdateToastRelease() {
   SDL_OpenURL(PortUpdateCheck::Latest().url.c_str());
-  sUpdateToastDone = true;
+  PortUpdateToast::Dismiss();
   SetUpdateToastShowing(false);
 }
 } // namespace
 
 void DrawUpdateToast() {
-  static double sShownAt = -1.0;
   SetUpdateToastShowing(false);
-  if (sUpdateToastDone || PortUpdateCheck::Status() != PortUpdateCheck::kStatus_Available) {
-    return;
-  }
+  sUpdateToastHovered = false;
   if (sUpdateToastTapped.exchange(false)) {
     OpenUpdateToastRelease();
     return;
   }
-  const double now = ImGui::GetTime();
-  if (sShownAt < 0.0) {
-    sShownAt = now;
-  }
-  if (now - sShownAt > 12.0) {
-    sUpdateToastDone = true;
+  const PortGameUi::ScreenRect r = PortUpdateToast::LastRect();
+  if (!PortUpdateToast::Showing() || !r.valid) {
     return;
   }
-  const ImGuiViewport* viewport = ImGui::GetMainViewport();
-  PlaceTopToast(viewport);
-  ImGui::SetNextWindowSize(ImVec2(std::min(viewport->Size.x - 32.f, 560.f), 0.f));
-  ImGui::SetNextWindowBgAlpha(0.8f);
-  if (ImGui::Begin("##update-toast", nullptr,
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav |
-                       ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings)) {
-    ImGui::TextWrapped("Version %s is out (this is %s). Click or tap here to open its release page.",
-                       PortUpdateCheck::Latest().version.c_str(), MP_BUILD_VERSION);
-    TopToastPlaced(viewport);
-    const ImVec2 pos = ImGui::GetWindowPos();
-    const ImVec2 size = ImGui::GetWindowSize();
-    if (viewport->Size.x > 0.f && viewport->Size.y > 0.f) {
-      SetUpdateToastShowing(true, ImVec4((pos.x - viewport->Pos.x) / viewport->Size.x,
-                                         (pos.y - viewport->Pos.y) / viewport->Size.y,
-                                         (pos.x + size.x - viewport->Pos.x) / viewport->Size.x,
-                                         (pos.y + size.y - viewport->Pos.y) / viewport->Size.y));
-    }
-    // A mouse click; taps go through PortDebug::TapUpdateToast.
-    if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-      OpenUpdateToastRelease();
-    }
+  SetUpdateToastShowing(true, ImVec4(r.x0, r.y0, r.x1, r.y1));
+  // A mouse click on the text, grown by half its height all round: easier to hit. Not while the
+  // game holds the cursor (aiming) or an ImGui window is over it. Taps go through
+  // PortDebug::TapUpdateToast.
+  const ImGuiViewport* vp = ImGui::GetMainViewport();
+  const ImGuiIO& io = ImGui::GetIO();
+  if (vp->Size.x <= 0.f || vp->Size.y <= 0.f || PortMouse::Captured() || io.WantCaptureMouse ||
+      !ImGui::IsMousePosValid(&io.MousePos)) {
+    return;
   }
-  ImGui::End();
+  const float x = (io.MousePos.x - vp->Pos.x) / vp->Size.x, y = (io.MousePos.y - vp->Pos.y) / vp->Size.y;
+  const float pad = 0.5f * (r.y1 - r.y0);
+  sUpdateToastHovered = x >= r.x0 - pad && x <= r.x1 + pad && y >= r.y0 - pad && y <= r.y1 + pad;
+  if (sUpdateToastHovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+    OpenUpdateToastRelease();
+  }
 }
+
+bool UpdateToastHovered() { return sUpdateToastHovered; }
 
 bool TapUpdateToast(float x, float y) {
   std::lock_guard lock(sUpdateToastMutex);

@@ -2,7 +2,9 @@
 #include "port_note_toast.h"
 
 #include "port_game_ui.h"
+#include "port_menu_hint.h"
 #include "port_shader_toast.h"
+#include "port_update_toast.h"
 
 #include <algorithm>
 #include <chrono>
@@ -56,8 +58,17 @@ void Draw() {
     sText = nullptr;
     return;
   }
-  // Below the shader compile's count while that is up.
-  sText->SetPlacement({PortGameUi::Anchor::Top, 0.f, PortShaderToast::Showing() ? 0.075f : 0.025f});
+  // Below the shader compile's count and the update toast while they are up, and below the launch
+  // hint where the two would meet (a narrow screen).
+  float top = std::max(0.025f, PortShaderToast::Bottom() + 0.01f);
+  if (const PortGameUi::ScreenRect update = PortUpdateToast::LastRect(); PortUpdateToast::Showing() && update.valid) {
+    top = std::max(top, update.y1 + 0.01f);
+  }
+  const PortGameUi::ScreenRect hint = PortMenuHint::LastRect(), self = sText->LastRect();
+  if (hint.valid && self.valid && hint.x1 + 0.01f > self.x0) {
+    top = std::max(top, hint.y1 + 0.01f);
+  }
+  sText->SetPlacement({PortGameUi::Anchor::Top, 0.f, top});
   sText->SetAlpha(std::clamp((kShowSecs - age) / kFadeSecs, 0.f, 1.f));
   sText->Draw();
 }

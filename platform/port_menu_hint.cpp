@@ -65,4 +65,8 @@ void Draw() {
     sShownAt = std::chrono::steady_clock::now();
   }
 }
+
+PortGameUi::ScreenRect LastRect() {
+  return sText != nullptr && sShowing ? sText->LastRect() : PortGameUi::ScreenRect{};
+}
 } // namespace PortMenuHint
