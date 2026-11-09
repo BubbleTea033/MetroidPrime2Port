@@ -385,10 +385,12 @@ bool UserData(const uint8_t* in, size_t size, const std::string& from, const std
     return false;
   }
   const uint32_t signature = port::ReadBE32(in);
-  if (signature != d->from->signature && signature != d->from->legacySignature) {
-    char buf[112];
-    std::snprintf(buf, sizeof buf, "signature %08x is not a %s save's (%08x, or older builds' %08x)",
-                  signature, from.c_str(), d->from->signature, d->from->legacySignature);
+  if (signature != d->from->signature && signature != d->from->portSignature &&
+      signature != d->from->legacySignature) {
+    char buf[128];
+    std::snprintf(buf, sizeof buf,
+                  "signature %08x is not a %s save's (%08x, or older builds' %08x or %08x)", signature,
+                  from.c_str(), d->from->signature, d->from->portSignature, d->from->legacySignature);
     error = buf;
     return false;
   }
