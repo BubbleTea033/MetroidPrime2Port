@@ -3,6 +3,7 @@
 #include "Kyoto/CCrc32.hpp"
 #include "port_bitstream.h"
 #include "port_bytes.h"
+#include "port_save_layout.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -334,7 +335,7 @@ bool Slot(const SConvDirection& d, const uint8_t* in, size_t size, std::vector<u
 uint32_t NewestTimestamp(const uint8_t* user, size_t size) {
   uint32_t newest = 0;
   for (int i = 0; i < 3; ++i) {
-    const size_t at = kSlotsStart + size_t(i) * kSlotStride;
+    const size_t at = PortSaveLayout::SlotOffset(user, i);
     if (user[8 + i] != 0 && at + 8 <= size) {
       newest = std::max(newest, port::ReadBE32(user + at + 4));
     }
@@ -400,7 +401,7 @@ bool UserData(const uint8_t* in, size_t size, const std::string& from, const std
     if (in[8 + i] == 0) {
       continue;
     }
-    const size_t at = kSlotsStart + size_t(i) * kSlotStride;
+    const size_t at = PortSaveLayout::SlotOffset(in, i);
     if (at + kSlotStride > size) {
       error = "slot " + std::to_string(i + 1) + " runs past the save data";
       return false;
