@@ -6148,7 +6148,7 @@ const CommandSpec kCommands[] = {
     {"", nullptr,
       "save export [<path>]        write the card's save file out (default: save-backups/)\n"},
     {"", nullptr,
-      "save import <path|latest>   put a .gci back on the card; the file it replaces is kept\n"},
+      "save import <path|latest>   put a .gci or a Trilogy save.bin on the card; the file it replaces is kept\n"},
     {"", nullptr,
       "save backup | backups       copy the card now, or list the copies in save-backups\n"},
     {"", nullptr,

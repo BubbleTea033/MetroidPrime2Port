@@ -735,6 +735,8 @@ bool ConvertCard(std::vector<uint8_t>& bytes, const std::string& from, const std
 
 } // namespace
 
+static bool ImportTrilogy(const std::string& saveBin, std::string& message, bool remountNow);
+
 bool Import(const std::string& source, std::string& message) {
   std::string path = source;
   if (path == "latest") {
@@ -757,6 +759,11 @@ bool Import(const std::string& source, std::string& message) {
   if (!ReadAll(path, bytes, error)) {
     message = error;
     return false;
+  }
+  // A Wii Trilogy save.bin (Dolphin's NAND copy): its Echoes file goes into the card's save.
+  std::string notTrilogy;
+  if (Trilogy::Validate(bytes.data(), bytes.size(), notTrilogy)) {
+    return ImportTrilogy(path, message, false);
   }
   File info;
   if (!Inspect(path, info, error)) {
@@ -1136,8 +1143,9 @@ bool ExportTrilogy(const std::string& saveBin, std::string& message) {
 }
 
 // Brings the Trilogy's file into the card: the converter updates the card's newest file (or makes
-// one), the card file is backed up first, and Aurora re-reads the card.
-static bool ImportTrilogy(const std::string& saveBin, std::string& message) {
+// one), the card file is backed up first, and Aurora re-reads the card: at once (the front end's
+// mirror), or at the save screen's next idle frame (Import, MarkCardChanged).
+static bool ImportTrilogy(const std::string& saveBin, std::string& message, bool remountNow) {
   std::vector<uint8_t> bin;
   if (!ReadAll(saveBin, bin, message) || !Trilogy::Validate(bin.data(), bin.size(), message)) {
     return false;
@@ -1172,7 +1180,11 @@ static bool ImportTrilogy(const std::string& saveBin, std::string& message) {
   if (!WriteAll(target, gci, message)) {
     return false;
   }
-  aurora_card_remount(0);
+  if (remountNow) {
+    aurora_card_remount(0);
+  } else {
+    MarkCardChanged();
+  }
   message = "Trilogy file " + std::to_string(file + 1) + " imported as " + target;
   return true;
 }
@@ -1230,7 +1242,7 @@ bool SyncTrilogyShare(bool pull) {
   if (!pull || binTime <= cardTime || binTime == sFailedBin) {
     return false;
   }
-  if (!ImportTrilogy(bin, message)) {
+  if (!ImportTrilogy(bin, message, true)) {
     std::fprintf(stderr, "[save] Trilogy mirror: import failed: %s\n", message.c_str());
     sFailedBin = binTime;
     return false;
