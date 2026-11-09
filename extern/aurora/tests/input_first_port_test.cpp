@@ -91,4 +91,14 @@ TEST(InputFirstPort, LowestIdWinsWhateverTheOrder) {
   EXPECT_EQ(Choose({Pad(41, -1, kFallback), Pad(40, -1, kFallback)}).take, 1);
 }
 
+TEST(InputFirstPort, DisplacedPadTakesTheTakersPortOrTheFirstEmptyOne) {
+  const bool none[4] = {true, false, false, false};
+  const bool second[4] = {true, true, false, false};
+  const bool full[4] = {true, true, true, true};
+  EXPECT_EQ(aurora::input::displaced_port(2, second), 2);
+  EXPECT_EQ(aurora::input::displaced_port(-1, none), 1);
+  EXPECT_EQ(aurora::input::displaced_port(-1, second), 2);
+  EXPECT_EQ(aurora::input::displaced_port(-1, full), -1);
+}
+
 } // namespace

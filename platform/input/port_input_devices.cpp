@@ -1588,6 +1588,21 @@ SPoll Poll(unsigned mouseHeld, bool focused) {
   return r;
 }
 
+namespace {
+bool InMatch() { return gpGameState != nullptr && gpGameState->GetGameMode().GetNumPlayers() > 1; }
+} // namespace
+
+void NotePadUsed(u32 instance) {
+  if (!InMatch()) PADTakeFirstPort(instance);
+}
+
+void MatchPortsTick() {
+  static bool sMatch = false;
+  const bool match = InMatch();
+  if (match && !sMatch) PADRestoreSavedPorts();
+  sMatch = match;
+}
+
 bool PollPlayer(int port, PADStatus& status) {
   status = PADStatus{};
   if (port <= 0 || port >= kUserFiles || PADGetIndexForPort(static_cast<u32>(port)) < 0) return false;

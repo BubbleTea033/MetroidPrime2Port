@@ -61,4 +61,13 @@ inline FirstPortMove choose_first_port(const FirstPortCandidate* pads, size_t co
   return {};
 }
 
+// Port: where the pad that held port 0 goes when the pad just used takes it (single-player:
+// every pad plays). It gets the taker's old port, else the first empty one of 1-3, else none.
+inline int32_t displaced_port(int32_t takerPort, const bool occupied[4]) noexcept {
+  if (takerPort > 0 && takerPort < 4) return takerPort;
+  for (int32_t port = 1; port < 4; ++port) {
+    if (!occupied[port]) return port;
+  }
+  return -1;
+}
 } // namespace aurora::input

@@ -510,6 +510,42 @@ void set_player_index(Uint32 instance, Sint32 index) noexcept {
   }
 }
 
+// Port: the pad just used takes port 0, so every pad plays player 1 outside a multiplayer match.
+// Nothing is saved. A saved None for player 1 still keeps real pads off it.
+bool take_first_port(Uint32 instance) noexcept {
+  const auto it = g_GameControllers.find(instance);
+  if (it == g_GameControllers.end()) {
+    return false;
+  }
+  const int32_t oldPort = SDL_GetGamepadPlayerIndex(it->second.m_controller);
+  if (oldPort == 0) {
+    return false;
+  }
+  ensure_port_preferences_loaded();
+  if (g_portPreferences[0].state == PortPreferenceState::None && !is_fallback_controller(instance, it->second)) {
+    return false;
+  }
+  if (const auto* holder = get_controller_for_player(0); holder != nullptr) {
+    bool occupied[PAD_MAX_CONTROLLERS] = {};
+    for (uint32_t port = 1; port < PAD_MAX_CONTROLLERS; ++port) {
+      occupied[port] = get_controller_for_player(port) != nullptr;
+    }
+    // Clear the taker first: SDL drops whoever holds an index that is handed out again.
+    SDL_SetGamepadPlayerIndex(it->second.m_controller, -1);
+    SDL_SetGamepadPlayerIndex(holder->m_controller, displaced_port(oldPort, occupied));
+  }
+  SDL_SetGamepadPlayerIndex(it->second.m_controller, 0);
+  const char* name = SDL_GetGamepadName(it->second.m_controller);
+  Log.info("Controller '{}' took port 0", name != nullptr ? name : "?");
+  return true;
+}
+
+// Port: back to the saved assignment (a multiplayer match starts) after take_first_port moved pads.
+void restore_saved_ports() noexcept {
+  apply_port_preferences();
+  prefer_real_controller_on_first_port();
+}
+
 std::string controller_name(Uint32 instance) noexcept {
   if (auto it = g_GameControllers.find(instance); it != g_GameControllers.end()) {
     const auto* name = SDL_GetGamepadName(it->second.m_controller);

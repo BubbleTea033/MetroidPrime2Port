@@ -65,6 +65,11 @@ PADStatus Poll();
 // their player. False, with nothing done, without a pad on the port or a player for it; the
 // pad then reads Aurora's own mapping.
 bool PollPlayer(int port, PADStatus& status);
+// Outside a multiplayer match every pad plays player 1: the pad just used (SDL joystick id)
+// takes pad port 0, unsaved. In a match the Player combos' assignment stands.
+void NotePadUsed(u32 instance);
+// Once per frame: a match starting puts the saved Player choices back.
+void MatchPortsTick();
 
 // Runs the port's own actions (port menu, screenshot) from their bindings; called once a
 // loop iteration from port_events.cpp, so they work while the game is paused.

@@ -15,6 +15,12 @@ appended, dated as in the heading there.
   port 0 saves Unset. Existing files heal by themselves. Test `input_first_port_tests` (11), headless check with
   `MP2_VPADS=1`: `padport clear 0`, reboot -> `Virtual Pad 1 moved to port 0`; `padport 0 0` writes state 0.
 - Not checked on a device (needs a real pad + the touch overlay). No reply posted (user: do not post).
+- Follow-up (user: every pad must work in single-player without picking one): the pad used last (button, or axis
+  past 16000; touch pad and `MP2_VPADS` pads included) takes pad port 0 while `GetNumPlayers() <= 1`
+  (`port_events.cpp` -> `PortInputDevices::NotePadUsed` -> `PADTakeFirstPort`), unsaved; the old holder gets the
+  taker's port or the first empty one. A saved None for player 1 still keeps real pads off. When a match starts
+  (`MatchPortsTick`) `PADRestoreSavedPorts` reapplies the Player combos' saved choices. The front end counts as
+  single-player, so in the multiplayer setup menus the pad pressed last is player 1 unless a choice is saved.
 
 ## 2026-11-09: #96, Hunter Ing doesn't fade out on death
 

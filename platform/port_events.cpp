@@ -628,6 +628,13 @@ bool PortPumpEvents() {
       if (PortTouch::PhysicalEvent(input, PortOverlay::Visible(), virtualPad)) {
         PortTouch::NotePhysicalInput();
       }
+      // Every pad plays player 1 outside a multiplayer match (#120): the one just used, the
+      // touch pad included, takes pad port 0. Axis motion counts past the drift threshold.
+      if (input.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+        PortInputDevices::NotePadUsed(input.gbutton.which);
+      } else if (input.type == SDL_EVENT_GAMEPAD_AXIS_MOTION && std::abs(int(input.gaxis.value)) > 16000) {
+        PortInputDevices::NotePadUsed(input.gaxis.which);
+      }
     }
     // MP1's F10: the 60 FPS cap on and off.
     if (event->type == AURORA_SDL_EVENT && event->sdl.type == SDL_EVENT_KEY_DOWN &&
@@ -675,6 +682,7 @@ bool PortPumpEvents() {
   PADSetPortOverride(0, &sPad0);
   // Players 2-4 (a multiplayer match): each pad through its player's own bindings, gated alike.
   static PortInputGate::Gate<PADStatus> sPlayerGates[4];
+  PortInputDevices::MatchPortsTick();
   for (u32 port = 1; port < 4; ++port) {
     sPlayerPadValid[port] = PortInputDevices::PollPlayer(port, sPlayerPads[port]);
     if (!sPlayerPadValid[port]) continue;
