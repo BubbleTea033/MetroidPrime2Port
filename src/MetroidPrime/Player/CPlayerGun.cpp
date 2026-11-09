@@ -3198,8 +3198,16 @@ void CPlayerGun::EnterFidget(CStateManager& mgr) {
 void CPlayerGun::UpdateGunIdle(float dt, CStateManager& mgr) {
   bool moving;
   CPlayer* player = GetPlayer(mgr);
+#ifdef TARGET_PC
+  // Port: the hand on cannon stands in for R's free look, which holds off fidgets; a fidget that
+  // leaves the left arm alone would otherwise play with the hand still on the cannon (#117).
+  if (player->IsInFreeLook() || mPortHandOnCannon ||
+      player->GetOrbitState() != CPlayer::kOS_NoOrbit || mBeamChangeState != kBCS_Idle ||
+      mInBigStrike) {
+#else
   if (player->IsInFreeLook() || player->GetOrbitState() != CPlayer::kOS_NoOrbit ||
       mBeamChangeState != kBCS_Idle || mInBigStrike) {
+#endif
     mFidget.ResetAll();
   } else {
     moving = true;
