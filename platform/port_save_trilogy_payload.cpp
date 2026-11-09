@@ -16,6 +16,7 @@
 
 #include "port_bitstream.h"
 #include "port_bytes.h"
+#include "port_save_layout.h"
 #include "port_crc32.h"
 
 #include <algorithm>
@@ -490,7 +491,7 @@ bool Locate(const std::vector<uint8_t>& gci, Gci& g, std::string& error) {
     }
     uint32_t newest = 0;
     for (int s = 0; s < 3; ++s) {
-      const uint8_t* slot = user + kSlotsStart + size_t(s) * kSlotStride;
+      const uint8_t* slot = user + PortSaveLayout::SlotOffset(user, s);
       if (user[8 + s] != 0 && std::memcmp(slot, "GMST", 4) == 0) {
         newest = std::max(newest, port::ReadBE32(slot + 4));
       }
@@ -686,7 +687,7 @@ bool PayloadFromGci(const std::vector<uint8_t>& gci, int slot, uint8_t partA[kPa
   if (!ParseSysBlock(user + kSysOffset, *g.rel, m, error)) {
     return false;
   }
-  if (!ParseGcSlot(user + kSlotsStart + size_t(slot) * kSlotStride, *g.rel, m, error)) {
+  if (!ParseGcSlot(user + PortSaveLayout::SlotOffset(user, slot), *g.rel, m, error)) {
     return false;
   }
   ConvertReport local;
@@ -739,14 +740,14 @@ bool GciFromPayload(const Payload& payload, std::vector<uint8_t>& gci, std::stri
   uint32_t newest = 0;
   bool present = false;
   for (int s = 0; s < 3; ++s) {
-    const uint8_t* p = user + kSlotsStart + size_t(s) * kSlotStride;
+    const uint8_t* p = user + PortSaveLayout::SlotOffset(user, s);
     if (user[8 + s] != 0 && std::memcmp(p, "GMST", 4) == 0 && (!present || port::ReadBE32(p + 4) >= newest)) {
       slot = s;
       newest = port::ReadBE32(p + 4);
       present = true;
     }
   }
-  uint8_t* slotBytes = user + kSlotsStart + size_t(slot) * kSlotStride;
+  uint8_t* slotBytes = user + PortSaveLayout::SlotOffset(user, slot);
 
   // What the Trilogy does not store keeps the card's value: the save index, the "initialise powerups
   // at first spawn" bit, and the cinematics the card has seen that the Trilogy file has not (the system
@@ -838,13 +839,13 @@ bool ConvertGci(const std::vector<uint8_t>& in, const std::string& to, std::vect
   // card's, shared by its slots, and goes over with the first.
   bool converted = false;
   for (int s = 0; s < 3; ++s) {
-    uint8_t* slot = user + kSlotsStart + size_t(s) * kSlotStride;
+    uint8_t* slot = user + PortSaveLayout::SlotOffset(user, s);
     if (user[8 + s] == 0 || std::memcmp(slot, "GMST", 4) != 0) {
       continue;
     }
     Model m;
     if (!ParseSysBlock(src + kUserHeader + kSysOffset, *g.rel, m, error) ||
-        !ParseGcSlot(src + kUserHeader + kSlotsStart + size_t(s) * kSlotStride, *g.rel, m, error)) {
+        !ParseGcSlot(src + kUserHeader + PortSaveLayout::SlotOffset(src + kUserHeader, s), *g.rel, m, error)) {
       error = "slot " + N(size_t(s) + 1) + ": " + error;
       return false;
     }

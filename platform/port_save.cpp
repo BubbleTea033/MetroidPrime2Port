@@ -1,6 +1,7 @@
 #include "port_utf8_path.h"
 #include "port_mobile.h"
 #include "port_save.h"
+#include "port_save_layout.h"
 
 #include "port_bytes.h"
 #include "port_save_trilogy.h"
@@ -64,7 +65,8 @@ constexpr int kCopies = 2;
 
 // A copy's payload, from CMemoryCardDriver::BuildSaveBuffer: SSaveHeader::PutTo (signature, index,
 // three present flags, the SAVH marker), the 192-byte system options, one 32-byte game-options block
-// per slot, the 32-byte global options, then one SGameFileSlot (0xa38) per present slot.
+// per slot, the 32-byte global options, then one SGameFileSlot (0xa38) per present slot, packed
+// (port_save_layout.h).
 constexpr size_t kSaveHeaderSize = 15;
 constexpr size_t kSystemDataSize = 192;
 constexpr size_t kGameOptionsSize = 32;
@@ -273,7 +275,12 @@ bool ParseCopy(const uint8_t* user, size_t size, SCopy& out) {
     if (!present[i]) {
       continue;
     }
-    const uint8_t* slot = user + kSlotsStart + size_t(i) * kSlotStride;
+    const size_t at = PortSaveLayout::SlotOffset(user, i);
+    if (at + kSlotStride > size) {
+      out.why = "the save data is too short for its slots";
+      return false;
+    }
+    const uint8_t* slot = user + at;
     if (std::memcmp(slot, "GMST", 4) != 0) {
       out.why = "a slot does not start with GMST";
       return false;
