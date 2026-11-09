@@ -20,6 +20,7 @@
 #include "port_entry.h"
 #include "port_mods.h"
 #include "port_overlay.h"
+#include "port_overlay_internal.h"
 #include "port_resume_logic.h"
 #include "port_save.h"
 #include "port_warp.h"
@@ -1108,15 +1109,16 @@ Info SlotInfo(int slot) {
 
 int SelectedSlot() { return sSelected.load(); }
 
+// The slot is a setting (state_slot): a change is written with the settings on the next frame.
 void SetSelectedSlot(int slot) {
-  if (slot >= 1 && slot <= kSlotCount) {
-    sSelected.store(slot);
+  if (slot >= 1 && slot <= kSlotCount && sSelected.exchange(slot) != slot) {
+    PortOverlaySettings::MarkDirty();
   }
 }
 
-void SelectNextSlot() { sSelected.store(sSelected.load() % kSlotCount + 1); }
+void SelectNextSlot() { SetSelectedSlot(sSelected.load() % kSlotCount + 1); }
 
-void SelectPrevSlot() { sSelected.store((sSelected.load() + kSlotCount - 2) % kSlotCount + 1); }
+void SelectPrevSlot() { SetSelectedSlot((sSelected.load() + kSlotCount - 2) % kSlotCount + 1); }
 
 void RequestSave(int slot, bool toast) {
   if (slot >= 0 && slot <= kSlotCount) {

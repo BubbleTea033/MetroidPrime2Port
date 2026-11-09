@@ -50,7 +50,7 @@ struct Info {
 std::string Folder();
 Info SlotInfo(int slot);
 
-int SelectedSlot();          // 1..kSlotCount, the slot F5/F9 act on
+int SelectedSlot();          // 1..kSlotCount, the slot F5/F9 act on (the state_slot setting)
 void SetSelectedSlot(int slot);
 void SelectNextSlot();
 void SelectPrevSlot();

@@ -67,6 +67,8 @@ Save states page:
 - `quick_resume`: Save states > Quick resume (default on); env `MP2_QUICK_RESUME`. On quitting during
   play (and as the game keeps safe points, see Resume below) `savestates/resume.mp2ss` is written; the
   next launch asks "Resume where you left off?". Console: `resume [status|save|load|clear]`.
+- `state_slot`: the save state slot the Save state / Load state bindings (F5 / F9) use, 1 to 8 (default 1).
+  Set from Save states, the Next / Previous state slot bindings or the console; kept between launches.
 - Save state bindings and room objects: no settings. The Save state / Load state bindings always
   work (unbind them in Controls > Remap); env `MP2_SAVESTATE_HOTKEYS=0` turns them off. States and
   quick resume store the loaded rooms' objects; env `MP2_SAVESTATE_ROOM_STATE=0` stores none, and a
