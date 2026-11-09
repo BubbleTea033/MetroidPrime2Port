@@ -1960,7 +1960,8 @@ void DrawPortController(u32 port, const char* label) {
   }
   if (port == PAD_CHAN0) {
     ImGui::SetItemTooltip("Controller used to play and record bindings. The choice is saved and restored on "
-                          "reconnect. Keyboard and touch remain available. 'Controller bindings for' selects "
+                          "reconnect; while that controller is away another one, or the touch controls, stands in. "
+                          "Keyboard and touch remain available. 'Controller bindings for' selects "
                           "the profile to edit, independently.");
   } else {
     ImGui::SetItemTooltip("This player's controller in a multiplayer match.");

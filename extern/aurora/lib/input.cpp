@@ -1,4 +1,5 @@
 #include "input.hpp"
+#include "input_first_port.hpp"
 #include "device.hpp"
 #include "internal.hpp"
 #include "io.hpp"
@@ -13,6 +14,7 @@
 #include <filesystem>
 #include <string>
 #include <utility>
+#include <vector>
 
 using namespace std::string_view_literals;
 
@@ -293,10 +295,7 @@ void apply_port_preferences() noexcept {
   }
 }
 
-// The port's Android touch overlay is an SDL virtual gamepad, attached on the first touch. Once it
-// holds player 1, a real pad connected later gets player 2, which a single-player game never reads.
-// Keep player 1 for a real pad when one is connected, and hand it back to the virtual pad when the
-// last real one leaves. An explicitly configured first port is left alone.
+// Port: the first port's holder is chosen by choose_first_port (input_first_port.hpp, which says why).
 // The Steam Deck's built-in controller (SDL reports it, 28de:1205, behind Steam's virtual pad too)
 // ranks with the virtual pads: a controller connected to a Deck takes player 1 from it, whatever
 // Steam's order, and the Deck gets it back when that controller leaves.
@@ -306,32 +305,31 @@ bool is_fallback_controller(Uint32 instance, const GameController& controller) n
 
 void prefer_real_controller_on_first_port() noexcept {
   ensure_port_preferences_loaded();
-  if (g_portPreferences[0].state != PortPreferenceState::Unset) {
-    return;
-  }
 
-  GameController* first = nullptr;
-  GameController* real = nullptr;
-  GameController* virt = nullptr;
+  std::vector<FirstPortCandidate> pads;
+  std::vector<GameController*> controllers;
+  pads.reserve(g_GameControllers.size());
+  controllers.reserve(g_GameControllers.size());
   for (auto& [instance, controller] : g_GameControllers) {
-    if (SDL_GetGamepadPlayerIndex(controller.m_controller) == 0) {
-      first = &controller;
-    } else if (!is_fallback_controller(instance, controller)) {
-      real = real != nullptr ? real : &controller;
-    } else {
-      virt = virt != nullptr ? virt : &controller;
-    }
+    FirstPortCandidate pad;
+    pad.id = instance;
+    pad.port = SDL_GetGamepadPlayerIndex(controller.m_controller);
+    pad.fallback = is_fallback_controller(instance, controller);
+    // apply_port_preferences left only the saved pad on a configured port
+    pad.assigned = pad.port > 0 && pad.port < PAD_MAX_CONTROLLERS &&
+                   g_portPreferences[pad.port].state != PortPreferenceState::Unset;
+    pads.push_back(pad);
+    controllers.push_back(&controller);
   }
 
-  // A real pad on port 0 stays, and a virtual pad only takes port 0 when it is empty
-  const bool firstIsReal = first != nullptr && !is_fallback_controller(first->m_index, *first);
-  GameController* wanted = real != nullptr ? real : virt;
-  if (wanted == nullptr || firstIsReal || (first != nullptr && wanted == virt)) {
+  const FirstPortMove move =
+      choose_first_port(pads.data(), pads.size(), g_portPreferences[0].state == PortPreferenceState::None);
+  if (move.take < 0) {
     return;
   }
-  const int32_t freed = SDL_GetGamepadPlayerIndex(wanted->m_controller);
-  if (first != nullptr) {
-    SDL_SetGamepadPlayerIndex(first->m_controller, freed);
+  GameController* wanted = controllers[move.take];
+  if (move.give >= 0) {
+    SDL_SetGamepadPlayerIndex(controllers[move.give]->m_controller, pads[move.take].port);
   }
   SDL_SetGamepadPlayerIndex(wanted->m_controller, 0);
   Log.info("Controller '{}' moved to port 0", SDL_GetGamepadName(wanted->m_controller) != nullptr
@@ -557,7 +555,12 @@ void persist_controller_for_player(uint32_t player, const GameController* contro
   }
 
   ensure_port_preferences_loaded();
-  if (controller != nullptr) {
+  if (controller != nullptr && player == 0 && is_fallback_controller(controller->m_index, *controller)) {
+    // Port: the touch pad (or the Deck's own controller) on the first port is the automatic
+    // choice, not a saved one: a real pad connected later still takes the port (#120).
+    g_portPreferences[player].state = PortPreferenceState::Unset;
+    g_portPreferences[player].identity = {};
+  } else if (controller != nullptr) {
     g_portPreferences[player].state = PortPreferenceState::Controller;
     g_portPreferences[player].identity = controller_identity(*controller);
   } else {

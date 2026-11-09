@@ -3,6 +3,19 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-09: #120, touch/controller swap blocked by a saved player-1 controller
+
+- Reporter's log: `Xbox 360 Controller ... port -1` beside the touch pad on port 0. Aurora's
+  `prefer_real_controller_on_first_port` returned whenever `controller_ports.dat` held a choice for port 0, and the
+  F1 Player 1 combo saves one for any pick, the touch pad included. Then the saved pad kept the port, the other
+  got -1, and unplugging the saved pad left player 1 empty (same code in MP1; MP1's users rarely open that combo).
+- Fix (`extern/aurora/lib/input_first_port.hpp` `choose_first_port`, `input.cpp`): a real pad without a configured
+  port takes port 0 from a fallback pad whatever is saved; a fallback pad fills an empty port 0 (also under
+  "None"); "None" keeps real pads off; pads the user put on ports 1-3 are never taken; picking a fallback pad for
+  port 0 saves Unset. Existing files heal by themselves. Test `input_first_port_tests` (11), headless check with
+  `MP2_VPADS=1`: `padport clear 0`, reboot -> `Virtual Pad 1 moved to port 0`; `padport 0 0` writes state 0.
+- Not checked on a device (needs a real pad + the touch overlay). No reply posted (user: do not post).
+
 ## 2026-11-09: #96, Hunter Ing doesn't fade out on death
 
 - `CMediumIng::UpdateMistState` (port-only, fn_41_6078) returned at once for a dead Ing; retail's `!mAlive` branch
