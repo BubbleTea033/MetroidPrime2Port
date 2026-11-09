@@ -271,6 +271,8 @@ extern "C" void OSFatal(GXColor fg, GXColor bg, const char* msg) {
     if (msg != nullptr) {
         std::fprintf(stderr, "OSFatal: %s\n", msg);
     }
+    // Declared noreturn: returning would run off the end of the caller.
+    std::abort();
 }
 
 // --- OS context -------------------------------------------------------------

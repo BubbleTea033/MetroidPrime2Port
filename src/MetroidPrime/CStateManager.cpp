@@ -3241,7 +3241,8 @@ void CStateManager::ApplyDamage(TUniqueId damagerId, TUniqueId damageeId, TUniqu
         useWeaponDirection ? damagee->GetDamageVulnerability(position, direction, info)
                            : damagee->GetDamageVulnerability();
 #ifdef TARGET_PC
-    if (const char* dbg = std::getenv("MP2_DEBUG_BALL"); dbg != nullptr) {
+    static const bool sDebugBallDamage = std::getenv("MP2_DEBUG_BALL") != nullptr;
+    if (sDebugBallDamage) {
       {
         std::fprintf(stderr,
                      "[ball] applydamage to %04x eid %04x: weapon %d hits %d damage %.1f "
@@ -3944,7 +3945,9 @@ void CStateManager::ShowPausedHUDMemo(CAssetId strg, float time) {
 
 void CStateManager::SendScriptMsg(const CScriptMsg& msg) {
 #ifdef TARGET_PC
-  if (std::getenv("MP2_DEBUG_BALL") != nullptr && msg.GetMessage() == kSM_SetToZero) {
+  // Read once: this runs for every script message.
+  static const bool sDebugBall = std::getenv("MP2_DEBUG_BALL") != nullptr;
+  if (sDebugBall && msg.GetMessage() == kSM_SetToZero) {
     std::fprintf(stderr, "[ball] queue SetToZero -> %04x from %04x (depth %d)\n",
                  msg.GetId().Value(), msg.GetSenderId().Value(), int(mScriptMsgs.GetCount()));
   }

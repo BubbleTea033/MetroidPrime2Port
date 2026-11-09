@@ -225,6 +225,9 @@ else()
     # decompilation is complete.
     target_compile_options(mp_game PRIVATE
         -Wformat -Wno-error=return-type -Wno-narrowing -Wno-multichar -Wno-write-strings
+        # rstl's smart pointers delete in headers: on an incomplete type that silently skips
+        # the destructor, and which unit's copy survives the link is arbitrary.
+        $<$<COMPILE_LANGUAGE:CXX>:-Werror=delete-incomplete>
         # The game's allocator API carries the literal "??(??)" call-stack tags
         # from the PowerPC build; they are trigraphs to the host compiler and
         # are intentional, so keep them out of the log.
@@ -247,6 +250,7 @@ foreach(m ${MP_MODULES})
     if(NOT MSVC)
         target_compile_options(mp_mod_${m} PRIVATE
             -Wformat -Wno-error=return-type -Wno-narrowing -Wno-multichar -Wno-write-strings
+            $<$<COMPILE_LANGUAGE:CXX>:-Werror=delete-incomplete>
             -Wno-trigraphs
             "$<$<COMPILE_LANGUAGE:CXX>:-include${CMAKE_CURRENT_SOURCE_DIR}/platform/compat.h>")
     else()
