@@ -21,7 +21,7 @@ with a window and no `MP2_FRAMES`/`MP2_HEADLESS`/`MP2_NO_DISC_DIALOG=1` a messag
 another image (blocks a scripted run until killed), otherwise the run exits 1.
 
 Robustness logs: `port: settings:`/`port: env:`/`port: storage:` at start; `watchdog:` after 5 s without
-a frame (`MP2_WATCHDOG_TEST_STALL=<frame>`); `MP stall:` for a loop over 250 ms (event pump with its joystick
+a frame, one `watchdog: a frame took` line for a frame of 1 to 5 s (`MP2_WATCHDOG_TEST_STALL=<frame>`, `MP2_WATCHDOG_TEST_STALL_MS`); `MP stall:` for a loop over 250 ms (event pump with its joystick
 update, tick, draw; at most one line per 2 s; `MP2_NO_STALL_LOG=1` off); `port: crashed:` with the stack (`MP2_CRASH_TEST=segv`).
 
 Sample a running boot: `gdb ... -x tools/gdb_interrupt.py -ex run -ex 'thread apply all bt 14'`

@@ -867,7 +867,22 @@ void CStateManager::PreRender(uint playerIndex) {
   mStateManagerContainer->mRenderLastAfterCameraFilters.clear();
   mProjectedShadows = nullptr;
 
+#ifdef TARGET_PC
+  // Port (MP1 #283): once per update for each player, as retail's one render per update did. An
+  // open door pings its occluded neighbour every Think and CGameArea::PreRender takes that ping;
+  // rendered twice between Thinks (frame rates above the simulation's) the second call counted
+  // the area as unwatched and it dropped and reloaded its textures over and over.
+  {
+    static uint sLastUpdate[4] = {~0u, ~0u, ~0u, ~0u};
+    uint& lastUpdate = sLastUpdate[playerIndex & 3];
+    if (lastUpdate != mUpdateFrameIdx) {
+      lastUpdate = mUpdateFrameIdx;
+      mWorld->PreRender();
+    }
+  }
+#else
   mWorld->PreRender();
+#endif
   BuildDynamicLightListForWorld();
   const CGameCamera* camera = mCameraManager->GetCurrentCamera(*this, true);
 #ifdef TARGET_PC

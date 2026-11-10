@@ -3384,8 +3384,21 @@ void CPlayerGun::DrawArm(const CStateManager& mgr, const CVector3f& cameraTransl
 
   const CPlayer* player = GetPlayer(const_cast< CStateManager& >(mgr));
   const CTransform4f armTransform = mGrappleArm->GetTransform();
+#ifdef TARGET_PC
+  // Port (MP1 #276): the arm follows the camera's pitch and the body doesn't, so near the pole
+  // the dot falls under 0.1 and the arm vanished. Retail free look stops short of that; direct
+  // aim goes further. Compare headings only, which keeps the facing-away test.
+  CVector3f portArmForward = armTransform.GetForward();
+  portArmForward.SetZ(0.f);
+  const float portArmDot =
+      portArmForward.CanBeNormalized()
+          ? CVector3f::Dot(portArmForward.AsNormalized(), player->GetTransform().GetForward())
+          : 1.f;
+  if (player->GetGrappleState() != CPlayer::kGS_None || portArmDot > 0.1f) {
+#else
   if (player->GetGrappleState() != CPlayer::kGS_None ||
       CVector3f::Dot(armTransform.GetForward(), player->GetTransform().GetForward()) > 0.1f) {
+#endif
     mGrappleArm->Render(mgr, cameraTranslation, flags, &mLights);
   }
 }

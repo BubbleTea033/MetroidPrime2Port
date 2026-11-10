@@ -3,6 +3,16 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-10: review of v0.14.0..085b959c2 and MP1 package 36
+
+- Review of the 22 commits since v0.14.0: no bug found (diff read in full; pad port swap, Prime 1 air
+  physics, toasts, title save-state refusal, Phazon shot audio checked against their call sites).
+- MP1 `1618ab8da..2b1aaa4f3` (`docs/MP1_SYNC.md` package 36): area PreRender once per update and player,
+  `DrawArm` at steep pitch, Fast Morph FOV blend, watchdog line for 1 to 5 s frames, mouse name bound.
+- Checked: build, headless new game 4500 frames with `MP2_WATCHDOG_TEST_STALL=3000` + `_MS=2000` (the
+  `a frame took 2.2 s` line). Not seen in play: doors above 60 fps, the arm, the morph zoom.
+- To decide: MP1 `7abaaf360` crosshair target colour, `6bb3722dd` translatable port strings.
+
 ## 2026-11-10: Phazon shot cheat (#100) had no sound outside the final fight
 
 - Cause: the charge loop, fire and hit sounds (`SamusPhazonGun.h`, samples 3766-3771) are in the AGSC
