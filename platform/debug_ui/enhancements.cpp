@@ -57,6 +57,7 @@ void DrawPrime1Disc() {
     if (sPrime1DiscPick.has_value()) {
       if (!sPrime1DiscPick->empty()) {
         PortOverlay::SetPrime1DiscPath(*sPrime1DiscPick);
+        PortPrime1Tweaks::Reload();
       }
       sPrime1DiscPick.reset();
     }

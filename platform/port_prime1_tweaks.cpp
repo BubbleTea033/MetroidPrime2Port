@@ -9,6 +9,7 @@
 #include <aurora/dvd.h>
 #include <zlib.h>
 
+#include <cctype>
 #include <cstring>
 #include <mutex>
 #include <vector>
@@ -36,10 +37,27 @@ bool ReadImageFile(AuroraDiscImage* image, uint32_t index, std::vector< uint8_t 
   return ok;
 }
 
+// A file of the disc by name, ignoring case as Aurora's own lookup does (Prime 1's GameCube disc
+// spells it Tweaks.Pak); the .pak names seen go into the error when it is not found.
 struct Find {
   const char* name;
   int64_t index = -1;
+  std::string paks;
 };
+
+bool EqualsIgnoreCase(const char* a, const char* b) {
+  for (; *a != '\0' && *b != '\0'; ++a, ++b) {
+    if (std::tolower(static_cast< unsigned char >(*a)) != std::tolower(static_cast< unsigned char >(*b))) {
+      return false;
+    }
+  }
+  return *a == *b;
+}
+
+bool EndsWithPak(const char* name) {
+  const size_t length = std::strlen(name);
+  return length >= 4 && EqualsIgnoreCase(name + length - 4, ".pak");
+}
 
 } // namespace
 
@@ -63,13 +81,20 @@ bool LoadFromDisc(const std::string& path, BoostBall& out, std::string& source, 
         image,
         [](u32 index, const char* name, u32, void* user) {
           auto* find = static_cast< Find* >(user);
-          if (find->index < 0 && name != nullptr && std::strcmp(name, find->name) == 0) {
+          if (name == nullptr) {
+            return;
+          }
+          if (find->index < 0 && EqualsIgnoreCase(name, find->name)) {
             find->index = index;
+          } else if (EndsWithPak(name) && find->paks.size() < 200) {
+            find->paks += find->paks.empty() ? "" : ", ";
+            find->paks += name;
           }
         },
         &tweaks);
     if (tweaks.index < 0) {
-      error = id + " has no Tweaks.pak";
+      error = id + " has no Tweaks.pak" +
+              (tweaks.paks.empty() ? std::string(" (no .pak files listed)") : " (has " + tweaks.paks + ")");
     } else if (!ReadImageFile(image, static_cast< uint32_t >(tweaks.index), pak)) {
       error = "cannot read Tweaks.pak from " + id;
     } else {
@@ -145,6 +170,11 @@ bool Values(BoostBall& out) {
     out = sValues;
   }
   return sValid;
+}
+
+void Reload() {
+  std::lock_guard< std::mutex > lock(sMutex);
+  sAttempted = false;
 }
 
 std::string Status() {

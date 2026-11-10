@@ -139,6 +139,8 @@ bool LoadFromDisc(const std::string& path, BoostBall& out, std::string& source, 
 bool Values(BoostBall& out);
 // "GM8E01 rev 0", "no Prime 1 disc set" or the reason the disc could not be read.
 std::string Status();
+// Reads the disc again on the next use, even at the same path (a disc picked again).
+void Reload();
 
 // While one is alive, CTweakBall returns Echoes' own Boost Ball values even with Prime 1's
 // loaded, so the console's `prime1boost` can print the two side by side. Game thread only.
