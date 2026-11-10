@@ -3,6 +3,16 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-10: Phazon shot cheat (#100) had no sound outside the final fight
+
+- Cause: the charge loop, fire and hit sounds (`SamusPhazonGun.h`, samples 3766-3771) are in the AGSC
+  `SamusPhazonGun` (0x6D318F8C), which only `Metroid1.pak` holds and only the final Dark Samus area lists.
+- Fix: `PortPhazonShotSfx` (`src/MetroidPrime/Player/`) holds the group while the cheat is on, through the
+  pool where the mounted paks have it, else read straight from `Metroid1.pak`; released with the cheat or the gun.
+- Checked: Agon `0b_sand_hall` new game, `phazon 1` + `press a 200`: log `[audio] Phazon shot cheat: ... read
+  from Metroid1.pak`, console `sfx` shows voices 3771 (charge), 3769 (fire), 3767 (hit). Temple Grounds (pool
+  path) boots and toggles clean. Not listened to; Trilogy/PAL discs unrun (silent as before if the id is absent).
+
 ## 2026-11-10: PR #122 merged (BubbleTea033) + follow-up fixes
 
 - PR: #107 lock-on release aim sync at the end of `CFirstPersonCamera::UpdateTransform`; custom FOV re-applied

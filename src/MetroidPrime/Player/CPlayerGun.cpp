@@ -70,6 +70,7 @@
 #include <math.h>
 #ifdef TARGET_PC
 #include "MetroidPrime/PortEfbCopy.hpp"
+#include "MetroidPrime/Player/PortPhazonShotSfx.hpp"
 #include "port_mouse.h"
 #include "port_overlay.h"
 #include "port_third_person.h"
@@ -193,8 +194,14 @@ void CPlayerGun::PortFireStackedBeams(float dt, CStateManager& mgr, const CTrans
 }
 
 void CPlayerGun::PortCheatPhazonCharge(CStateManager& mgr) {
+  // The shot's sounds are loaded by the final fight's area alone: hold them while the cheat is on.
+  if (!PortOverlay::PhazonShot()) {
+    PortPhazonShotSfx::Release();
+    return;
+  }
+  PortPhazonShotSfx::Ensure();
   const int max = gpTweakPlayerGun->GetMaxAbsorbedPhazonShots();
-  if (!PortOverlay::PhazonShot() || mAbsorbedPhazonShots == max ||
+  if (mAbsorbedPhazonShots == max ||
       GetPlayerFromAll(mgr)->GetPlayerState()->GetChargeBeamFactor() != 1.f) {
     return;
   }
@@ -3690,4 +3697,10 @@ CPlayerGun::CPlayerGun(TUniqueId playerId, int characterIndex)
   }
 }
 
-CPlayerGun::~CPlayerGun() { NWeaponTypes::unlock_tokens(mCommonDependencies); }
+CPlayerGun::~CPlayerGun() {
+#ifdef TARGET_PC
+  // Dropped with the world: the next one may hold the group itself (Metroid1.pak).
+  PortPhazonShotSfx::Release();
+#endif
+  NWeaponTypes::unlock_tokens(mCommonDependencies);
+}
