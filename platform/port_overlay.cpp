@@ -79,6 +79,8 @@ bool sBallCam = false;
 int sBallCamSpeed = PortOverlay::kBallCamSpeedDefault;
 bool sWalkSpeedEnabled = true;
 int sWalkSpeed = PortOverlay::kWalkSpeedDefault;
+// `MP2_PRIME1_AIR_PHYSICS`: Prime 1's airborne movement rules (CPlayerDynamics), saved in settings.cfg.
+bool sPrime1AirPhysics = false;
 int sScanSpeed = PortOverlay::kScanSpeedDefault;
 int sBeamSwitchSpeed = PortOverlay::kBeamSwitchSpeedDefault;
 int sMusicBoost = PortOverlay::kVolumeBoostDefault;

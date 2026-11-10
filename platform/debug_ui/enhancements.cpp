@@ -113,6 +113,13 @@ void DrawEnhancementsTab() {
   Changed(ImGui::Checkbox("Fast Morph", &sFastMorph));
   ImGui::SameLine();
   Changed(ImGui::Checkbox("Spring Ball", &sSpringBall));
+
+  ImGui::SeparatorText("Prime 1 Player Physics");
+  // Single player only: CPlayerDynamics ignores it in multiplayer.
+  CheckboxTip("Restore Prime 1 Jumps and Dashes", &sPrime1AirPhysics,
+              "Echoes patched most Prime 1 speedrunning techniques that allowed Samus to\n"
+              "build up lots of speed while in the air. This option restores Prime 1's jumping behavior,\n"
+              "line-for-line. L-Jumping, R-Jumping, and Scan / Combat Dashing work as they did in Prime 1.");
   ImGui::EndDisabled();
 
   ImGui::SeparatorText("Hints");
