@@ -110,6 +110,13 @@ Game page:
   orbit strafe and approach speeds are all multiplied by it, so she reaches k times the retail speed
   in the same time and stops in the same time. Jump height, sideways dashes, turning, the grapple
   and the Morph Ball are unchanged; speed carries into a jump. At 100 movement is exactly retail.
+- `prime1_air_physics`: Enhancements > Prime 1 movement > Prime 1 air physics (off by default, off under Original
+  experience); env `MP2_PRIME1_AIR_PHYSICS`. Single player only. While airborne, Samus moves by
+  Metroid Prime 1's rules (GM8E01_00) instead of Echoes': no friction once the jump button is
+  released, only the speed along her facing is capped (sideways speed is kept), and a sideways dash
+  that ends in the air keeps its speed (no `skDashClampSpeeds` clamp). L-jumps, R-jumps and scan
+  dashes carry again; under mouse aim, arcing the view in the air does what R does on a pad, as in
+  the Prime 1 port. Movement on the ground is unchanged.
 - `walk_speed_enabled`: Enhancements > Pace > Custom walk speed (default on); env
   `MP2_WALK_SPEED_ENABLED`, console `walkspeed on|off`. Off moves at retail speed whatever the
   slider says. For a sprint, set the speed and bind a custom action to this switch (Settings >

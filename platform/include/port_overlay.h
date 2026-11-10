@@ -219,6 +219,13 @@ void SetBeamAmmoPerExpansion(int ammo);
 // off, so a custom action can flip between retail and the slider's speed as a sprint.
 int WalkSpeed();
 void SetWalkSpeed(int percent);
+// Prime 1 air physics (`MP2_PRIME1_AIR_PHYSICS=1`, off by default, single player only): airborne
+// Samus moves by Metroid Prime 1's (GM8E01_00) rules instead of Echoes' patched ones, so L-jumps,
+// R-jumps and scan dashes carry their speed again. No friction once the jump button is released,
+// only the speed along her facing is capped, and a sideways dash keeps its speed when it ends
+// (CPlayerDynamics: GetDampedClampedVelocityWR, ComputeMovement, FinishSidewaysDash).
+bool Prime1AirPhysics();
+void SetPrime1AirPhysics(bool enabled);
 bool WalkSpeedEnabled();
 void SetWalkSpeedEnabled(bool enabled);
 // Scan speed in percent (`MP2_SCAN_SPEED`, 100 = retail): ScanSpeed() scales the time a scan takes

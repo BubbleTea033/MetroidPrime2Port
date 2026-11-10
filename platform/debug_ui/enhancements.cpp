@@ -113,6 +113,9 @@ void DrawEnhancementsTab() {
   Changed(ImGui::Checkbox("Fast Morph", &sFastMorph));
   ImGui::SameLine();
   Changed(ImGui::Checkbox("Spring Ball", &sSpringBall));
+
+  ImGui::SeparatorText("Prime 1 movement");
+  Changed(ImGui::Checkbox("Prime 1 air physics", &sPrime1AirPhysics));
   ImGui::EndDisabled();
 
   ImGui::SeparatorText("Hints");
