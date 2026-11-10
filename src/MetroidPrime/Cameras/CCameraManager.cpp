@@ -270,6 +270,15 @@ void CCameraManager::UpdateCameras(float dt, CStateManager& mgr) {
       mFpCamera->SetFovAndTarget(wantFov);
     }
   }
+  // A camera the change skipped under a cinematic is caught up once it ends. A world load (an
+  // elevator ride) rebuilds the cameras at retail's FOV and the arrival cinematic is often already
+  // playing on the first update, so the change above lands on mFirstPersonFov only and, matching
+  // from then on, was never retried: the view stayed at 55. Only this function sets the
+  // first-person camera's FOV, so whenever the setting is on it must equal mFirstPersonFov.
+  if (portFov > 0.f && mFpCamera != nullptr && !IsInCinematicCamera() &&
+      mFpCamera->GetTargetFov() != mFirstPersonFov) {
+    mFpCamera->SetFovAndTarget(mFirstPersonFov);
+  }
   // The morph ball's cameras scale their FOVs by the setting (PortFollowFovSetting) when they set
   // one, so a change mid-roll rescales what they hold.
   const float ballFovSetting = PortBallFovSetting();
