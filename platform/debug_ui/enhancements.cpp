@@ -174,27 +174,28 @@ void DrawEnhancementsTab() {
   ImGui::SameLine();
   Changed(ImGui::Checkbox("Spring Ball", &sSpringBall));
 
-  ImGui::SeparatorText("Prime 1 movement");
+  ImGui::SeparatorText("Prime 1 Player Physics");
   // Single player only: CPlayerDynamics and CMorphBall ignore both in multiplayer.
-  CheckboxTip("Prime 1 air physics", &sPrime1AirPhysics,
-              "Samus moves through the air as in Metroid Prime 1: no air friction once the jump\n"
-              "button is released, and only her forward speed is capped, so L-jumps, R-jumps and\n"
-              "scan dashes carry their speed. With mouse, twin-stick or touch aim, turning the\n"
-              "view in the air does what holding R does. Single player only.");
-  CheckboxTip("Prime 1 boost ball", &sPrime1BoostBall,
-              "The Boost Ball as in Metroid Prime 1: the next boost can charge as soon as one\n"
-              "ends, and a boost keeps its full strength when the ball is already rolling fast,\n"
-              "so boosts chain and stack. Single player only.");
+  CheckboxTip("Restore Prime 1 Jumps and Dashes", &sPrime1AirPhysics,
+              "Echoes patched most Prime 1 speedrunning techniques that allowed Samus to\n"
+              "build up lots of speed while in the air. This option restores Prime 1's jumping behavior,\n"
+              "line-for-line. L-Jumping, R-Jumping, and Scan / Combat Dashing work as they did in Prime 1.");
+  CheckboxTip("Restore Prime 1 Boost Ball", &sPrime1BoostBall,
+              "Requires your own copy of Prime 1. The tuning values have to be read from a disc.\n"
+              "Echoes reduced the rate in which boosts can be charged, and heavily dampens any excess speed\n"
+              "you get from boosting. This option restores both to their Prime 1 behavior.\n"
+              "WARNING: Prime 1's boosts are pretty aggressive in Prime 2's smaller rooms, and may effect how\n" 
+              "some puzzles function. The slider below can restore the dampening behavior, scaled to your.\n" 
+              "preference. 25%-33% is a good starting point.");
   ImGui::BeginDisabled(!sPrime1BoostBall);
   int boostFalloff = sPrime1BoostFalloff;
-  if (ImGui::SliderInt("Boost speed falloff", &boostFalloff, PortOverlay::kPrime1BoostFalloffMin,
+  if (ImGui::SliderInt("Boost Dampening", &boostFalloff, PortOverlay::kPrime1BoostFalloffMin,
                        PortOverlay::kPrime1BoostFalloffMax, "%d%%", ImGuiSliderFlags_AlwaysClamp)) {
     sPrime1BoostFalloff = boostFalloff;
     Changed(true);
   }
-  ItemHelp("How much weaker a boost gets when the ball is already moving: 0% is Prime 1 (full "
-           "strength at any speed), 100% is Echoes. Raise it if chained boosts carry too far for "
-           "Echoes' rooms. A boost from a standstill is the same at every value.");
+  ItemHelp("Prime 2 dampens the speed you gain when you boost while already under the effects of another boost, essentially a soft speed cap."
+           "Prime 1 never does this (0%), letting you stack boosts on top of one another and pick up lots of speed. 100% is Echoes retail.");
   ImGui::EndDisabled();
   DrawPrime1Disc();
   ImGui::EndDisabled();
