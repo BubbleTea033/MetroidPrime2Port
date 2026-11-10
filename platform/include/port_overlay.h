@@ -240,6 +240,11 @@ const int kPrime1BoostFalloffMax = 100;
 const int kPrime1BoostFalloffDefault = 0;
 int Prime1BoostFalloff();
 void SetPrime1BoostFalloff(int percent);
+// The player's Metroid Prime 1 disc (`prime1_disc`, env `MP2_PRIME1_DISC`; any image nod reads).
+// With Prime 1 boost ball on, the Boost Ball's charge and speed tweaks are read from it
+// (port_prime1_tweaks.h, CTweakBall); the port ships none of Prime 1's data.
+std::string Prime1DiscPath();
+void SetPrime1DiscPath(const std::string& path);
 bool WalkSpeedEnabled();
 void SetWalkSpeedEnabled(bool enabled);
 // Scan speed in percent (`MP2_SCAN_SPEED`, 100 = retail): ScanSpeed() scales the time a scan takes

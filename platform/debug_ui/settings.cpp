@@ -367,6 +367,8 @@ const SettingKey kSettingKeys[] = {
     BoolKey< &sPrime1BoostBall >("prime1_boost_ball"),
     IntKey< &sPrime1BoostFalloff, PortOverlay::kPrime1BoostFalloffMin,
             PortOverlay::kPrime1BoostFalloffMax >("prime1_boost_falloff", "0", "100"),
+    {"prime1_disc", [](const std::string& value) { sPrime1DiscPath = value; },
+     [](std::ostream& out) { out << sPrime1DiscPath; }, true, "/a/prime1.iso", "/b/prime1.iso"},
     IntKey< &sScanSpeed, PortOverlay::kScanSpeedMin, PortOverlay::kScanSpeedMax >("scan_speed", "50",
                                                                                   "400"),
     IntKey< &sBeamSwitchSpeed, PortOverlay::kBeamSwitchSpeedMin, PortOverlay::kBeamSwitchSpeedMax >(

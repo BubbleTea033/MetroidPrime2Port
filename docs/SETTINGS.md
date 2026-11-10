@@ -310,6 +310,12 @@ Controls > Options:
   impulse is scaled by 1 - (percent/100) * speed/50, so 0 is Prime 1 and 100 is Echoes; a boost
   from a standstill is the same at every value. Half-pipe scaling, the half impulse under water without the Gravity
   Boost, Spider Ball boosts and rooms that damp the entry speed are unchanged.
+- `prime1_disc`: the player's own Metroid Prime 1 disc (GameCube, GM8E01/GM8P01/GM8J01; any image
+  nod reads); env `MP2_PRIME1_DISC`, console `prime1boost <path>`. With Prime 1 boost ball on, the
+  Boost Ball's drain time, charge times and incremental speeds are read from its Tweaks.pak (the
+  CTWK named Ball, refused unless it is Prime 1's 114-float layout) and replace Echoes'
+  (`CTweakBall`, `platform/port_prime1_tweaks.cpp`), so boosts are as long and as strong as Prime
+  1's. The port ships none of these values; without a readable disc Echoes' own are used.
 - `ball_cam`, `ball_cam_speed`: Controls > Options > Morph Ball camera (issue #54; off by default,
   speed 25-400%, 100 default; env `MP2_BALL_CAM`, `MP2_BALL_CAM_SPEED`; off under Original
   experience). The mouse, twin stick, touch aim swipes and the C-stick turn the Morph Ball camera

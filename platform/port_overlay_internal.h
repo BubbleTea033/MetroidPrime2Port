@@ -31,6 +31,7 @@ extern int sWalkSpeed;
 extern bool sPrime1AirPhysics;
 extern bool sPrime1BoostBall;
 extern int sPrime1BoostFalloff;
+extern std::string sPrime1DiscPath;
 extern int sScanSpeed;
 extern int sBeamSwitchSpeed;
 extern int sMusicBoost;
