@@ -300,6 +300,28 @@ Controls > Options:
   that ends in the air keeps its speed (no `skDashClampSpeeds` clamp). L-jumps, R-jumps and scan
   dashes carry again; under mouse aim, arcing the view in the air does what R does on a pad, as in
   the Prime 1 port. Movement on the ground is unchanged.
+- `prime1_boost_ball`: Enhancements > Prime 1 movement > Prime 1 boost ball (off by default, off
+  under Original experience); env `MP2_PRIME1_BOOST_BALL`. Single player only. The Boost Ball as in
+  Metroid Prime 1 (GM8E01_00): a new charge can start as soon as a boost ends (Echoes holds the
+  charge at zero until the tweak's drain time has passed since the boost began), and the impulse is
+  not scaled down by the ball's speed (Echoes multiplies it by 1 - speed/50 outside half-pipes), so
+  boosts chain and stack. With a Prime 1 disc set (`prime1_disc`) the boost's timing, strength and
+  camera spring are Prime 1's too; without one, Echoes' values are used. Half-pipe scaling, the half
+  impulse under water without the Gravity Boost, Spider Ball boosts and rooms that damp the entry
+  speed are unchanged.
+- `prime1_boost_falloff`: Enhancements > Prime 1 movement > Boost speed falloff (0 to 100 percent,
+  default 0; env `MP2_PRIME1_BOOST_FALLOFF`). With Prime 1 boost ball on, brings part of Echoes'
+  speed falloff back: the impulse is scaled by 1 - (percent/100) * speed/50, so 0 is Prime 1 and
+  100 is Echoes. Chained Prime 1 boosts can carry further than Echoes' rooms and collision were
+  built for; this tunes that. A boost from a standstill is the same at every value.
+- `prime1_disc`: Enhancements > Prime 1 movement > Choose Prime 1 disc...: the player's own Metroid
+  Prime 1 disc (GameCube, GM8E01/GM8P01/GM8J01; any image nod reads); env `MP2_PRIME1_DISC`. With
+  Prime 1 boost ball on, the Boost Ball's drain time, charge times and incremental speeds and the
+  ball camera's boost spring tardis are read from its Tweaks.pak (the CTWK named Ball, refused
+  unless it is Prime 1's 114-float layout) and replace Echoes' (`CTweakBall`,
+  `platform/port_prime1_tweaks.cpp`). The port ships none of these values; without a readable disc
+  Echoes' own are used. The row beside the button shows the disc read ("GM8E01 rev 0") or why it
+  could not be.
 - `ball_cam`, `ball_cam_speed`: Controls > Options > Morph Ball camera (issue #54; off by default,
   speed 25-400%, 100 default; env `MP2_BALL_CAM`, `MP2_BALL_CAM_SPEED`; off under Original
   experience). The mouse, twin stick, touch aim swipes and the C-stick turn the Morph Ball camera
