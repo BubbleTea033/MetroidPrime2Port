@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <limits>
 #include <mutex>
 #include <utility>
 #include <optional>
@@ -116,6 +117,9 @@ void DrawPrime1Disc() {
   }
   // Rolling and the boost camera, as the tweak files hold them (degrees; gravity as stored), for
   // comparing the feel around a boost. Prime 1's from its Ball body by CTweakBall's read order.
+  // Its boost camera floats 87-91 are distance, elevation, yaw speed, dampen angle and turn rate,
+  // Echoes' order: MP1's decomp names them otherwise, but CBallCamera uses them so (the "boost
+  // elevation" is compared with the ball-to-camera distance, the "distance" passed as yaw speed).
   const CTweakBall& tweak = *gpTweakBall;
   const float toDegrees = 180.f / 3.14159265f;
   const auto compare = [&](const char* id, const char* title,
@@ -133,7 +137,11 @@ void DrawPrime1Disc() {
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(name);
         ImGui::TableNextColumn();
-        ImGui::Text("%.3f", values.first);
+        if (values.first == values.first) {
+          ImGui::Text("%.3f", values.first);
+        } else {
+          ImGui::TextUnformatted("-"); // Echoes has no accessor for it
+        }
         ImGui::TableNextColumn();
         ImGui::Text("%.3f", prime1.raw[values.second]);
       }
@@ -156,9 +164,10 @@ void DrawPrime1Disc() {
   compare("prime1cam", "Ball camera",
           {{"Distance at low speed", {tweak.GetBallCameraMinSpeedDistance(), 52}},
            {"Distance at high speed", {tweak.GetBallCameraMaxSpeedDistance(), 53}},
-           {"Boost distance", {tweak.GetBallCameraBoostDistance(), 89}},
-           {"Boost dampen angle (deg)", {tweak.GetBallCameraBoostDampenAngle() * toDegrees, 88}},
-           {"Boost yaw speed", {tweak.GetBallCameraBoostYawSpeed(), 90}},
+           {"Boost distance", {tweak.GetBallCameraBoostDistance(), 87}},
+           {"Boost elevation", {std::numeric_limits< float >::quiet_NaN(), 88}},
+           {"Boost yaw speed", {tweak.GetBallCameraBoostYawSpeed(), 89}},
+           {"Boost dampen angle (deg)", {tweak.GetBallCameraBoostDampenAngle() * toDegrees, 90}},
            {"Boost turn rate (deg/s)", {tweak.GetBallCameraBoostAnglePerSecond() * toDegrees, 91}},
            {"Boost spring constant", {tweak.GetBallCameraBoostSpringConstant(), 95}},
            {"Boost spring max", {tweak.GetBallCameraBoostSpringMax(), 96}},
