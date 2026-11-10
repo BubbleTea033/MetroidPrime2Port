@@ -113,6 +113,14 @@ void DrawEnhancementsTab() {
   Changed(ImGui::Checkbox("Fast Morph", &sFastMorph));
   ImGui::SameLine();
   Changed(ImGui::Checkbox("Spring Ball", &sSpringBall));
+
+  ImGui::SeparatorText("Prime 1 movement");
+  // Single player only: CPlayerDynamics ignores it in multiplayer.
+  CheckboxTip("Prime 1 air physics", &sPrime1AirPhysics,
+              "Samus moves through the air as in Metroid Prime 1: no air friction once the jump\n"
+              "button is released, and only her forward speed is capped, so L-jumps, R-jumps and\n"
+              "scan dashes carry their speed. With mouse, twin-stick or touch aim, turning the\n"
+              "view in the air does what holding R does. Single player only.");
   ImGui::EndDisabled();
 
   ImGui::SeparatorText("Hints");
