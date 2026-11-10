@@ -54,4 +54,12 @@ void Draw() {
   sText->SetText(text);
   sText->Draw();
 }
+
+float Bottom() {
+  if (sText == nullptr) {
+    return 0.f;
+  }
+  const PortGameUi::ScreenRect rect = sText->LastRect();
+  return rect.valid ? rect.y1 : 0.f;
+}
 } // namespace PortShaderToast

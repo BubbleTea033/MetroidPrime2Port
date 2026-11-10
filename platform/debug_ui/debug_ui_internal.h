@@ -205,6 +205,7 @@ void DrawVideoQuality();
 void DrawVideoCompatibility();
 // Drawn every frame, the window open or not (DrawUI).
 void DrawUpdateToast(); // once per launch: a newer release than this build is out
+bool UpdateToastHovered(); // the cursor is over it: a press there is not the game's
 // photo.cpp: photo mode's panel, bar and toast, and the touch fingers that fly its camera.
 void DrawPhotoUI();
 // Top-centre toasts stack instead of overlapping: BeginTopToastStack once per frame before them,

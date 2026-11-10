@@ -10,6 +10,7 @@
 #include "port_skip_prompt.h"
 #include "port_input_remap_ui.h"
 #include "port_mouse.h"
+#include "port_note_toast.h"
 #include "port_overlay.h"
 #include "port_prompts.h"
 #include "port_savestate.h"
@@ -321,53 +322,17 @@ bool DrawDesktopWindow() {
 
 } // namespace
 
-// ShowNote's text, set from any thread and timed from the first frame that draws it (MP1's
-// overlays.cpp:468-512).
 namespace {
-std::mutex sNoteMutex;
-std::string sNote;
-bool sNoteNew = false;
 // Set at startup when the last session ended on a failed disc read (main.cpp's marker file).
 std::atomic_bool sDiscReadFailedLastSession{false};
 } // namespace
 
-void ShowNote(const std::string& text) {
-  std::lock_guard<std::mutex> lock(sNoteMutex);
-  sNote = text;
-  sNoteNew = true;
-}
+// MP1's overlay toast (overlays.cpp:468-512), drawn here in the game's text (port_note_toast.h).
+void ShowNote(const std::string& text) { PortNoteToast::Show(text); }
 
 void NoteDiscReadFailedLastSession() { sDiscReadFailedLastSession = true; }
 
 namespace {
-void DrawNoteToast() {
-  static std::string sText;
-  static double sShownAt = -1.0;
-  const double now = ImGui::GetTime();
-  {
-    std::lock_guard<std::mutex> lock(sNoteMutex);
-    if (sNoteNew) {
-      sText = sNote;
-      sNoteNew = false;
-      sShownAt = now;
-    }
-  }
-  if (sText.empty() || now - sShownAt > 2.5) {
-    return;
-  }
-  const ImGuiViewport* viewport = ImGui::GetMainViewport();
-  PlaceTopToast(viewport);
-  ImGui::SetNextWindowBgAlpha(0.8f);
-  if (ImGui::Begin("##note-toast", nullptr,
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav |
-                       ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings |
-                       ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize)) {
-    ImGui::TextUnformatted(sText.c_str());
-    TopToastPlaced(viewport);
-  }
-  ImGui::End();
-}
-
 // Once per launch, for longer and in red: the last session ended on a failed disc read.
 void DrawDiscReadFailedAlert() {
   static double sShownAt = -1.0;
@@ -677,7 +642,6 @@ void DrawUI() {
   DrawIgtTimer();
   DrawSkipConfirm();
   DrawUpdateToast();
-  DrawNoteToast();
   DrawPhotoUI();
 #if defined(PORT_TOUCH_OVERLAY)
   DrawTouchOverlay();

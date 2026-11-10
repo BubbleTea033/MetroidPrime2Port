@@ -736,7 +736,7 @@ bool Visible() {
 }
 
 bool PointerBlocked() {
-  return Visible() || PortMouse::UiActive() ||
+  return Visible() || PortMouse::UiActive() || PortDebug::UpdateToastHovered() ||
          (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse);
 }
 
