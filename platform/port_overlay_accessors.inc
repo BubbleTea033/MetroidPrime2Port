@@ -86,6 +86,14 @@ PORT_GET_INT_IN(BallCamSpeed, "MP2_BALL_CAM_SPEED", sBallCamSpeed, kBallCamSpeed
 PORT_GET_BOOL(WalkSpeedEnabled, "MP2_WALK_SPEED_ENABLED", sWalkSpeedEnabled)
 PORT_SET(SetWalkSpeedEnabled, bool, sWalkSpeedEnabled)
 PORT_SET_CLAMP(SetWalkSpeed, int, sWalkSpeed, kWalkSpeedMin, kWalkSpeedMax)
+PORT_GET_BOOL_RETAIL(Prime1AirPhysics, false, "MP2_PRIME1_AIR_PHYSICS", sPrime1AirPhysics)
+PORT_SET(SetPrime1AirPhysics, bool, sPrime1AirPhysics)
+PORT_GET_BOOL_RETAIL(Prime1BoostBall, false, "MP2_PRIME1_BOOST_BALL", sPrime1BoostBall)
+PORT_SET(SetPrime1BoostBall, bool, sPrime1BoostBall)
+PORT_GET_INT_IN(Prime1BoostFalloff, "MP2_PRIME1_BOOST_FALLOFF", sPrime1BoostFalloff, kPrime1BoostFalloffMin,
+                kPrime1BoostFalloffMax)
+PORT_SET_CLAMP(SetPrime1BoostFalloff, int, sPrime1BoostFalloff, kPrime1BoostFalloffMin,
+               kPrime1BoostFalloffMax)
 PORT_GET_BOOL_RETAIL(SpringBall, false, "MP2_SPRING_BALL", sSpringBall)
 PORT_GET_BOOL(QuickResume, "MP2_QUICK_RESUME", sQuickResume)
 PORT_SET(SetQuickResume, bool, sQuickResume)

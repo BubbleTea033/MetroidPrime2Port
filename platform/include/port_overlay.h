@@ -219,6 +219,32 @@ void SetBeamAmmoPerExpansion(int ammo);
 // off, so a custom action can flip between retail and the slider's speed as a sprint.
 int WalkSpeed();
 void SetWalkSpeed(int percent);
+// Prime 1 air physics (`MP2_PRIME1_AIR_PHYSICS=1`, off by default, single player only): airborne
+// Samus moves by Metroid Prime 1's (GM8E01_00) rules instead of Echoes' patched ones, so L-jumps,
+// R-jumps and scan dashes carry their speed again. No friction once the jump button is released,
+// only the speed along her facing is capped, and a sideways dash keeps its speed when it ends
+// (CPlayerDynamics: GetDampedClampedVelocityWR, ComputeMovement, FinishSidewaysDash).
+bool Prime1AirPhysics();
+void SetPrime1AirPhysics(bool enabled);
+// Prime 1 boost ball (`MP2_PRIME1_BOOST_BALL=1`, off by default, single player only): the Boost
+// Ball as in Metroid Prime 1. A new charge can start as soon as a boost ends (Echoes waits the
+// tweak's drain time from the boost's start), and the impulse keeps Prime1BoostFalloff() percent
+// of Echoes' speed falloff (Echoes scales it by 1 - speed/50; Prime 1 not at all), so boosts
+// chain and stack (CMorphBall::ComputeBoostBallMovement, EnterBoosting).
+bool Prime1BoostBall();
+void SetPrime1BoostBall(bool enabled);
+// Boost speed falloff (`MP2_PRIME1_BOOST_FALLOFF`, percent, default 0 = Prime 1, 100 = Echoes):
+// with Prime 1 boost ball on, the impulse is scaled by 1 - (percent/100) * speed/50.
+const int kPrime1BoostFalloffMin = 0;
+const int kPrime1BoostFalloffMax = 100;
+const int kPrime1BoostFalloffDefault = 0;
+int Prime1BoostFalloff();
+void SetPrime1BoostFalloff(int percent);
+// The player's Metroid Prime 1 disc (`prime1_disc`, env `MP2_PRIME1_DISC`; any image nod reads).
+// With Prime 1 boost ball on, the Boost Ball's charge and speed tweaks are read from it
+// (port_prime1_tweaks.h, CTweakBall); the port ships none of Prime 1's data.
+std::string Prime1DiscPath();
+void SetPrime1DiscPath(const std::string& path);
 bool WalkSpeedEnabled();
 void SetWalkSpeedEnabled(bool enabled);
 // Scan speed in percent (`MP2_SCAN_SPEED`, 100 = retail): ScanSpeed() scales the time a scan takes
