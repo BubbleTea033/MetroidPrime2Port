@@ -81,6 +81,10 @@ bool sWalkSpeedEnabled = true;
 int sWalkSpeed = PortOverlay::kWalkSpeedDefault;
 // `MP2_PRIME1_AIR_PHYSICS`: Prime 1's airborne movement rules (CPlayerDynamics), saved in settings.cfg.
 bool sPrime1AirPhysics = false;
+// `MP2_PRIME1_BOOST_BALL`: Prime 1's Boost Ball recharge and impulse (CMorphBall), saved in settings.cfg.
+bool sPrime1BoostBall = false;
+// `MP2_PRIME1_BOOST_FALLOFF`: how much of Echoes' speed falloff a Prime 1 boost keeps, in percent.
+int sPrime1BoostFalloff = PortOverlay::kPrime1BoostFalloffDefault;
 int sScanSpeed = PortOverlay::kScanSpeedDefault;
 int sBeamSwitchSpeed = PortOverlay::kBeamSwitchSpeedDefault;
 int sMusicBoost = PortOverlay::kVolumeBoostDefault;

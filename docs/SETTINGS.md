@@ -117,6 +117,16 @@ Game page:
   that ends in the air keeps its speed (no `skDashClampSpeeds` clamp). L-jumps, R-jumps and scan
   dashes carry again; under mouse aim, arcing the view in the air does what R does on a pad, as in
   the Prime 1 port. Movement on the ground is unchanged.
+- `prime1_boost_ball`: Enhancements > Prime 1 movement > Prime 1 boost ball (off by default, off under Original
+  experience); env `MP2_PRIME1_BOOST_BALL`. Single player only. The Boost Ball as in Metroid
+  Prime 1 (GM8E01_00): a new charge can start as soon as a boost ends (Echoes holds the charge at
+  zero until the tweak's drain time has passed since the boost began), and the impulse is not
+  scaled down by the ball's speed (Echoes multiplies it by 1 - speed/50 outside half-pipes), so
+  boosts chain and stack. `prime1_boost_falloff` (Boost speed falloff, 0 to 100
+  percent, default 0; env `MP2_PRIME1_BOOST_FALLOFF`) brings part of Echoes' falloff back: the
+  impulse is scaled by 1 - (percent/100) * speed/50, so 0 is Prime 1 and 100 is Echoes; a boost
+  from a standstill is the same at every value. Half-pipe scaling, the half impulse under water without the Gravity
+  Boost, Spider Ball boosts and rooms that damp the entry speed are unchanged.
 - `walk_speed_enabled`: Enhancements > Pace > Custom walk speed (default on); env
   `MP2_WALK_SPEED_ENABLED`, console `walkspeed on|off`. Off moves at retail speed whatever the
   slider says. For a sprint, set the speed and bind a custom action to this switch (Settings >

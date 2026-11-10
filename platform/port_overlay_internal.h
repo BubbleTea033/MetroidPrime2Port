@@ -29,6 +29,8 @@ extern int sBallCamSpeed;
 extern bool sWalkSpeedEnabled;
 extern int sWalkSpeed;
 extern bool sPrime1AirPhysics;
+extern bool sPrime1BoostBall;
+extern int sPrime1BoostFalloff;
 extern int sScanSpeed;
 extern int sBeamSwitchSpeed;
 extern int sMusicBoost;

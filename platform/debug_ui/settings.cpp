@@ -364,6 +364,9 @@ const SettingKey kSettingKeys[] = {
     IntKey< &sWalkSpeed, PortOverlay::kWalkSpeedMin, PortOverlay::kWalkSpeedMax >("walk_speed", "50",
                                                                                   "200"),
     BoolKey< &sPrime1AirPhysics >("prime1_air_physics"),
+    BoolKey< &sPrime1BoostBall >("prime1_boost_ball"),
+    IntKey< &sPrime1BoostFalloff, PortOverlay::kPrime1BoostFalloffMin,
+            PortOverlay::kPrime1BoostFalloffMax >("prime1_boost_falloff", "0", "100"),
     IntKey< &sScanSpeed, PortOverlay::kScanSpeedMin, PortOverlay::kScanSpeedMax >("scan_speed", "50",
                                                                                   "400"),
     IntKey< &sBeamSwitchSpeed, PortOverlay::kBeamSwitchSpeedMin, PortOverlay::kBeamSwitchSpeedMax >(

@@ -77,6 +77,11 @@ static bool PortBallDebug() {
   return enabled;
 }
 
+// Prime 1 boost ball (PortOverlay::Prime1BoostBall): single player only.
+static bool PortPrime1BoostBall(const CStateManager& mgr) {
+  return PortOverlay::Prime1BoostBall() && !mgr.IsMultiplayer();
+}
+
 // The Boost Ball duration cheat (PortOverlay::BoostDurationScale) stretches the boosted window.
 static inline float PortBoostDrainTime() {
   return gpTweakBall->GetBoostBallDrainTime() * PortOverlay::BoostDurationScale();
@@ -2046,7 +2051,15 @@ void CMorphBall::EnterBoosting(CStateManager& mgr, bool skipImpulse) {
       }
       incSpeed = rstl::max_val(0.f, incSpeed);
     } else {
+#ifdef TARGET_PC
+      // Prime 1 boost ball: Prime 1 adds the full impulse whatever the ball's speed; the slider
+      // brings back part of Echoes' falloff (100% is Echoes).
+      const float falloff =
+          PortPrime1BoostBall(mgr) ? PortOverlay::Prime1BoostFalloff() / 100.f : 1.f;
+      incSpeed *= 1.f - falloff * mPlayer.GetVelocityWR().Magnitude() / 50.f;
+#else
       incSpeed *= 1.f - mPlayer.GetVelocityWR().Magnitude() / 50.f;
+#endif
     }
 
     CVector3f lookDir;
@@ -2151,7 +2164,13 @@ void CMorphBall::ComputeBoostBallMovement(const CFinalInput& input, CStateManage
 
   if (!IsBoosting() || activateBoost) {
     if (mPlayer.BoostHeld(input) && !activateBoost) {
-      const bool canCharge = mTimeNotInBoost > gpTweakBall->GetBoostBallDrainTime();
+      bool canCharge = mTimeNotInBoost > gpTweakBall->GetBoostBallDrainTime();
+#ifdef TARGET_PC
+      // Prime 1 boost ball: Prime 1 has no recharge wait, a charge starts once the boost ends.
+      if (PortPrime1BoostBall(mgr)) {
+        canCharge = true;
+      }
+#endif
       if (canCharge) {
         if (mBallAnimationIndex == 0) {
           mBallAnimationIndex = 1;

@@ -116,6 +116,15 @@ void DrawEnhancementsTab() {
 
   ImGui::SeparatorText("Prime 1 movement");
   Changed(ImGui::Checkbox("Prime 1 air physics", &sPrime1AirPhysics));
+  Changed(ImGui::Checkbox("Prime 1 boost ball", &sPrime1BoostBall));
+  ImGui::BeginDisabled(!sPrime1BoostBall);
+  int boostFalloff = sPrime1BoostFalloff;
+  if (ImGui::SliderInt("Boost speed falloff", &boostFalloff, PortOverlay::kPrime1BoostFalloffMin,
+                       PortOverlay::kPrime1BoostFalloffMax, "%d%%", ImGuiSliderFlags_AlwaysClamp)) {
+    sPrime1BoostFalloff = boostFalloff;
+    Changed(true);
+  }
+  ImGui::EndDisabled();
   ImGui::EndDisabled();
 
   ImGui::SeparatorText("Hints");
