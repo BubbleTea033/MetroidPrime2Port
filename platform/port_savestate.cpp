@@ -542,7 +542,7 @@ void DoSave(CStateManager& mgr, int slot) {
   State s;
   std::string error;
   // The title and file select run a CMFGame in the 'FRND' front-end world: a state of it is useless
-  // and would overwrite the slot. Loads stay allowed there once a card file is chosen (LoadState).
+  // and would overwrite the slot. LoadState refuses there too.
   if (gpGameState != nullptr && gpGameState->GetGameMode().GetGameModeType() == 'FRND') {
     SetMessage("save to slot " + std::to_string(slot) + " failed: no game running (title screen)");
     return;
@@ -600,11 +600,13 @@ bool LoadState(CStateManager& mgr, const State& s, int slot, const std::string& 
     SetMessage(what + " failed: world " + id + " is not on this disc");
     return false;
   }
-  // The title runs a CMFGame too (the 'FRND' world), so a load reaches here before any card file
-  // is chosen. Such a game has no card serial: save stations only refill energy and never ask to
-  // save (#124). MP1's title has no state manager, which refuses the same load.
-  if (gpGameState->GetGameMode().GetGameModeType() == 'FRND' && gpGameState->GetCardSerial() == 0) {
-    SetMessage(what + " failed: choose a save file first (save stations could not save)");
+  // The title runs a CMFGame too (the 'FRND' world), so a load reaches here with no game running.
+  // Before a card file is chosen that game has no card serial: save stations only refill energy and
+  // never ask to save. And the front end's sound groups stay locked by the replaced game state while
+  // the campaign's load, which fills the 6 MB sound pool: Weapons, SamusFootsteps and 29 more groups
+  // are then missing (#124). MP1's title has no state manager, which refuses the same load.
+  if (gpGameState->GetGameMode().GetGameModeType() == 'FRND') {
+    SetMessage(what + " failed: no game running (title screen)");
     return false;
   }
   if (slot == kResumeSlot) {
