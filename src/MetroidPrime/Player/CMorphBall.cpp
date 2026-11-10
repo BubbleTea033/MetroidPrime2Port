@@ -80,10 +80,13 @@ static bool PortBallDebug() {
 
 // Prime 1 boost ball (PortOverlay::Prime1BoostBall): single player only, and only with Prime 1's
 // values read from the player's disc (`prime1_disc`): without them the recharge and falloff
-// changes would run on Echoes' flat boost speeds, a combination neither game has.
+// changes would run on Echoes' flat boost speeds, a combination neither game has. For the same
+// reason it is off wherever CTweakBall hands out Echoes' values (EchoesValuesScope: Spider Ball
+// tracks and half-pipes).
 static bool PortPrime1BoostBall(const CStateManager& mgr) {
   PortPrime1Tweaks::BoostBall values;
-  return PortOverlay::Prime1BoostBall() && !mgr.IsMultiplayer() && PortPrime1Tweaks::Values(values);
+  return PortPrime1Tweaks::EchoesValuesDepth() == 0 && PortOverlay::Prime1BoostBall() &&
+         !mgr.IsMultiplayer() && PortPrime1Tweaks::Values(values);
 }
 
 // The Boost Ball duration cheat (PortOverlay::BoostDurationScale) stretches the boosted window.

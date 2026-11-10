@@ -18,6 +18,7 @@
 #include <SDL3/SDL_video.h>
 
 #include <algorithm>
+#include <atomic>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -29,7 +30,7 @@ namespace {
 // frame; empty when cancelled.
 std::mutex sPrime1DiscMutex;
 std::optional< std::string > sPrime1DiscPick;
-bool sPrime1DiscDialogOpen = false;
+std::atomic< bool > sPrime1DiscDialogOpen{false}; // read by the frame outside the lock
 
 void OpenPrime1DiscDialog() {
   int windowCount = 0;

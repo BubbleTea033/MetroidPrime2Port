@@ -17,13 +17,16 @@
 namespace PortPrime1Tweaks {
 namespace {
 
+// Prime 1's Tweaks.pak is under 100 KB; a file past this is not it, and is not read into memory.
+constexpr int64_t kMaxPakBytes = 16 * 1024 * 1024;
+
 bool ReadImageFile(AuroraDiscImage* image, uint32_t index, std::vector< uint8_t >& out) {
   void* file = aurora_disc_image_file_open(image, index);
   if (file == nullptr) {
     return false;
   }
   const int64_t size = aurora_dvd_base_seek(file, 0, 2);
-  bool ok = size > 0 && aurora_dvd_base_seek(file, 0, 0) == 0;
+  bool ok = size > 0 && size <= kMaxPakBytes && aurora_dvd_base_seek(file, 0, 0) == 0;
   if (ok) {
     out.resize(static_cast< size_t >(size));
     size_t done = 0;
@@ -119,7 +122,13 @@ bool LoadFromDisc(const std::string& path, BoostBall& out, std::string& source, 
       error = "the Ball tweak is truncated";
       return false;
     }
+    // The size is the file's word: one ParseBall would refuse is refused before it is allocated.
     uLongf length = ReadBE32(body);
+    if (!BallSizeOk(length)) {
+      error = "the Ball tweak inflates to " + std::to_string(length) + " bytes, not Prime 1's " +
+              std::to_string(kBallBytes);
+      return false;
+    }
     inflated.resize(length);
     if (uncompress(inflated.data(), &length, body + 4, static_cast< uLong >(bodySize - 4)) != Z_OK) {
       error = "the Ball tweak does not inflate";

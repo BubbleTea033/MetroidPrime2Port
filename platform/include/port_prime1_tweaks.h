@@ -10,6 +10,7 @@
 // values out) so the tests can build the files; port_prime1_tweaks.cpp does the disc I/O and zlib.
 #pragma once
 
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -113,10 +114,16 @@ inline bool FindPakResource(const uint8_t* pak, size_t size, const char type[4],
   return false;
 }
 
+// CTweakBall's 114 floats, plus at most the PAK's padding.
+inline bool BallSizeOk(size_t size) { return size >= kBallBytes && size < kBallBytes + 32; }
+
 // Reads the Boost Ball's values from an uncompressed Prime 1 CTWK "Ball" body. A body that is
-// not CTweakBall's 114 floats (plus the PAK's padding) is refused rather than misread.
+// not CTweakBall's 114 floats (plus the PAK's padding) is refused rather than misread, and so is
+// one whose values are negative or not finite, or whose drain or full charge time is zero:
+// CMorphBall divides by those two, and a modded or damaged disc must not put a NaN in the ball's
+// velocity.
 inline bool ParseBall(const uint8_t* data, size_t size, BoostBall& out, std::string& error) {
-  if (size < kBallBytes || size >= kBallBytes + 32) {
+  if (!BallSizeOk(size)) {
     error = "the Ball tweak is " + std::to_string(size) + " bytes, not Prime 1's " +
             std::to_string(kBallBytes);
     return false;
@@ -132,6 +139,18 @@ inline bool ParseBall(const uint8_t* data, size_t size, BoostBall& out, std::str
   out.incrementalSpeed[0] = at(111);
   out.incrementalSpeed[1] = at(112);
   out.incrementalSpeed[2] = at(113);
+  const float values[] = {out.cameraBoostSpringTardis, out.minChargeTime,       out.chargeTime[0],
+                          out.chargeTime[1],           out.incrementalSpeed[0], out.incrementalSpeed[1],
+                          out.incrementalSpeed[2]};
+  bool ok = std::isfinite(out.drainTime) && out.drainTime > 0.f && std::isfinite(out.maxChargeTime) &&
+            out.maxChargeTime > 0.f;
+  for (const float value : values) {
+    ok = ok && std::isfinite(value) && value >= 0.f;
+  }
+  if (!ok) {
+    error = "the Ball tweak's Boost Ball values are not usable numbers";
+    return false;
+  }
   return true;
 }
 

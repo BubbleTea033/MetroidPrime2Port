@@ -295,8 +295,8 @@ Controls > Options:
 - `fast_morph`, `spring_ball`: Enhancements > Morph Ball > Fast Morph, Spring Ball (one row; C-stick up, the Spring Ball binding on the Remap page, touch swipe up, or a gyro flick).
 - `prime1_air_physics`: Enhancements > Prime 1 Player Physics > Restore Prime 1 Jumps and Dashes
   (off by default, off under Original experience); env `MP2_PRIME1_AIR_PHYSICS`. Single player only. While airborne, Samus moves by
-  Metroid Prime 1's rules (GM8E01_00) instead of Echoes': no friction once the jump button is
-  released, only the speed along her facing is capped (sideways speed is kept), and a sideways dash
+  Metroid Prime 1's rules (GM8E01_00) instead of Echoes': no friction while the jump is held
+  and rising, only the speed along her facing is capped (sideways speed is kept), and a sideways dash
   that ends in the air keeps its speed (no `skDashClampSpeeds` clamp). L-jumps, R-jumps and scan
   dashes carry again; under mouse aim, arcing the view in the air does what R does on a pad, as in
   the Prime 1 port. Movement on the ground is unchanged.

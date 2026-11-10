@@ -221,7 +221,7 @@ int WalkSpeed();
 void SetWalkSpeed(int percent);
 // Prime 1 air physics (`MP2_PRIME1_AIR_PHYSICS=1`, off by default, single player only): airborne
 // Samus moves by Metroid Prime 1's (GM8E01_00) rules instead of Echoes' patched ones, so L-jumps,
-// R-jumps and scan dashes carry their speed again. No friction once the jump button is released,
+// R-jumps and scan dashes carry their speed again. No friction while the jump is held and rising,
 // only the speed along her facing is capped, and a sideways dash keeps its speed when it ends
 // (CPlayerDynamics: GetDampedClampedVelocityWR, ComputeMovement, FinishSidewaysDash).
 bool Prime1AirPhysics();

@@ -3,6 +3,25 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-10: PR #122 merged (BubbleTea033) + follow-up fixes
+
+- PR: #107 lock-on release aim sync at the end of `CFirstPersonCamera::UpdateTransform`; custom FOV re-applied
+  after cinematics (`CCameraManager::UpdateCameras`); #97 follow-up, widescreen helmet map through the lagged
+  edges (`CGuiFrame.cpp`); opt-in `prime1_air_physics` (`CPlayerDynamics.cpp`); opt-in `prime1_boost_ball` +
+  `prime1_boost_falloff` + `prime1_disc`, reading Prime 1's CTWK "Ball" from the player's own GM8* disc
+  (`platform/port_prime1_tweaks.cpp`, `port_prime1_tweaks.h`, `tests/port_prime1_tweaks.cpp`).
+- Fixes on top: Tweaks.pak read capped at 16 MB and the compressed Ball's inflated size checked before it is
+  allocated (`BallSizeOk`); `ParseBall` refuses negative or non-finite values and a zero drain or full charge time
+  (`CMorphBall` divides by both); `PortPrime1BoostBall` is off inside an `EchoesValuesScope`, so Spider Ball
+  tracks and half-pipes keep Echoes' recharge wait along with Echoes' values; the disc dialog's open flag is
+  atomic; the air-friction comments said "once the jump is released" where the code (and Prime 1) skips friction
+  while the jump is held and rising.
+- Left as is: `Values()` takes a mutex and copies the disc path per getter call (a few per frame, option on
+  only), and the first use reads the disc on the game thread. The Prime 1 air path drops Echoes'
+  `GetAcceleration()` scaling of friction and cap, as Prime 1 has none.
+- Checked: build, `port_prime1_tweaks_tests`, settings index, console docs. No gameplay run and no Prime 1 disc
+  here: the disc read, the boost feel and the air physics are unrun on this side.
+
 ## 2026-11-10: #123, echo lock stuck after leaving the room part-solved (retail bug)
 
 - Main Research (`04_cliff_contraption`) and Aerie (`10_cliff_rooftop`), NTSC and PAL: each shot sonic emitter is

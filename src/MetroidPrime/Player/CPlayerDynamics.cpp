@@ -105,7 +105,7 @@ CVector3f CPlayer::GetDampedClampedVelocityWR() const {
   CVector3f localVelocity = GetTransform().TransposeRotate(GetVelocityWR());
 #ifdef TARGET_PC
   if (sPrime1Air && mMovementState != NPlayer::kMS_OnGround) {
-    // Prime 1 in the air: no friction once the jump is released (ApplyJump) or while orbiting,
+    // Prime 1 in the air: no friction while the jump is still held and rising (ApplyJump) or while orbiting,
     // and the tweak's friction, not Echoes' 3.5|v|/mass drag, otherwise. Only the speed along
     // the facing is capped, so speed turned sideways (an R-jump, or arcing the view under mouse
     // aim) and a scan dash's momentum carry.

@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -74,10 +75,12 @@ std::vector< uint8_t > BuildPak(const std::vector< Resource >& resources, uint32
   return pak;
 }
 
-std::vector< uint8_t > BallBody(size_t floats = PortPrime1Tweaks::kBallFloats) {
+// `bad` (a float index) gets `badValue` instead of its own index.
+std::vector< uint8_t > BallBody(size_t floats = PortPrime1Tweaks::kBallFloats, size_t bad = size_t(-1),
+                                float badValue = 0.f) {
   std::vector< uint8_t > body;
   for (size_t i = 0; i < floats; ++i) {
-    PutFloat(body, float(i));
+    PutFloat(body, i == bad ? badValue : float(i));
   }
   return body;
 }
@@ -129,6 +132,20 @@ void TestRefusals() {
   CHECK(!PortPrime1Tweaks::ParseBall(shortBody.data(), shortBody.size(), ball, error));
   const std::vector< uint8_t > longBody = BallBody(PortPrime1Tweaks::kBallFloats + 8);
   CHECK(!PortPrime1Tweaks::ParseBall(longBody.data(), longBody.size(), ball, error));
+  // Values the ball would divide by or add to its velocity must be finite and not negative, the two divisors not zero.
+  const float inf = std::numeric_limits< float >::infinity();
+  const float nan = std::numeric_limits< float >::quiet_NaN();
+  const struct {
+    size_t index;
+    float value;
+  } bad[] = {{105, 0.f}, {110, 0.f}, {106, -1.f}, {108, nan}, {113, inf}, {97, nan}};
+  for (const auto& b : bad) {
+    const std::vector< uint8_t > body = BallBody(PortPrime1Tweaks::kBallFloats, b.index, b.value);
+    CHECK(!PortPrime1Tweaks::ParseBall(body.data(), body.size(), ball, error));
+  }
+  // A float the Boost Ball does not use may be anything.
+  const std::vector< uint8_t > unused = BallBody(PortPrime1Tweaks::kBallFloats, 0, nan);
+  CHECK(PortPrime1Tweaks::ParseBall(unused.data(), unused.size(), ball, error));
 }
 
 } // namespace
