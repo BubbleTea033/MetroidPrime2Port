@@ -542,7 +542,7 @@ void DoSave(CStateManager& mgr, int slot) {
   State s;
   std::string error;
   // The title and file select run a CMFGame in the 'FRND' front-end world: a state of it is useless
-  // and would overwrite the slot. Loads stay allowed there.
+  // and would overwrite the slot. Loads stay allowed there once a card file is chosen (LoadState).
   if (gpGameState != nullptr && gpGameState->GetGameMode().GetGameModeType() == 'FRND') {
     SetMessage("save to slot " + std::to_string(slot) + " failed: no game running (title screen)");
     return;
@@ -598,6 +598,13 @@ bool LoadState(CStateManager& mgr, const State& s, int slot, const std::string& 
     char id[16];
     std::snprintf(id, sizeof id, "%08x", static_cast< uint32_t >(s.worldId));
     SetMessage(what + " failed: world " + id + " is not on this disc");
+    return false;
+  }
+  // The title runs a CMFGame too (the 'FRND' world), so a load reaches here before any card file
+  // is chosen. Such a game has no card serial: save stations only refill energy and never ask to
+  // save (#124). MP1's title has no state manager, which refuses the same load.
+  if (gpGameState->GetGameMode().GetGameModeType() == 'FRND' && gpGameState->GetCardSerial() == 0) {
+    SetMessage(what + " failed: choose a save file first (save stations could not save)");
     return false;
   }
   if (slot == kResumeSlot) {
