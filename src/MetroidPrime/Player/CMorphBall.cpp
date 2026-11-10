@@ -2032,6 +2032,10 @@ void CMorphBall::EnterBoosting(CStateManager& mgr, bool skipImpulse) {
     mBallState = kBS_Boost;
     mBoostDamageScale = 1.f;
   }
+#ifdef TARGET_PC
+  // A Spider Ball boost takes Echoes' Boost Ball values under Prime 1 boost ball (port_prime1_tweaks.h).
+  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_SpiderBoost);
+#endif
 
   if (mPlayer.DampsBoostEntryVelocity()) {
     mPlayer.SetVelocityWR(mPlayer.GetVelocityWR() * 0.4f);
@@ -2133,6 +2137,12 @@ void CMorphBall::ComputeBoostBallMovement(const CFinalInput& input, CStateManage
   if (!IsMovementAllowed()) {
     return;
   }
+#ifdef TARGET_PC
+  // Charging on a Spider Ball track and the boost off it take Echoes' Boost Ball values under
+  // Prime 1 boost ball (port_prime1_tweaks.h).
+  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_Spider ||
+                                                         mBallState == kBS_SpiderBoost);
+#endif
 
   mTimeNotInBoost += dt;
   CPlayerState* playerState = mPlayer.GetPlayerState();
@@ -2734,6 +2744,11 @@ void CMorphBall::UpdateBallLight(float dt, CStateManager& mgr) {
 }
 
 void CMorphBall::UpdateEffects(float dt, CStateManager& mgr) {
+#ifdef TARGET_PC
+  // The charge and drain glow follow the values the boost uses (ComputeBoostBallMovement).
+  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_Spider ||
+                                                         mBallState == kBS_SpiderBoost);
+#endif
   const CTransform4f swooshToWorld = GetSwooshToWorld();
   const CPlayerState* playerState = mPlayer.GetPlayerState();
   const bool dead = mPlayer.GetDeathTime() > 0.f;

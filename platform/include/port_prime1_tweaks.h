@@ -147,4 +147,30 @@ std::string Status();
 // Reads the disc again on the next use, even at the same path (a disc picked again).
 void Reload();
 
+// While one with `echoes` set is alive, CTweakBall returns Echoes' own Boost Ball values even with
+// Prime 1's loaded. CMorphBall holds one on a Spider Ball track: Prime 1 has no Spider Ball boost,
+// and Echoes' spider gaps need its boost to last its 0.75 s drain at 35 from any charge (Prime 1's
+// 0.33 s drain ends the boost mid-gap and the ball drops). Game thread only.
+inline int& EchoesValuesDepth() {
+  static int depth = 0;
+  return depth;
+}
+struct EchoesValuesScope {
+  explicit EchoesValuesScope(bool echoes) : mActive(echoes) {
+    if (mActive) {
+      ++EchoesValuesDepth();
+    }
+  }
+  ~EchoesValuesScope() {
+    if (mActive) {
+      --EchoesValuesDepth();
+    }
+  }
+  EchoesValuesScope(const EchoesValuesScope&) = delete;
+  EchoesValuesScope& operator=(const EchoesValuesScope&) = delete;
+
+private:
+  bool mActive;
+};
+
 } // namespace PortPrime1Tweaks

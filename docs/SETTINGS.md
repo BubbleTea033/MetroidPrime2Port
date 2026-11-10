@@ -306,9 +306,11 @@ Controls > Options:
   charge at zero until the tweak's drain time has passed since the boost began), and the impulse is
   not scaled down by the ball's speed (Echoes multiplies it by 1 - speed/50 outside half-pipes), so
   boosts chain and stack, and the boost's timing, strength and camera spring are Prime 1's, read
-  from the player's Prime 1 disc (`prime1_disc`). Without a readable disc the option has no effect. Half-pipe scaling, the half
-  impulse under water without the Gravity Boost, Spider Ball boosts and rooms that damp the entry
-  speed are unchanged.
+  from the player's Prime 1 disc (`prime1_disc`). Without a readable disc the option has no effect.
+  On a Spider Ball track (charging, and the boost off it) Echoes' Boost Ball values stay: Prime 1
+  has no Spider Ball boost, and Echoes' spider gaps need its 0.75 s boost at 35 from any charge.
+  Half-pipe scaling, the half impulse under water without the Gravity Boost and rooms that damp the
+  entry speed are unchanged.
 - `prime1_boost_falloff`: Enhancements > Prime 1 Player Physics > Boost Dampening (0 to 100 percent,
   default 0; env `MP2_PRIME1_BOOST_FALLOFF`). With Prime 1 boost ball on, brings part of Echoes'
   speed falloff back: the impulse is scaled by 1 - (percent/100) * speed/50, so 0 is Prime 1 and

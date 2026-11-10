@@ -15,7 +15,8 @@
 // (port_prime1_tweaks.h), so a boost is as long and as strong as Prime 1's and the camera follows
 // it as Prime 1's does. Single player only, as the rest of Prime 1 boost ball.
 static bool PortPrime1Boost(PortPrime1Tweaks::BoostBall& out) {
-  return PortOverlay::Prime1BoostBall() && gpGameState != nullptr &&
+  return PortPrime1Tweaks::EchoesValuesDepth() == 0 && PortOverlay::Prime1BoostBall() &&
+         gpGameState != nullptr &&
          gpGameState->GetGameMode().GetNumPlayers() <= 1 && PortPrime1Tweaks::Values(out);
 }
 #endif
