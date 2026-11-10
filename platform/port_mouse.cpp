@@ -1029,6 +1029,12 @@ void Synchronize(float x, float y, float z, int player) {
   }
 }
 
+void Place(float x, float y, float z, int player) {
+  if (DirectAim(player)) {
+    SlotFor(player).aim.Synchronize(x, y, z);
+  }
+}
+
 void SetAimAngles(float yawDeg, float pitchDeg, int player) {
   ReadEnv();
   Slot& s = SlotFor(player);

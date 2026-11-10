@@ -3,6 +3,16 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-10: #121, mouse aim leaves Samus facing the wrong way after an elevator cutscene
+
+- An arrival cutscene ends with a `CScriptSequenceTimer` sending SetToZero to a spawn point, whose
+  `CPlayer::Teleport` runs after that tick's `UpdateMouseAim` synced the locked aim to the old heading; the next
+  tick the aim owns the view and turns the body back. Fix: `PortMouse::Place` from `CPlayer::Teleport` turns the
+  aim of any direct source (mouse, twin stick, touch) with the placement. Test in `port_radial_mouse_tests`.
+- Repro (Temple Grounds `00_elev_temple_sand_a`, `MP2_SKIP_CINEMATICS=0`, console `aim 137 0`, then
+  `send e00180053 Start`): yaw after the cutscene -137 before, 0 after (0 with aim off). Not checked on Windows.
+  Unpushed, no reply posted.
+
 ## 2026-11-09: #120, touch/controller swap blocked by a saved player-1 controller
 
 - Reporter's log: `Xbox 360 Controller ... port -1` beside the touch pad on port 0. Aurora's

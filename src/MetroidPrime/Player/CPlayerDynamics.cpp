@@ -1256,6 +1256,10 @@ void CPlayer::Teleport(const CTransform4f& transform, CStateManager& mgr,
     mGravityBoostUsed = false;
     mGravityBoostDuration = 0.f;
     mGravityBoostSfx = CSfxHandle();
+#ifdef TARGET_PC
+    // Port: mouse, twin-stick and touch aim face the way the placement does (issue #121).
+    PortMouse::Place(direction.GetX(), direction.GetY(), direction.GetZ(), mPlayerIndex);
+#endif
   } else {
     SetTranslation(transform.GetTranslation());
   }
