@@ -3,6 +3,19 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-10: #123, echo lock stuck after leaving the room part-solved (retail bug)
+
+- Main Research (`04_cliff_contraption`) and Aerie (`10_cliff_rooftop`), NTSC and PAL: each shot sonic emitter is
+  kept by a memory relay ('Store Destroyed State'), but the counter that opens the lock (100b0315 / 204100be) is
+  incremented by the shot relay only and restarts at 0 on a room reload. Staging Area and Hive Dynamo Access have
+  the relays increment the counter themselves and are fine. Main Gyro Chamber (the room the reporter names) has
+  no such state: its echo gate keeps nothing until solved and needs the Annihilator Beam.
+- Fix: `PortRecountEchoLocks` in `CScriptMailbox::SendMsgs` re-increments the counter once per kept emitter relay
+  on area load, unless the lock's own solved relay is kept. A save already stuck (3 relays, lock closed) opens on
+  entering the room.
+- Checked in Main Research by console (`send e100b02e6 Activate`/`SetToZero`, `warp 0`, `warp 914f1381`): two shots
+  + reload + third shot solves; three kept relays with no solved relay solve at load. Aerie not run.
+
 ## 2026-11-10: #121, mouse aim leaves Samus facing the wrong way after an elevator cutscene
 
 - An arrival cutscene ends with a `CScriptSequenceTimer` sending SetToZero to a spawn point, whose
