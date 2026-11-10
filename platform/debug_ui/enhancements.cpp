@@ -19,7 +19,9 @@
 #include <SDL3/SDL_video.h>
 
 #include <algorithm>
+#include <initializer_list>
 #include <mutex>
+#include <utility>
 #include <optional>
 #include <string>
 
@@ -112,6 +114,55 @@ void DrawPrime1Disc() {
     row("Boost speed 3", echoes.incrementalSpeed[2], prime1.incrementalSpeed[2]);
     ImGui::EndTable();
   }
+  // Rolling and the boost camera, as the tweak files hold them (degrees; gravity as stored), for
+  // comparing the feel around a boost. Prime 1's from its Ball body by CTweakBall's read order.
+  const CTweakBall& tweak = *gpTweakBall;
+  const float toDegrees = 180.f / 3.14159265f;
+  const auto compare = [&](const char* id, const char* title,
+                           std::initializer_list< std::pair< const char*, std::pair< float, int > > > rows) {
+    if (!ImGui::TreeNode(title)) {
+      return;
+    }
+    if (ImGui::BeginTable(id, 3, ImGuiTableFlags_SizingFixedFit)) {
+      ImGui::TableSetupColumn("");
+      ImGui::TableSetupColumn("Echoes");
+      ImGui::TableSetupColumn("Prime 1");
+      ImGui::TableHeadersRow();
+      for (const auto& [name, values] : rows) {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(name);
+        ImGui::TableNextColumn();
+        ImGui::Text("%.3f", values.first);
+        ImGui::TableNextColumn();
+        ImGui::Text("%.3f", prime1.raw[values.second]);
+      }
+      ImGui::EndTable();
+    }
+    ImGui::TreePop();
+  };
+  compare("prime1roll", "Rolling",
+          {{"Acceleration (ground)", {tweak.GetMaxBallTranslationAcceleration(0), 0}},
+           {"Acceleration (air)", {tweak.GetMaxBallTranslationAcceleration(1), 1}},
+           {"Friction (ground)", {tweak.GetBallTranslationFriction(0), 8}},
+           {"Friction (air)", {tweak.GetBallTranslationFriction(1), 9}},
+           {"Top speed (ground)", {tweak.GetBallTranslationMaxSpeed(0), 16}},
+           {"Top speed (air)", {tweak.GetBallTranslationMaxSpeed(1), 17}},
+           {"Braking (ground)", {tweak.GetBallForwardBrakingAcceleration(0), 28}},
+           {"Braking (air)", {tweak.GetBallForwardBrakingAcceleration(1), 29}},
+           {"Gravity", {-tweak.GetBallGravity(), 36}},
+           {"Water gravity", {-tweak.GetBallWaterGravity(), 37}},
+           {"Tireness", {tweak.GetTireness(), 42}}});
+  compare("prime1cam", "Ball camera",
+          {{"Distance at low speed", {tweak.GetBallCameraMinSpeedDistance(), 52}},
+           {"Distance at high speed", {tweak.GetBallCameraMaxSpeedDistance(), 53}},
+           {"Boost distance", {tweak.GetBallCameraBoostDistance(), 89}},
+           {"Boost dampen angle (deg)", {tweak.GetBallCameraBoostDampenAngle() * toDegrees, 88}},
+           {"Boost yaw speed", {tweak.GetBallCameraBoostYawSpeed(), 90}},
+           {"Boost turn rate (deg/s)", {tweak.GetBallCameraBoostAnglePerSecond() * toDegrees, 91}},
+           {"Boost spring constant", {tweak.GetBallCameraBoostSpringConstant(), 95}},
+           {"Boost spring max", {tweak.GetBallCameraBoostSpringMax(), 96}},
+           {"Boost spring tardis", {tweak.GetBallCameraBoostSpringTardis(), 97}}});
   ImGui::TreePop();
 }
 

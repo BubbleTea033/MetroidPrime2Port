@@ -21,6 +21,8 @@ struct BoostBall {
   float maxChargeTime = 0.f;
   float chargeTime[3] = {}; // [2] is maxChargeTime, as Prime 1's CTweakBall sets it
   float incrementalSpeed[3] = {};
+  // The whole Ball body as read, CTweakBall(CInputStream&)'s order (diagnostics: F1 Boost values).
+  float raw[114] = {};
 };
 
 struct PakEntry {
@@ -118,6 +120,9 @@ inline bool ParseBall(const uint8_t* data, size_t size, BoostBall& out, std::str
     return false;
   }
   auto at = [&](size_t index) { return ReadBEFloat(data + index * 4); };
+  for (size_t i = 0; i < kBallFloats; ++i) {
+    out.raw[i] = at(i);
+  }
   out.drainTime = at(105);
   out.minChargeTime = at(106);
   out.chargeTime[0] = at(108);
