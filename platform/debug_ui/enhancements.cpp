@@ -5,15 +5,116 @@
 #include "debug_ui_internal.h"
 
 #include "port_overlay.h"
+#include "port_prime1_tweaks.h"
 
 #include "MetroidPrime/Player/CGameOptions.hpp"
 #include "MetroidPrime/Player/CGameState.hpp"
+#include "MetroidPrime/Tweaks/CTweakBall.hpp"
 
 #include <imgui.h>
 
+#include <SDL3/SDL_dialog.h>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_video.h>
+
 #include <algorithm>
+#include <mutex>
+#include <optional>
+#include <string>
 
 namespace PortDebug {
+namespace {
+
+// The Prime 1 disc picked in the file dialog, handed from its callback (any thread) to the next
+// frame; empty when cancelled.
+std::mutex sPrime1DiscMutex;
+std::optional< std::string > sPrime1DiscPick;
+bool sPrime1DiscDialogOpen = false;
+
+void OpenPrime1DiscDialog() {
+  int windowCount = 0;
+  SDL_Window** windows = SDL_GetWindows(&windowCount);
+  SDL_Window* window = windows != nullptr && windowCount > 0 ? windows[0] : nullptr;
+  SDL_free(windows);
+  static const SDL_DialogFileFilter filters[] = {
+      {"GameCube disc images", "iso;gcm;ciso;gcz;rvz;wia;nfs"},
+      {"All files", "*"},
+  };
+  const SDL_DialogFileCallback done = [](void*, const char* const* files, int) {
+    std::lock_guard lock(sPrime1DiscMutex);
+    sPrime1DiscPick = files != nullptr && files[0] != nullptr ? std::string(files[0]) : std::string();
+    sPrime1DiscDialogOpen = false;
+  };
+  sPrime1DiscDialogOpen = true;
+  SDL_ShowOpenFileDialog(done, nullptr, window, filters, 2, nullptr, false);
+}
+
+// Prime 1 boost ball's disc: the pick, what was read from it, and its values beside Echoes'.
+void DrawPrime1Disc() {
+  {
+    std::lock_guard lock(sPrime1DiscMutex);
+    if (sPrime1DiscPick.has_value()) {
+      if (!sPrime1DiscPick->empty()) {
+        PortOverlay::SetPrime1DiscPath(*sPrime1DiscPick);
+      }
+      sPrime1DiscPick.reset();
+    }
+  }
+  ImGui::BeginDisabled(sPrime1DiscDialogOpen);
+  if (ImGui::Button("Choose Prime 1 disc...")) {
+    OpenPrime1DiscDialog();
+  }
+  ImGui::EndDisabled();
+  ImGui::SetItemTooltip("Your own Metroid Prime 1 GameCube disc. Prime 1 boost ball reads its\n"
+                        "Boost Ball values (charge times, boost speeds) from it; the port\n"
+                        "ships none of them. Without one, Echoes' values are used.");
+  ImGui::SameLine();
+  ImGui::TextDisabled("%s", PortPrime1Tweaks::Status().c_str());
+  PortPrime1Tweaks::BoostBall prime1;
+  if (gpTweakBall.get() == nullptr || !PortPrime1Tweaks::Values(prime1) ||
+      !ImGui::TreeNode("Boost values")) {
+    return;
+  }
+  PortPrime1Tweaks::BoostBall echoes;
+  {
+    const PortPrime1Tweaks::SuppressOverride suppress;
+    echoes.drainTime = gpTweakBall->GetBoostBallDrainTime();
+    echoes.minChargeTime = gpTweakBall->GetBoostBallMinChargeTime();
+    echoes.maxChargeTime = gpTweakBall->GetBoostBallMaxChargeTime();
+    for (int i = 0; i < 3; ++i) {
+      echoes.chargeTime[i] = gpTweakBall->GetBoostBallChargeTimeTable(i);
+      echoes.incrementalSpeed[i] = gpTweakBall->GetBoostBallIncrementalSpeedTable(i);
+    }
+  }
+  if (ImGui::BeginTable("prime1boost", 3, ImGuiTableFlags_SizingFixedFit)) {
+    ImGui::TableSetupColumn("");
+    ImGui::TableSetupColumn("Echoes");
+    ImGui::TableSetupColumn("Prime 1");
+    ImGui::TableHeadersRow();
+    auto row = [](const char* name, float e, float p) {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::TextUnformatted(name);
+      ImGui::TableNextColumn();
+      ImGui::Text("%.3f", e);
+      ImGui::TableNextColumn();
+      ImGui::Text("%.3f", p);
+    };
+    row("Drain time (s)", echoes.drainTime, prime1.drainTime);
+    row("Min charge time (s)", echoes.minChargeTime, prime1.minChargeTime);
+    row("Charge time 1 (s)", echoes.chargeTime[0], prime1.chargeTime[0]);
+    row("Charge time 2 (s)", echoes.chargeTime[1], prime1.chargeTime[1]);
+    row("Max charge time (s)", echoes.maxChargeTime, prime1.maxChargeTime);
+    row("Boost speed 1", echoes.incrementalSpeed[0], prime1.incrementalSpeed[0]);
+    row("Boost speed 2", echoes.incrementalSpeed[1], prime1.incrementalSpeed[1]);
+    row("Boost speed 3", echoes.incrementalSpeed[2], prime1.incrementalSpeed[2]);
+    ImGui::EndTable();
+  }
+  ImGui::TreePop();
+}
+
+} // namespace
 
 void DrawEnhancementsTab() {
   // Original experience plays the game as it shipped: every enhancement acts as retail.
@@ -136,6 +237,7 @@ void DrawEnhancementsTab() {
            "strength at any speed), 100% is Echoes. A boost from a standstill is the same at "
            "every value.");
   ImGui::EndDisabled();
+  DrawPrime1Disc();
   ImGui::EndDisabled();
 
   ImGui::SeparatorText("Hints");

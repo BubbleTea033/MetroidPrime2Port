@@ -310,7 +310,7 @@ Controls > Options:
   impulse is scaled by 1 - (percent/100) * speed/50, so 0 is Prime 1 and 100 is Echoes; a boost
   from a standstill is the same at every value. Half-pipe scaling, the half impulse under water without the Gravity
   Boost, Spider Ball boosts and rooms that damp the entry speed are unchanged.
-- `prime1_disc`: the player's own Metroid Prime 1 disc (GameCube, GM8E01/GM8P01/GM8J01; any image
+- `prime1_disc`: Enhancements > Prime 1 movement > Choose Prime 1 disc...: the player's own Metroid Prime 1 disc (GameCube, GM8E01/GM8P01/GM8J01; any image
   nod reads); env `MP2_PRIME1_DISC`, console `prime1boost <path>`. With Prime 1 boost ball on, the
   Boost Ball's drain time, charge times and incremental speeds are read from its Tweaks.pak (the
   CTWK named Ball, refused unless it is Prime 1's 114-float layout) and replace Echoes'

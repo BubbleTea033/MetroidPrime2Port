@@ -225,6 +225,7 @@
 {"Enhancements", "", "Prime 1 movement", "Prime 1 air physics", "l-jump r-jump ljump rjump scan dash momentum speedrun air control velocity cap metroid prime 1"},
 {"Enhancements", "", "Prime 1 movement", "Prime 1 boost ball", "morph ball boost cooldown recharge chain stack speed momentum speedrun metroid prime 1"},
 {"Enhancements", "", "Prime 1 movement", "Boost speed falloff", "morph ball boost strength impulse reduction weaker rolling speed prime 1"},
+{"Enhancements", "", "Prime 1 movement", "Choose Prime 1 disc...", "metroid prime 1 disc iso boost ball values import"},
 {"Enhancements", "", "Hints", "Hints", "hints help enable disable toggle"},
 {"Enhancements", "", "Hints", "Hint delay", "hints help wait timer minutes scan"},
 {"Enhancements", "", "Hints", "Show current hint", "hints help stuck next message map marker"},
