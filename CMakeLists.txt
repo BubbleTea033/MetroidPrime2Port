@@ -644,7 +644,7 @@ if(AURORA_SDL3_TARGET)
         platform/input/port_input_remap_ui.cpp
         platform/input/port_input_devices.cpp platform/input/port_steam_triton_hid.cpp
         platform/input/port_input_user_presets.cpp platform/input/port_input_user_presets_store.cpp
-        platform/port_embedded.cpp platform/port_textures.cpp platform/port_zip.cpp platform/port_prompts.cpp platform/port_prompt_ring.cpp platform/port_game_ui.cpp platform/port_skip_prompt.cpp platform/port_menu_hint.cpp platform/port_resume_prompt.cpp platform/port_shader_toast.cpp
+        platform/port_embedded.cpp platform/port_textures.cpp platform/port_zip.cpp platform/port_prime1_tweaks.cpp platform/port_prompts.cpp platform/port_prompt_ring.cpp platform/port_game_ui.cpp platform/port_skip_prompt.cpp platform/port_menu_hint.cpp platform/port_resume_prompt.cpp platform/port_shader_toast.cpp
         platform/port_discord.cpp
         platform/port_disc_verify.cpp
         platform/port_disc_verify_core.cpp)
@@ -851,6 +851,12 @@ if(AURORA_SDL3_TARGET)
         add_test(NAME port_zip_tests COMMAND port_zip_tests)
         set_tests_properties(port_zip_tests PROPERTIES TIMEOUT 30 LABELS port)
     endif()
+
+    # Prime 1's Boost Ball values: the PAK and CTWK parsing (port_prime1_tweaks.h) on files built here.
+    add_executable(port_prime1_tweaks_tests tests/port_prime1_tweaks.cpp)
+    target_include_directories(port_prime1_tweaks_tests PRIVATE platform/include tests)
+    add_test(NAME port_prime1_tweaks_tests COMMAND port_prime1_tweaks_tests)
+    set_tests_properties(port_prime1_tweaks_tests PROPERTIES TIMEOUT 15 LABELS port)
 
     add_executable(port_config_reset_tests tests/port_config_reset.cpp)
     target_include_directories(port_config_reset_tests PRIVATE platform/include)

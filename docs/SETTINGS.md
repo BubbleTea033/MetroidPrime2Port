@@ -300,6 +300,31 @@ Controls > Options:
   that ends in the air keeps its speed (no `skDashClampSpeeds` clamp). L-jumps, R-jumps and scan
   dashes carry again; under mouse aim, arcing the view in the air does what R does on a pad, as in
   the Prime 1 port. Movement on the ground is unchanged.
+- `prime1_boost_ball`: Enhancements > Prime 1 Player Physics > Restore Prime 1 Boost Ball (off
+  by default, off under Original experience, greyed out until a Prime 1 disc is read); env `MP2_PRIME1_BOOST_BALL`. Single player only. The Boost Ball as in
+  Metroid Prime 1 (GM8E01_00): a new charge can start as soon as a boost ends (Echoes holds the
+  charge at zero until the tweak's drain time has passed since the boost began), and the impulse is
+  not scaled down by the ball's speed (Echoes multiplies it by 1 - speed/50 outside half-pipes), so
+  boosts chain and stack, and the boost's timing, strength and camera spring are Prime 1's, read
+  from the player's Prime 1 disc (`prime1_disc`). Without a readable disc the option has no effect.
+  On a Spider Ball track (charging, and the boost off it) and in a half-pipe, Echoes' Boost Ball
+  values stay: Echoes' spider gaps need its 0.75 s boost at 35 from any charge, and its half-pipes
+  are climbed with quick boosts that Prime 1's charge tiers make much tighter.
+  Half-pipe scaling, the half impulse under water without the Gravity Boost and rooms that damp the
+  entry speed are unchanged.
+- `prime1_boost_falloff`: Enhancements > Prime 1 Player Physics > Boost Dampening (0 to 100 percent,
+  default 0; env `MP2_PRIME1_BOOST_FALLOFF`). With Prime 1 boost ball on, brings part of Echoes'
+  speed falloff back: the impulse is scaled by 1 - (percent/100) * speed/50, so 0 is Prime 1 and
+  100 is Echoes. Chained Prime 1 boosts can carry further than Echoes' rooms and collision were
+  built for; this tunes that. A boost from a standstill is the same at every value.
+- `prime1_disc`: Enhancements > Prime 1 Player Physics > Choose Prime 1 disc...: the player's own Metroid
+  Prime 1 disc (GameCube, GM8E01/GM8P01/GM8J01; any image nod reads); env `MP2_PRIME1_DISC`. With
+  Prime 1 boost ball on, the Boost Ball's drain time, charge times and incremental speeds and the
+  ball camera's boost spring tardis are read from its Tweaks.pak (the CTWK named Ball, refused
+  unless it is Prime 1's 114-float layout) and replace Echoes' (`CTweakBall`,
+  `platform/port_prime1_tweaks.cpp`). The port ships none of these values; without a readable disc
+  Restore Prime 1 Boost Ball stays greyed out and off. The row beside the button shows the disc
+  read ("GM8E01 rev 0") or why it could not be.
 - `ball_cam`, `ball_cam_speed`: Controls > Options > Morph Ball camera (issue #54; off by default,
   speed 25-400%, 100 default; env `MP2_BALL_CAM`, `MP2_BALL_CAM_SPEED`; off under Original
   experience). The mouse, twin stick, touch aim swipes and the C-stick turn the Morph Ball camera

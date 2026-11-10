@@ -81,6 +81,12 @@ bool sWalkSpeedEnabled = true;
 int sWalkSpeed = PortOverlay::kWalkSpeedDefault;
 // `MP2_PRIME1_AIR_PHYSICS`: Prime 1's airborne movement rules (CPlayerDynamics), saved in settings.cfg.
 bool sPrime1AirPhysics = false;
+// `MP2_PRIME1_BOOST_BALL`: Prime 1's Boost Ball recharge and impulse (CMorphBall), saved in settings.cfg.
+bool sPrime1BoostBall = false;
+// `MP2_PRIME1_BOOST_FALLOFF`: how much of Echoes' speed falloff a Prime 1 boost keeps, in percent.
+int sPrime1BoostFalloff = PortOverlay::kPrime1BoostFalloffDefault;
+// `MP2_PRIME1_DISC`: the player's Metroid Prime 1 disc, read for Prime 1 boost ball's values.
+std::string sPrime1DiscPath;
 int sScanSpeed = PortOverlay::kScanSpeedDefault;
 int sBeamSwitchSpeed = PortOverlay::kBeamSwitchSpeedDefault;
 int sMusicBoost = PortOverlay::kVolumeBoostDefault;
@@ -767,6 +773,18 @@ void SkipConfirmTap() {
 }
 
 bool TakeSkipConfirmTap() { return sSkipConfirmTapped.exchange(false); }
+
+std::string Prime1DiscPath() {
+  ReadEnv();
+  const char* env = port::EnvString("MP2_PRIME1_DISC");
+  return env != nullptr ? std::string(env) : sPrime1DiscPath;
+}
+
+void SetPrime1DiscPath(const std::string& path) {
+  ReadEnv();
+  sPrime1DiscPath = path;
+  Persist();
+}
 
 int SeamlessPickups() {
   ReadEnv();
