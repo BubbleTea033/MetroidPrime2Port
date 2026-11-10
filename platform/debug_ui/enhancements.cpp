@@ -199,7 +199,7 @@ void DrawEnhancementsTab() {
     sPrime1BoostFalloff = boostFalloff;
     Changed(true);
   }
-  ItemHelp("Prime 2 dampens the speed you gain when you boost while already under the effects of another boost, essentially a soft speed cap. "
+  ItemHelp("Prime 2 dampens a boost the faster the ball is already moving, essentially a soft speed cap. "
            "Prime 1 never does this (0%), letting you stack boosts on top of one another and pick up lots of speed. 100% is Echoes retail.");
   ImGui::EndDisabled();
   ImGui::EndDisabled();
