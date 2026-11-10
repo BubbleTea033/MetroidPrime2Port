@@ -3,6 +3,7 @@
 
 #include "port_build_info.h"
 #include "port_menu_hint.h"
+#include "port_photo.h"
 #include "port_shader_toast.h"
 #include "port_update_check.h"
 
@@ -21,6 +22,8 @@ std::atomic< bool > sDone{false};
 // Not a unique_ptr (see port_game_ui.h: one deleted while the program exits hangs it); freed once
 // it is done.
 PortGameUi::Text* sText = nullptr;
+// The twelve seconds start when it can first be seen (its frame and font take a frame or two to
+// load, longer under the startup shader compile).
 bool sStarted = false;
 Clock::time_point sShownAt;
 } // namespace
@@ -31,12 +34,7 @@ void Draw() {
     sText = nullptr;
     return;
   }
-  const Clock::time_point now = Clock::now();
-  if (!sStarted) {
-    sStarted = true;
-    sShownAt = now;
-  }
-  const float age = std::chrono::duration< float >(now - sShownAt).count();
+  const float age = sStarted ? std::chrono::duration< float >(Clock::now() - sShownAt).count() : 0.f;
   if (age > kShowSecs) {
     Dismiss();
     delete sText;
@@ -57,11 +55,16 @@ void Draw() {
     top = std::max(top, hint.y1 + 0.01f);
   }
   sText->SetPlacement({PortGameUi::Anchor::Top, 0.f, top});
-  sText->SetAlpha(std::clamp((kShowSecs - age) / kFadeSecs, 0.f, 1.f));
+  // Not in a photo (the overlay's toasts hide for one too); its time still runs.
+  sText->SetAlpha(PortPhoto::Capturing() ? 0.f : std::clamp((kShowSecs - age) / kFadeSecs, 0.f, 1.f));
   sText->Draw();
+  if (!sStarted && sText->Ready()) {
+    sStarted = true;
+    sShownAt = Clock::now();
+  }
 }
 
-bool Showing() { return sText != nullptr && !sDone.load(); }
+bool Showing() { return sText != nullptr && sStarted && !sDone.load(); }
 
 PortGameUi::ScreenRect LastRect() { return sText != nullptr ? sText->LastRect() : PortGameUi::ScreenRect{}; }
 

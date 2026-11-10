@@ -13,6 +13,8 @@
 #include "port_third_person.h"
 #include "port_build_info.h"
 #include "port_update_check.h"
+#include "port_note_toast.h"
+#include "port_shader_toast.h"
 #include "port_update_toast.h"
 #include "port_video.h"
 
@@ -776,7 +778,18 @@ namespace {
 float sTopToastNextY = 0.f;
 } // namespace
 
-void BeginTopToastStack() { sTopToastNextY = 16.f; }
+void BeginTopToastStack() {
+  sTopToastNextY = 16.f;
+  // Below the top toasts the game draws (the shader count, the update toast, a note), which were
+  // drawn earlier this frame.
+  float bottom = std::max(PortShaderToast::Bottom(), PortNoteToast::Bottom());
+  if (const PortGameUi::ScreenRect r = PortUpdateToast::LastRect(); PortUpdateToast::Showing() && r.valid) {
+    bottom = std::max(bottom, r.y1);
+  }
+  if (bottom > 0.f) {
+    sTopToastNextY = std::max(sTopToastNextY, bottom * ImGui::GetMainViewport()->Size.y + 8.f);
+  }
+}
 
 void PlaceTopToast(const ImGuiViewport* viewport) {
   ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + viewport->Size.x * 0.5f, viewport->Pos.y + sTopToastNextY),
@@ -836,8 +849,8 @@ void DrawUpdateToast() {
     return;
   }
   const float x = (io.MousePos.x - vp->Pos.x) / vp->Size.x, y = (io.MousePos.y - vp->Pos.y) / vp->Size.y;
-  const float pad = 0.5f * (r.y1 - r.y0);
-  sUpdateToastHovered = x >= r.x0 - pad && x <= r.x1 + pad && y >= r.y0 - pad && y <= r.y1 + pad;
+  const float pad = 0.5f * (r.y1 - r.y0), padX = pad * vp->Size.y / vp->Size.x;
+  sUpdateToastHovered = x >= r.x0 - padX && x <= r.x1 + padX && y >= r.y0 - pad && y <= r.y1 + pad;
   if (sUpdateToastHovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
     OpenUpdateToastRelease();
   }

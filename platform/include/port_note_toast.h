@@ -12,4 +12,7 @@ namespace PortNoteToast {
 void Show(const std::string& text);
 // Draws it over whatever the game drew, on the game thread after the IOWin draw.
 void Draw();
+// Its bottom, in fractions of the screen's height from its top, or 0 when it is not up: the
+// overlay's own top toasts go below it (BeginTopToastStack).
+float Bottom();
 } // namespace PortNoteToast

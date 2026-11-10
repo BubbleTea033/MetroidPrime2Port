@@ -3,6 +3,7 @@
 
 #include "port_game_ui.h"
 #include "port_menu_hint.h"
+#include "port_photo.h"
 #include "port_shader_toast.h"
 #include "port_update_toast.h"
 
@@ -15,6 +16,8 @@ namespace {
 using Clock = std::chrono::steady_clock;
 constexpr float kShowSecs = 2.5f;
 constexpr float kFadeSecs = 0.4f;
+// A note whose text never loads is dropped after this long unseen.
+constexpr float kLoadSecs = 10.f;
 
 std::mutex sMutex;
 std::string sNext;
@@ -22,13 +25,25 @@ bool sNew = false;
 // Not a unique_ptr (see port_game_ui.h: one deleted while the program exits hangs it); freed once
 // the note is done.
 PortGameUi::Text* sText = nullptr;
-// Timed from the first frame that draws the note.
+// Timed from the first frame the note can be seen (its frame and font take a frame or two to
+// load); until then from when it was taken, for kLoadSecs.
+bool sShowing = false;
 Clock::time_point sShownAt;
 } // namespace
 
 void Show(const std::string& text) {
+  // The game's text reads "&...;" as a tag and "&&" as the character: a note is plain words (a
+  // custom action's own, a room's name).
+  std::string plain;
+  plain.reserve(text.size());
+  for (const char c : text) {
+    plain += c;
+    if (c == '&') {
+      plain += '&';
+    }
+  }
   std::lock_guard< std::mutex > lock(sMutex);
-  sNext = text;
+  sNext = std::move(plain);
   sNew = true;
 }
 
@@ -38,6 +53,7 @@ void Draw() {
     std::lock_guard< std::mutex > lock(sMutex);
     if (sNew) {
       sNew = false;
+      sShowing = false;
       sShownAt = now;
       if (sNext.empty()) {
         delete sText;
@@ -53,7 +69,7 @@ void Draw() {
     return;
   }
   const float age = std::chrono::duration< float >(now - sShownAt).count();
-  if (age > kShowSecs) {
+  if (age > (sShowing ? kShowSecs : kLoadSecs)) {
     delete sText;
     sText = nullptr;
     return;
@@ -69,7 +85,21 @@ void Draw() {
     top = std::max(top, hint.y1 + 0.01f);
   }
   sText->SetPlacement({PortGameUi::Anchor::Top, 0.f, top});
-  sText->SetAlpha(std::clamp((kShowSecs - age) / kFadeSecs, 0.f, 1.f));
+  // Not in a photo (the overlay's toasts hide for one too); its time still runs.
+  const float fade = sShowing ? std::clamp((kShowSecs - age) / kFadeSecs, 0.f, 1.f) : 1.f;
+  sText->SetAlpha(PortPhoto::Capturing() ? 0.f : fade);
   sText->Draw();
+  if (!sShowing && sText->Ready()) {
+    sShowing = true;
+    sShownAt = Clock::now();
+  }
+}
+
+float Bottom() {
+  if (sText == nullptr || !sShowing) {
+    return 0.f;
+  }
+  const PortGameUi::ScreenRect rect = sText->LastRect();
+  return rect.valid ? rect.y1 : 0.f;
 }
 } // namespace PortNoteToast
