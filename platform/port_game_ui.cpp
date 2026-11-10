@@ -272,6 +272,34 @@ bool FrameLoaded(CGuiFrame& frame) {
   return true;
 }
 
+// A frame whose element was freed before its assets were in: its fonts and textures load through
+// the element's own pool, so the pool must outlive the loads (freed with them, the finished load
+// writes into it: a crash in CRasterFont's constructor). Held here until the frame is done
+// loading, then freed (ReapHeld, from every element's draw).
+struct HeldFrame {
+  CGuiFrame* frame;
+  std::unique_ptr< CSimplePool > pool;
+};
+std::vector< HeldFrame >& Held() {
+  // Never freed at exit, as the elements are not (port_game_ui.h).
+  static auto* held = new std::vector< HeldFrame >();
+  return *held;
+}
+
+void ReapHeld() {
+  std::vector< HeldFrame >& held = Held();
+  for (size_t i = 0; i < held.size();) {
+    if (held[i].frame->GetIsFinishedLoading()) {
+      // The frame's widgets hold tokens of the pool: the frame goes first.
+      delete held[i].frame;
+      held[i] = std::move(held.back());
+      held.pop_back();
+    } else {
+      ++i;
+    }
+  }
+}
+
 } // namespace
 
 struct Box::Impl {
@@ -307,8 +335,13 @@ struct Box::Impl {
   const StyleInfo& Style() const { return question ? kQuestion : Info(spec.style); }
 
   void Unload() {
-    // The frame's widgets hold tokens of the pool: the frame goes first.
-    delete frame;
+    if (frame != nullptr && !frame->GetIsFinishedLoading()) {
+      // Still loading into the pool: both kept until it is done (Held).
+      Held().push_back({frame, std::move(pool)});
+    } else {
+      // The frame's widgets hold tokens of the pool: the frame goes first.
+      delete frame;
+    }
     frame = nullptr;
     pool.reset();
     text = nullptr;
@@ -787,7 +820,10 @@ Box::~Box() = default;
 void Box::SetText(const std::string& text) { mImpl->SetText(text); }
 void Box::SetAlpha(float alpha) { mImpl->alpha = std::clamp(alpha, 0.f, 1.f); }
 void Box::SetPlacement(const Placement& placement) { mImpl->spec.placement = placement; }
-void Box::Draw() { mImpl->Draw(); }
+void Box::Draw() {
+  ReapHeld();
+  mImpl->Draw();
+}
 bool Box::Ready() const { return mImpl->shaped; }
 bool Box::Failed() const { return mImpl->failed; }
 ScreenRect Box::LastRect() const { return mImpl->rect; }
@@ -811,7 +847,10 @@ Text::~Text() = default;
 void Text::SetText(const std::string& text) { mImpl->SetText(text); }
 void Text::SetAlpha(float alpha) { mImpl->alpha = std::clamp(alpha, 0.f, 1.f); }
 void Text::SetPlacement(const Placement& placement) { mImpl->spec.placement = placement; }
-void Text::Draw() { mImpl->Draw(); }
+void Text::Draw() {
+  ReapHeld();
+  mImpl->Draw();
+}
 bool Text::Ready() const { return mImpl->shaped; }
 ScreenRect Text::LastRect() const { return mImpl->rect; }
 
@@ -840,7 +879,10 @@ void Question::SetSelected(int choice) {
 int Question::Selected() const { return mImpl->selected; }
 void Question::SetAlpha(float alpha) { mImpl->alpha = std::clamp(alpha, 0.f, 1.f); }
 void Question::SetPlacement(const Placement& placement) { mImpl->spec.placement = placement; }
-void Question::Draw() { mImpl->Draw(); }
+void Question::Draw() {
+  ReapHeld();
+  mImpl->Draw();
+}
 bool Question::Ready() const { return mImpl->shaped; }
 bool Question::Failed() const { return mImpl->failed; }
 ScreenRect Question::LastRect() const { return mImpl->rect; }
