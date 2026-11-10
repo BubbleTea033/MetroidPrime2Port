@@ -3,6 +3,12 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-10: release 0.15.0
+
+- v0.15.0 = `3831637c2`, published as latest with 12 assets (CI runs 42892270317 linux, 42892275907 windows,
+  42892281524 macos, 42892287746 android, 42892293328 ios; Flatpak local). Soak 96/96 ok on the local build of
+  `73c4fe7b4` (`build/s-release-20261110`). Notes: `docs/release-notes/0.15.0.md`. No issue replies posted.
+
 ## 2026-11-10: review of v0.14.0..085b959c2 and MP1 package 36
 
 - Review of the 22 commits since v0.14.0: no bug found (diff read in full; pad port swap, Prime 1 air
