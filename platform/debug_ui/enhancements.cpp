@@ -115,8 +115,16 @@ void DrawEnhancementsTab() {
   Changed(ImGui::Checkbox("Spring Ball", &sSpringBall));
 
   ImGui::SeparatorText("Prime 1 movement");
-  Changed(ImGui::Checkbox("Prime 1 air physics", &sPrime1AirPhysics));
-  Changed(ImGui::Checkbox("Prime 1 boost ball", &sPrime1BoostBall));
+  // Single player only: CPlayerDynamics and CMorphBall ignore both in multiplayer.
+  CheckboxTip("Prime 1 air physics", &sPrime1AirPhysics,
+              "Samus moves through the air as in Metroid Prime 1: no air friction once the jump\n"
+              "button is released, and only her forward speed is capped, so L-jumps, R-jumps and\n"
+              "scan dashes carry their speed. With mouse, twin-stick or touch aim, turning the\n"
+              "view in the air does what holding R does. Single player only.");
+  CheckboxTip("Prime 1 boost ball", &sPrime1BoostBall,
+              "The Boost Ball as in Metroid Prime 1: the next boost can charge as soon as one\n"
+              "ends, and a boost keeps its full strength when the ball is already rolling fast,\n"
+              "so boosts chain and stack. Single player only.");
   ImGui::BeginDisabled(!sPrime1BoostBall);
   int boostFalloff = sPrime1BoostFalloff;
   if (ImGui::SliderInt("Boost speed falloff", &boostFalloff, PortOverlay::kPrime1BoostFalloffMin,
@@ -124,6 +132,9 @@ void DrawEnhancementsTab() {
     sPrime1BoostFalloff = boostFalloff;
     Changed(true);
   }
+  ItemHelp("How much weaker a boost gets when the ball is already moving: 0% is Prime 1 (full "
+           "strength at any speed), 100% is Echoes. A boost from a standstill is the same at "
+           "every value.");
   ImGui::EndDisabled();
   ImGui::EndDisabled();
 
