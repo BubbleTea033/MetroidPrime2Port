@@ -2033,8 +2033,10 @@ void CMorphBall::EnterBoosting(CStateManager& mgr, bool skipImpulse) {
     mBoostDamageScale = 1.f;
   }
 #ifdef TARGET_PC
-  // A Spider Ball boost takes Echoes' Boost Ball values under Prime 1 boost ball (port_prime1_tweaks.h).
-  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_SpiderBoost);
+  // A Spider Ball or half-pipe boost takes Echoes' Boost Ball values under Prime 1 boost ball
+  // (port_prime1_tweaks.h).
+  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_SpiderBoost ||
+                                                         GetIsInHalfPipeMode());
 #endif
 
   if (mPlayer.DampsBoostEntryVelocity()) {
@@ -2138,10 +2140,10 @@ void CMorphBall::ComputeBoostBallMovement(const CFinalInput& input, CStateManage
     return;
   }
 #ifdef TARGET_PC
-  // Charging on a Spider Ball track and the boost off it take Echoes' Boost Ball values under
-  // Prime 1 boost ball (port_prime1_tweaks.h).
-  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_Spider ||
-                                                         mBallState == kBS_SpiderBoost);
+  // Charging on a Spider Ball track and the boost off it, and boosts in a half-pipe, take Echoes'
+  // Boost Ball values under Prime 1 boost ball (port_prime1_tweaks.h).
+  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(
+      mBallState == kBS_Spider || mBallState == kBS_SpiderBoost || GetIsInHalfPipeMode());
 #endif
 
   mTimeNotInBoost += dt;
@@ -2746,8 +2748,8 @@ void CMorphBall::UpdateBallLight(float dt, CStateManager& mgr) {
 void CMorphBall::UpdateEffects(float dt, CStateManager& mgr) {
 #ifdef TARGET_PC
   // The charge and drain glow follow the values the boost uses (ComputeBoostBallMovement).
-  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(mBallState == kBS_Spider ||
-                                                         mBallState == kBS_SpiderBoost);
+  const PortPrime1Tweaks::EchoesValuesScope spiderEchoes(
+      mBallState == kBS_Spider || mBallState == kBS_SpiderBoost || GetIsInHalfPipeMode());
 #endif
   const CTransform4f swooshToWorld = GetSwooshToWorld();
   const CPlayerState* playerState = mPlayer.GetPlayerState();

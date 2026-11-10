@@ -148,9 +148,11 @@ std::string Status();
 void Reload();
 
 // While one with `echoes` set is alive, CTweakBall returns Echoes' own Boost Ball values even with
-// Prime 1's loaded. CMorphBall holds one on a Spider Ball track: Prime 1 has no Spider Ball boost,
-// and Echoes' spider gaps need its boost to last its 0.75 s drain at 35 from any charge (Prime 1's
-// 0.33 s drain ends the boost mid-gap and the ball drops). Game thread only.
+// Prime 1's loaded. CMorphBall holds one on a Spider Ball track and in a half-pipe, both built
+// around Echoes' boost: its spider gaps need the boost to last its 0.75 s drain at 35 from any
+// charge (Prime 1's 0.33 s drain ends it mid-gap and the ball drops), and its half-pipes are
+// climbed with quick boosts that Prime 1's charge tiers (20/30/35 over 2 s) make much tighter.
+// Game thread only.
 inline int& EchoesValuesDepth() {
   static int depth = 0;
   return depth;
