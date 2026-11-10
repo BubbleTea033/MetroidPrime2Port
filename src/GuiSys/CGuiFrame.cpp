@@ -34,10 +34,12 @@
 static void PortDrawSlicedPiece(const CGuiCamera& camera, const CGuiWidget* widget,
                                 const CGuiWidgetDrawParms& parms, const CTransform4f& toView,
                                 const CTransform4f& fromView, const u32* scissor, float from,
-                                float to, float fromWarped, float toWarped) {
+                                float to, float fromWarped, float toWarped,
+                                bool wholeScissor = false) {
   // Maps the authored span [from, to] (view X per unit depth, or ortho units from the centre)
   // onto [fromWarped, toWarped]: x' = scale * x + offset * depth in view space, a screen-space
-  // scale and slide. Drawn under a scissor covering the warped span's columns.
+  // scale and slide. Drawn under a scissor covering the warped span's columns, or with
+  // `wholeScissor` the caller's whole scissor (the map then holds beyond the span).
   const float scale = (toWarped - fromWarped) / (to - from);
   const float offset = fromWarped - scale * from;
   const CViewport& viewport = CGraphics::GetViewport();
@@ -52,8 +54,10 @@ static void PortDrawSlicedPiece(const CGuiCamera& camera, const CGuiWidget* widg
                                     (1.f + t / screenHalf) +
                                 0.5f);
   }
-  const int left = cut[0] > static_cast< int >(scissor[0]) ? cut[0] : static_cast< int >(scissor[0]);
-  const int right = cut[1] < static_cast< int >(scissor[0] + scissor[2])
+  const int left = !wholeScissor && cut[0] > static_cast< int >(scissor[0])
+                       ? cut[0]
+                       : static_cast< int >(scissor[0]);
+  const int right = !wholeScissor && cut[1] < static_cast< int >(scissor[0] + scissor[2])
                         ? cut[1]
                         : static_cast< int >(scissor[0] + scissor[2]);
   if (right <= left) {
@@ -104,9 +108,16 @@ static void PortDrawSliced(const CGuiCamera& camera, const CGuiWidget* widget,
   };
   if (split < 0.f) {
     // Uniform: the authored view's edges land on the screen's, everything between scaled evenly
-    // (the helmet, as an emulator's widescreen stretch draws it).
+    // (the helmet, as an emulator's widescreen stretch draws it). The map is taken through the
+    // lagged authored and screen edges, not points past the screen: the HUD lag turns tangents,
+    // which runs away toward 90 degrees, so a line through `edge` swung the whole helmet with
+    // every turn of the camera. The whole scissor is drawn, so the edges stay covered.
     const float screenHalf = camera.GetSpreadScreenHalfWidth();
-    piece(-edge, edge, -edge * screenHalf / halfWidth, edge * screenHalf / halfWidth);
+    PortDrawSlicedPiece(camera, widget, parms, view, fromView, scissor,
+                        camera.GetLaggedTangent(-halfWidth, depth),
+                        camera.GetLaggedTangent(halfWidth, depth),
+                        camera.GetLaggedTangent(-screenHalf, depth),
+                        camera.GetLaggedTangent(screenHalf, depth), true);
     GXSetScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
     return;
   }
