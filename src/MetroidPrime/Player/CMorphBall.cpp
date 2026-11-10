@@ -68,6 +68,7 @@
 #include "rstl/math.hpp"
 #ifdef TARGET_PC
 #include "port_overlay.h"
+#include "port_prime1_tweaks.h"
 #include "port_touch.h"
 #include <cstdio>
 #include <cstdlib>
@@ -77,9 +78,12 @@ static bool PortBallDebug() {
   return enabled;
 }
 
-// Prime 1 boost ball (PortOverlay::Prime1BoostBall): single player only.
+// Prime 1 boost ball (PortOverlay::Prime1BoostBall): single player only, and only with Prime 1's
+// values read from the player's disc (`prime1_disc`): without them the recharge and falloff
+// changes would run on Echoes' flat boost speeds, a combination neither game has.
 static bool PortPrime1BoostBall(const CStateManager& mgr) {
-  return PortOverlay::Prime1BoostBall() && !mgr.IsMultiplayer();
+  PortPrime1Tweaks::BoostBall values;
+  return PortOverlay::Prime1BoostBall() && !mgr.IsMultiplayer() && PortPrime1Tweaks::Values(values);
 }
 
 // The Boost Ball duration cheat (PortOverlay::BoostDurationScale) stretches the boosted window.

@@ -66,9 +66,9 @@ void DrawPrime1Disc() {
     OpenPrime1DiscDialog();
   }
   ImGui::EndDisabled();
-  ImGui::SetItemTooltip("Your own Metroid Prime 1 GameCube disc. Prime 1 boost ball reads its\n"
-                        "Boost Ball values (charge times, boost speeds) from it; the port\n"
-                        "ships none of them. Without one, Echoes' values are used.");
+  ImGui::SetItemTooltip("Your own Metroid Prime 1 GameCube disc. Restore Prime 1 Boost Ball reads\n"
+                        "its Boost Ball values (charge times, boost speeds) from it; the port\n"
+                        "ships none of them. The option stays greyed out until one is read.");
   ImGui::SameLine();
   ImGui::TextDisabled("%s", PortPrime1Tweaks::Status().c_str());
 }
@@ -180,12 +180,17 @@ void DrawEnhancementsTab() {
               "Echoes patched most Prime 1 speedrunning techniques that allowed Samus to\n"
               "build up lots of speed while in the air. This option restores Prime 1's jumping behavior,\n"
               "line-for-line. L-Jumping, R-Jumping, and Scan / Combat Dashing work as they did in Prime 1.");
+  // The Boost Ball option needs Prime 1's values: the disc comes first, and the option and its
+  // slider stay greyed until it has been read (CMorphBall ignores the option without it too).
+  DrawPrime1Disc();
+  PortPrime1Tweaks::BoostBall prime1Values;
+  ImGui::BeginDisabled(!PortPrime1Tweaks::Values(prime1Values));
   CheckboxTip("Restore Prime 1 Boost Ball", &sPrime1BoostBall,
               "Requires your own copy of Prime 1. The tuning values have to be read from a disc.\n"
               "Echoes reduced the rate in which boosts can be charged, and heavily dampens any excess speed\n"
               "you get from boosting. This option restores both to their Prime 1 behavior.\n"
-              "WARNING: Prime 1's boosts are pretty aggressive in Prime 2's smaller rooms, and may effect how\n" 
-              "some puzzles function. The slider below can restore the dampening behavior, scaled to your.\n" 
+              "WARNING: Prime 1's boosts are pretty aggressive in Prime 2's smaller rooms, and may affect how\n"
+              "some puzzles function. The slider below can restore the dampening behavior, scaled to your\n"
               "preference. 25%-33% is a good starting point.");
   ImGui::BeginDisabled(!sPrime1BoostBall);
   int boostFalloff = sPrime1BoostFalloff;
@@ -194,10 +199,10 @@ void DrawEnhancementsTab() {
     sPrime1BoostFalloff = boostFalloff;
     Changed(true);
   }
-  ItemHelp("Prime 2 dampens the speed you gain when you boost while already under the effects of another boost, essentially a soft speed cap."
+  ItemHelp("Prime 2 dampens the speed you gain when you boost while already under the effects of another boost, essentially a soft speed cap. "
            "Prime 1 never does this (0%), letting you stack boosts on top of one another and pick up lots of speed. 100% is Echoes retail.");
   ImGui::EndDisabled();
-  DrawPrime1Disc();
+  ImGui::EndDisabled();
   ImGui::EndDisabled();
 
   ImGui::SeparatorText("Hints");
