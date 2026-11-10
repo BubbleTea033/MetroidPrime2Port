@@ -9,7 +9,6 @@
 
 #include "MetroidPrime/Player/CGameOptions.hpp"
 #include "MetroidPrime/Player/CGameState.hpp"
-#include "MetroidPrime/Tweaks/CTweakBall.hpp"
 
 #include <imgui.h>
 
@@ -19,10 +18,7 @@
 #include <SDL3/SDL_video.h>
 
 #include <algorithm>
-#include <initializer_list>
-#include <limits>
 #include <mutex>
-#include <utility>
 #include <optional>
 #include <string>
 
@@ -53,7 +49,7 @@ void OpenPrime1DiscDialog() {
   SDL_ShowOpenFileDialog(done, nullptr, window, filters, 2, nullptr, false);
 }
 
-// Prime 1 boost ball's disc: the pick, what was read from it, and its values beside Echoes'.
+// Prime 1 boost ball's disc: the pick and what was read from it.
 void DrawPrime1Disc() {
   {
     std::lock_guard lock(sPrime1DiscMutex);
@@ -75,104 +71,6 @@ void DrawPrime1Disc() {
                         "ships none of them. Without one, Echoes' values are used.");
   ImGui::SameLine();
   ImGui::TextDisabled("%s", PortPrime1Tweaks::Status().c_str());
-  PortPrime1Tweaks::BoostBall prime1;
-  if (gpTweakBall.get() == nullptr || !PortPrime1Tweaks::Values(prime1) ||
-      !ImGui::TreeNode("Boost values")) {
-    return;
-  }
-  PortPrime1Tweaks::BoostBall echoes;
-  {
-    const PortPrime1Tweaks::SuppressOverride suppress;
-    echoes.drainTime = gpTweakBall->GetBoostBallDrainTime();
-    echoes.minChargeTime = gpTweakBall->GetBoostBallMinChargeTime();
-    echoes.maxChargeTime = gpTweakBall->GetBoostBallMaxChargeTime();
-    for (int i = 0; i < 3; ++i) {
-      echoes.chargeTime[i] = gpTweakBall->GetBoostBallChargeTimeTable(i);
-      echoes.incrementalSpeed[i] = gpTweakBall->GetBoostBallIncrementalSpeedTable(i);
-    }
-  }
-  if (ImGui::BeginTable("prime1boost", 3, ImGuiTableFlags_SizingFixedFit)) {
-    ImGui::TableSetupColumn("");
-    ImGui::TableSetupColumn("Echoes");
-    ImGui::TableSetupColumn("Prime 1");
-    ImGui::TableHeadersRow();
-    auto row = [](const char* name, float e, float p) {
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-      ImGui::TextUnformatted(name);
-      ImGui::TableNextColumn();
-      ImGui::Text("%.3f", e);
-      ImGui::TableNextColumn();
-      ImGui::Text("%.3f", p);
-    };
-    row("Drain time (s)", echoes.drainTime, prime1.drainTime);
-    row("Min charge time (s)", echoes.minChargeTime, prime1.minChargeTime);
-    row("Charge time 1 (s)", echoes.chargeTime[0], prime1.chargeTime[0]);
-    row("Charge time 2 (s)", echoes.chargeTime[1], prime1.chargeTime[1]);
-    row("Max charge time (s)", echoes.maxChargeTime, prime1.maxChargeTime);
-    row("Boost speed 1", echoes.incrementalSpeed[0], prime1.incrementalSpeed[0]);
-    row("Boost speed 2", echoes.incrementalSpeed[1], prime1.incrementalSpeed[1]);
-    row("Boost speed 3", echoes.incrementalSpeed[2], prime1.incrementalSpeed[2]);
-    ImGui::EndTable();
-  }
-  // Rolling and the boost camera, as the tweak files hold them (degrees; gravity as stored), for
-  // comparing the feel around a boost. Prime 1's from its Ball body by CTweakBall's read order.
-  // Its boost camera floats 87-91 are distance, elevation, yaw speed, dampen angle and turn rate,
-  // Echoes' order: MP1's decomp names them otherwise, but CBallCamera uses them so (the "boost
-  // elevation" is compared with the ball-to-camera distance, the "distance" passed as yaw speed).
-  const CTweakBall& tweak = *gpTweakBall;
-  const float toDegrees = 180.f / 3.14159265f;
-  const auto compare = [&](const char* id, const char* title,
-                           std::initializer_list< std::pair< const char*, std::pair< float, int > > > rows) {
-    if (!ImGui::TreeNode(title)) {
-      return;
-    }
-    if (ImGui::BeginTable(id, 3, ImGuiTableFlags_SizingFixedFit)) {
-      ImGui::TableSetupColumn("");
-      ImGui::TableSetupColumn("Echoes");
-      ImGui::TableSetupColumn("Prime 1");
-      ImGui::TableHeadersRow();
-      for (const auto& [name, values] : rows) {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        ImGui::TextUnformatted(name);
-        ImGui::TableNextColumn();
-        if (values.first == values.first) {
-          ImGui::Text("%.3f", values.first);
-        } else {
-          ImGui::TextUnformatted("-"); // Echoes has no accessor for it
-        }
-        ImGui::TableNextColumn();
-        ImGui::Text("%.3f", prime1.raw[values.second]);
-      }
-      ImGui::EndTable();
-    }
-    ImGui::TreePop();
-  };
-  compare("prime1roll", "Rolling",
-          {{"Acceleration (ground)", {tweak.GetMaxBallTranslationAcceleration(0), 0}},
-           {"Acceleration (air)", {tweak.GetMaxBallTranslationAcceleration(1), 1}},
-           {"Friction (ground)", {tweak.GetBallTranslationFriction(0), 8}},
-           {"Friction (air)", {tweak.GetBallTranslationFriction(1), 9}},
-           {"Top speed (ground)", {tweak.GetBallTranslationMaxSpeed(0), 16}},
-           {"Top speed (air)", {tweak.GetBallTranslationMaxSpeed(1), 17}},
-           {"Braking (ground)", {tweak.GetBallForwardBrakingAcceleration(0), 28}},
-           {"Braking (air)", {tweak.GetBallForwardBrakingAcceleration(1), 29}},
-           {"Gravity", {-tweak.GetBallGravity(), 36}},
-           {"Water gravity", {-tweak.GetBallWaterGravity(), 37}},
-           {"Tireness", {tweak.GetTireness(), 42}}});
-  compare("prime1cam", "Ball camera",
-          {{"Distance at low speed", {tweak.GetBallCameraMinSpeedDistance(), 52}},
-           {"Distance at high speed", {tweak.GetBallCameraMaxSpeedDistance(), 53}},
-           {"Boost distance", {tweak.GetBallCameraBoostDistance(), 87}},
-           {"Boost elevation", {std::numeric_limits< float >::quiet_NaN(), 88}},
-           {"Boost yaw speed", {tweak.GetBallCameraBoostYawSpeed(), 89}},
-           {"Boost dampen angle (deg)", {tweak.GetBallCameraBoostDampenAngle() * toDegrees, 90}},
-           {"Boost turn rate (deg/s)", {tweak.GetBallCameraBoostAnglePerSecond() * toDegrees, 91}},
-           {"Boost spring constant", {tweak.GetBallCameraBoostSpringConstant(), 95}},
-           {"Boost spring max", {tweak.GetBallCameraBoostSpringMax(), 96}},
-           {"Boost spring tardis", {tweak.GetBallCameraBoostSpringTardis(), 97}}});
-  ImGui::TreePop();
 }
 
 } // namespace
@@ -295,8 +193,8 @@ void DrawEnhancementsTab() {
     Changed(true);
   }
   ItemHelp("How much weaker a boost gets when the ball is already moving: 0% is Prime 1 (full "
-           "strength at any speed), 100% is Echoes. A boost from a standstill is the same at "
-           "every value.");
+           "strength at any speed), 100% is Echoes. Raise it if chained boosts carry too far for "
+           "Echoes' rooms. A boost from a standstill is the same at every value.");
   ImGui::EndDisabled();
   DrawPrime1Disc();
   ImGui::EndDisabled();

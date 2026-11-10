@@ -3,9 +3,11 @@
 // disc the player points it at (`prime1_disc`), never compiled in.
 //
 // Prime 1 keeps its tweaks in Tweaks.pak, a version 3.5 PAK; the ball's is the CTWK resource named
-// "Ball". Its body is 114 big-endian floats read in order by CTweakBall(CInputStream&) (GM8E01_00),
-// the Boost Ball's at floats 105-113. The parsing here is pure (bytes in, values out) so the tests
-// can build the files; port_prime1_tweaks.cpp does the disc I/O and zlib.
+// "Ball". Its body is 114 big-endian floats read in order by CTweakBall(CInputStream&) (GM8E01_00):
+// the Boost Ball's at floats 105-113, the boost camera's spring tardis at 97. (MP1's decomp names
+// the boost camera's floats 87-90 out of order, but they are Echoes' order, as CBallCamera uses
+// them; the rolling and other camera values are Echoes' own.) The parsing here is pure (bytes in,
+// values out) so the tests can build the files; port_prime1_tweaks.cpp does the disc I/O and zlib.
 #pragma once
 
 #include <cstddef>
@@ -21,8 +23,8 @@ struct BoostBall {
   float maxChargeTime = 0.f;
   float chargeTime[3] = {}; // [2] is maxChargeTime, as Prime 1's CTweakBall sets it
   float incrementalSpeed[3] = {};
-  // The whole Ball body as read, CTweakBall(CInputStream&)'s order (diagnostics: F1 Boost values).
-  float raw[114] = {};
+  // How the ball camera's spring settles while boosting (Echoes 10, Prime 1 5.5).
+  float cameraBoostSpringTardis = 0.f;
 };
 
 struct PakEntry {
@@ -120,9 +122,7 @@ inline bool ParseBall(const uint8_t* data, size_t size, BoostBall& out, std::str
     return false;
   }
   auto at = [&](size_t index) { return ReadBEFloat(data + index * 4); };
-  for (size_t i = 0; i < kBallFloats; ++i) {
-    out.raw[i] = at(i);
-  }
+  out.cameraBoostSpringTardis = at(97);
   out.drainTime = at(105);
   out.minChargeTime = at(106);
   out.chargeTime[0] = at(108);
@@ -146,18 +146,5 @@ bool Values(BoostBall& out);
 std::string Status();
 // Reads the disc again on the next use, even at the same path (a disc picked again).
 void Reload();
-
-// While one is alive, CTweakBall returns Echoes' own Boost Ball values even with Prime 1's
-// loaded, so the console's `prime1boost` can print the two side by side. Game thread only.
-inline bool& OverrideSuppressed() {
-  static bool suppressed = false;
-  return suppressed;
-}
-struct SuppressOverride {
-  SuppressOverride() { OverrideSuppressed() = true; }
-  ~SuppressOverride() { OverrideSuppressed() = false; }
-  SuppressOverride(const SuppressOverride&) = delete;
-  SuppressOverride& operator=(const SuppressOverride&) = delete;
-};
 
 } // namespace PortPrime1Tweaks

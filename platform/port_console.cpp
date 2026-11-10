@@ -23,7 +23,6 @@
 #include "port_third_person.h"
 #include "port_livesplit.h"
 #include "port_photo.h"
-#include "port_prime1_tweaks.h"
 
 #include "port_input.h"
 #include "port_input_remap_ui.h"
@@ -73,7 +72,6 @@ extern bool gPortForceMultiplayer; // CStateManager.cpp, console `mpforce`
 #include "MetroidPrime/Weapons/CGameProjectile.hpp"
 #include "Weapons/CWeaponDescription.hpp"
 #include "MetroidPrime/Player/CPlayerState.hpp"
-#include "MetroidPrime/Tweaks/CTweakBall.hpp"
 #include "MetroidPrime/CRezbitEffect.hpp"
 #include "MetroidPrime/CActor.hpp"
 #include "MetroidPrime/CPhysicsActor.hpp"
@@ -1816,61 +1814,6 @@ void CmdCredits(CStateManager& mgr, const Args& args, std::string& out) {
 
 // The gameplay tweaks: the same shape as `god` and `skipcine`, an optional 0/1 and a print of the
 // state it ends in, because the F1 row and the env var set the same thing.
-// prime1boost [path]: sets the Prime 1 disc (`prime1_disc`) when given a path, then prints the
-// Boost Ball's values read from it beside Echoes' own (PortPrime1Tweaks).
-void CmdPrime1Boost(CStateManager&, const Args& args, std::string& out) {
-  if (args.size() >= 2) {
-    std::string path(args[1]);
-    for (size_t i = 2; i < args.size(); ++i) {
-      path += ' ';
-      path += args[i];
-    }
-    // A path pasted from Explorer's "Copy as path" comes quoted.
-    if (path.size() >= 2 && path.front() == '"' && path.back() == '"') {
-      path = path.substr(1, path.size() - 2);
-    }
-    PortOverlay::SetPrime1DiscPath(path);
-  }
-  out += "prime1 disc: " + (PortOverlay::Prime1DiscPath().empty() ? std::string("(none)")
-                                                                     : PortOverlay::Prime1DiscPath()) +
-         "\nprime1 values: " + PortPrime1Tweaks::Status() + "\n";
-  if (gpTweakBall.get() == nullptr) {
-    out += "echoes values: not loaded yet\n";
-    return;
-  }
-  PortPrime1Tweaks::BoostBall echoes;
-  {
-    const PortPrime1Tweaks::SuppressOverride suppress;
-    echoes.drainTime = gpTweakBall->GetBoostBallDrainTime();
-    echoes.minChargeTime = gpTweakBall->GetBoostBallMinChargeTime();
-    echoes.maxChargeTime = gpTweakBall->GetBoostBallMaxChargeTime();
-    for (int i = 0; i < 3; ++i) {
-      echoes.chargeTime[i] = gpTweakBall->GetBoostBallChargeTimeTable(i);
-      echoes.incrementalSpeed[i] = gpTweakBall->GetBoostBallIncrementalSpeedTable(i);
-    }
-  }
-  PortPrime1Tweaks::BoostBall prime1;
-  const bool havePrime1 = PortPrime1Tweaks::Values(prime1);
-  char line[160];
-  auto row = [&](const char* name, float e, float p) {
-    if (havePrime1) {
-      std::snprintf(line, sizeof(line), "  %-22s echoes %9.4f   prime1 %9.4f\n", name, e, p);
-    } else {
-      std::snprintf(line, sizeof(line), "  %-22s echoes %9.4f\n", name, e);
-    }
-    out += line;
-  };
-  row("drain time", echoes.drainTime, prime1.drainTime);
-  row("min charge time", echoes.minChargeTime, prime1.minChargeTime);
-  row("max charge time", echoes.maxChargeTime, prime1.maxChargeTime);
-  row("charge time 0", echoes.chargeTime[0], prime1.chargeTime[0]);
-  row("charge time 1", echoes.chargeTime[1], prime1.chargeTime[1]);
-  row("charge time 2", echoes.chargeTime[2], prime1.chargeTime[2]);
-  row("incremental speed 0", echoes.incrementalSpeed[0], prime1.incrementalSpeed[0]);
-  row("incremental speed 1", echoes.incrementalSpeed[1], prime1.incrementalSpeed[1]);
-  row("incremental speed 2", echoes.incrementalSpeed[2], prime1.incrementalSpeed[2]);
-}
-
 void CmdFastMorph(CStateManager&, const Args& args, std::string& out) {
   const bool enabled = args.size() < 2 ? !PortOverlay::FastMorph() : ArgToInt(args[1], 1) != 0;
   PortOverlay::SetFastMorph(enabled);
@@ -5987,9 +5930,6 @@ const CommandSpec kCommands[] = {
       "gameevent <ev> [src] [tgt] [value] [as <proxyType>]  deliver a game event to every\n"
       "                            CScriptPlayerProxy listener (ev: score kill generic scan\n"
       "                            damage stop spawn; value: float for damage, state for generic)\n"},
-    {"prime1boost", CmdPrime1Boost,
-      "prime1boost [path]          the Prime 1 disc for Prime 1 boost ball's values; prints them\n"
-      "                            beside Echoes' (drain, charge times, incremental speeds)\n"},
     {"fastmorph", CmdFastMorph,
       "fastmorph <0|1>             fast morph: the morph transition takes 0.2 s, not a second\n"},
     {"finger", CmdFinger,

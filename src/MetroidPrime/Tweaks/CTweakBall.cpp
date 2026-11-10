@@ -11,11 +11,11 @@
 #include "port_prime1_tweaks.h"
 
 // Prime 1 boost ball with a Prime 1 disc set (`prime1_disc`): the Boost Ball's charge and speed
-// tweaks are Prime 1's, read from that disc (port_prime1_tweaks.h), so a boost is as long and as
-// strong as Prime 1's. Single player only, as the rest of Prime 1 boost ball.
+// tweaks, and the ball camera's boost spring, are Prime 1's, read from that disc
+// (port_prime1_tweaks.h), so a boost is as long and as strong as Prime 1's and the camera follows
+// it as Prime 1's does. Single player only, as the rest of Prime 1 boost ball.
 static bool PortPrime1Boost(PortPrime1Tweaks::BoostBall& out) {
-  return !PortPrime1Tweaks::OverrideSuppressed() && PortOverlay::Prime1BoostBall() &&
-         gpGameState != nullptr &&
+  return PortOverlay::Prime1BoostBall() && gpGameState != nullptr &&
          gpGameState->GetGameMode().GetNumPlayers() <= 1 && PortPrime1Tweaks::Values(out);
 }
 #endif
@@ -280,6 +280,12 @@ float CTweakBall::GetBallCameraBoostSpringMax() const {
 }
 
 float CTweakBall::GetBallCameraBoostSpringTardis() const {
+#ifdef TARGET_PC
+  PortPrime1Tweaks::BoostBall prime1;
+  if (PortPrime1Boost(prime1)) {
+    return prime1.cameraBoostSpringTardis;
+  }
+#endif
   return mData->camera.ballCameraBoostSpringTardis;
 }
 

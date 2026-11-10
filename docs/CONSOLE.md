@@ -78,9 +78,6 @@ hp, hp_max, visor, beam, freecam) for scripts.
 - `boost` — boost-ball release on the morphed player
 - `noise <type> [x y z]` — InformListeners at the player (6 = safe-zone noise)
 - `gameevent <ev> [src] [tgt] [value] [as <proxyType>]` — deliver a game event to every CScriptPlayerProxy listener (ev: score kill generic scan damage stop spawn; value: float for damage, state for generic)
-- `prime1boost [path]` — sets the Prime 1 disc (`prime1_disc`) read for Prime 1 boost ball's
-  values, then prints the Boost Ball's drain time, charge times and incremental speeds read from it
-  beside Echoes' own. A path with spaces can be typed as is.
 - `fastmorph <0|1>` — fast morph: the morph transition takes 0.2 s, not a second
 - `scanspeed [50..400]`, `elevator [original|fast|skip]`, `portal [original|fast|skip]`, `rooms [original|fast]`, `travel [original|fast]`, `original [0|1]`, `igt [0|1]`, `language [0..6]` — the Game page's
   scan speed, elevator ride, Original experience and on-screen time (`scan_speed`, `elevator_ride`,

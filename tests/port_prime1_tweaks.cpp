@@ -108,10 +108,7 @@ void TestFindsBallAmongOthers() {
   CHECK_EQ(ball.incrementalSpeed[0], 111.f);
   CHECK_EQ(ball.incrementalSpeed[1], 112.f);
   CHECK_EQ(ball.incrementalSpeed[2], 113.f);
-  // The raw body keeps every float in order (the rolling and camera rows read it).
-  CHECK_EQ(ball.raw[0], 0.f);
-  CHECK_EQ(ball.raw[52], 52.f);
-  CHECK_EQ(ball.raw[113], 113.f);
+  CHECK_EQ(ball.cameraBoostSpringTardis, 97.f);
 }
 
 void TestRefusals() {
