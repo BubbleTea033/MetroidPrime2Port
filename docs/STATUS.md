@@ -3,6 +3,18 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-11: #126 clicks dead on a message box after F1
+
+- Cause: F1 releases the mouse-aim grab; only `PortMouse::UpdateAim` (a player tick) re-takes it, and a paused
+  game (message box, save station prompt) ticks no player. `mouse:aim:<btn>` rows read only while grabbed, so with
+  a keyboard-family Fire row that lacks `mouse:menu:left` (any `controls.toml` that overrides `pad_a`, e.g. one
+  saved before the menu rows existed) no click reaches A. Defaults do not reproduce: `mouse:menu:left` covers it.
+- Fix: `SetUiActive` remembers the grab it took (and what each player tick under the window would have asked
+  for) and hands it back on close. Xvfb harness: override `pad_a` with `mouse:aim:left` + a key, F1 open, `memo
+  pause`, F1 close, click: PAUSED forever before, dismissed on the first click after; control and defaults pass.
+- Not checked: Windows, the reporter's actual bindings (not in the report), their "aim came back only after a
+  click" (would fit a connected controller: the mouse yields to the pad until a click).
+
 ## 2026-11-11: #98 pipeline cache "disk I/O error"
 
 - The reporter's log (Huawei Y7a, Android 10, Mali-G51, 3678 MiB, 0.12.0) has `Failed to read pipeline cache rows:
