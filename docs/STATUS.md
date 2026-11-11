@@ -3,6 +3,20 @@
 The Status section of AGENTS.md links here: this is the per-session detail, rewritten rather than
 appended, dated as in the heading there.
 
+## 2026-11-11: #98 pipeline cache "disk I/O error"
+
+- The reporter's log (Huawei Y7a, Android 10, Mali-G51, 3678 MiB, 0.12.0) has `Failed to read pipeline cache rows:
+  disk I/O error` right after the seed merge: the lazy loader's sorted queries spill to a SQLite temp file and the
+  app has no temp directory. The cache then stays closed for the session and records nothing, so every launch
+  compiles every pipeline on first use (500 compiles in 119 s in that log). f8a5ade03 could not help: it pins rows
+  that never load.
+- Fix: `PRAGMA temp_store=MEMORY` on both cache DBs and the seed (GOTCHAS "Cache DBs keep temp data in memory");
+  the error line now carries the extended code.
+- Checked: desktop repro under a read-only bwrap root (before: the reporter's exact line; after: `lazy, 1236 rows
+  known; queued 810 global (pinned) and 273 frontend`), ctest 45/45. Not checked on an Android 10 device; the
+  Poco (Android 16) never had the error. No reply posted.
+- Open in the same log: texture pressure flips between moderate and off around 1024 MiB of headroom.
+
 ## 2026-11-10: release 0.15.0
 
 - v0.15.0 = `3831637c2`, published as latest with 12 assets (CI runs 42892270317 linux, 42892275907 windows,
