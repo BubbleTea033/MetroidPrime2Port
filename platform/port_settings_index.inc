@@ -209,6 +209,7 @@
 {"Enhancements", "", "Dark Visor", "Dark Visor static", "dark visor noise static grain"},
 {"Enhancements", "", "Ammo", "Infinite Light and Dark Ammo", "beam ammo unlimited light dark cheat"},
 {"Enhancements", "", "Music", "Light world music in Dark Aether", "dark world soundtrack theme bgm song track override"},
+{"Enhancements", "", "Ammo", "Only charged shots use ammo", "beam ammo free uncharged normal shots light dark annihilator balance"},
 {"Enhancements", "", "Pace", "Skippable cutscenes", "skip cinematics movies"},
 {"Enhancements", "", "Pace", "Game-style skip prompt", "skip cutscene prompt box confirm"},
 {"Enhancements", "", "Pace", "Seamless item pickups", "pickup item acquired cutscene cinematic message box textbox memo control lock jingle randomizer map station repeats expansion tank ammo"},

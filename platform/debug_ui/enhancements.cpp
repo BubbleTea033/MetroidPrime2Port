@@ -85,6 +85,11 @@ void DrawEnhancementsTab() {
 
   ImGui::SeparatorText("Ammo");
   Changed(ImGui::Checkbox("Infinite Light and Dark Ammo", &sInfiniteBeamAmmo));
+  ImGui::BeginDisabled(sInfiniteBeamAmmo);
+  Changed(ImGui::Checkbox("Only charged shots use ammo", &sChargeOnlyBeamAmmo));
+  ImGui::SetItemTooltip("Uncharged Dark, Light and Annihilator Beam shots cost no ammo.\n"
+                        "Charged shots and combos cost what they always do.");
+  ImGui::EndDisabled();
 
   ImGui::SeparatorText("Music");
   // Read when the next track starts: a room change or a portal hop.

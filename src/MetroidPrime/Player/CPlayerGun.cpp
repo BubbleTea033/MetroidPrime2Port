@@ -1063,6 +1063,12 @@ void CPlayerGun::DamageRumble(const CVector3f& position, float damage, const CSt
 }
 
 bool CPlayerGun::IsOutOfAmmoToShoot(CStateManager& mgr) const {
+#ifdef TARGET_PC
+  // Port (#130): with "Only charged shots use ammo" an uncharged shot costs nothing.
+  if (PortOverlay::ChargeOnlyBeamAmmo()) {
+    return false;
+  }
+#endif
   const CPlayerState* state = GetPlayer(mgr)->GetPlayerState();
   switch (mCurrentBeamId) {
   case CPlayerState::kBI_Light:
@@ -1096,6 +1102,11 @@ bool CPlayerGun::GetBeamAmmoTypeAndCosts(bool combo, CStateManager& mgr,
   ammoA = CPlayerState::kIT_Invalid;
   ammoB = CPlayerState::kIT_Invalid;
   cost = skNormalAmmoCosts[mCurrentBeamId];
+#ifdef TARGET_PC
+  if (PortOverlay::ChargeOnlyBeamAmmo()) {
+    cost = 0;
+  }
+#endif
   switch (mCurrentBeamId) {
   case CPlayerState::kBI_Dark:
     ammoA = CPlayerState::kIT_DarkAmmo;

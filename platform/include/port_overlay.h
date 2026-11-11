@@ -153,6 +153,10 @@ bool InfiniteAmmo(unsigned kinds);
 // Enhancement (F1 > Enhancements, saved, env `MP2_INFINITE_BEAM_AMMO`): Light and Dark Ammo are
 // infinite, whatever the cheat's bits say. Original experience turns it off.
 bool InfiniteBeamAmmo();
+// Enhancement (F1 > Enhancements > Ammo, saved, env `MP2_CHARGE_ONLY_BEAM_AMMO`, #130): uncharged
+// Dark, Light and Annihilator shots cost no ammo (CPlayerGun::GetBeamAmmoTypeAndCosts); charged
+// shots and combos cost what they do in retail. Original experience turns it off.
+bool ChargeOnlyBeamAmmo();
 // Enhancement (F1 > Enhancements > Music, saved, env `MP2_DARK_WORLD_LIGHT_MUSIC`, #36): Dark
 // Aether's area themes play their light world counterparts (CScriptStreamedMusic::Play); takes
 // effect at the next track start. Original experience turns it off.

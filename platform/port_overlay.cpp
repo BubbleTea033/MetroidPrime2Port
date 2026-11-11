@@ -173,6 +173,7 @@ bool sDarkVisorFull = false;
 int sDarkVisorStatic = PortOverlay::kDarkVisorStaticMax;
 bool sInfiniteBeamAmmo = false; // Enhancements; saved, unlike the sInfiniteAmmo cheat
 bool sDarkWorldLightMusic = false; // `dark_world_light_music` (#36)
+bool sChargeOnlyBeamAmmo = false; // `charge_only_beam_ammo` (#130)
 int sHudOpacityEcho = PortOverlay::kHudOpacityVisor;
 int sHudOpacityDark = PortOverlay::kHudOpacityVisor;
 int sHudOpacityScan = PortOverlay::kHudOpacityVisor;

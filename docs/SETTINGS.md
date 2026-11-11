@@ -548,6 +548,10 @@ Video > Display:
   unchanged. Takes effect at the next track start. Original experience turns it off.
 - `hud_opacity_echo`, `hud_opacity_dark`, `hud_opacity_scan` (`-1` = the game's Visor Opacity,
   default; else 0-100): HUD and view > Echo/Dark/Scan HUD opacity. Applies to that visor's HUD, its
+- `charge_only_beam_ammo` (default off, env `MP2_CHARGE_ONLY_BEAM_AMMO`, issue #130):
+  Enhancements > Only charged shots use ammo; uncharged Dark, Light and Annihilator shots cost no
+  ammo and fire at full strength with none left. Charged shots (5) and combos keep their cost, and
+  a charge needs the ammo for it. Multiplayer too. Original experience turns it off.
   visor/beam menu, the radar and the map; the energy readout is part of the HUD frame and has no
   separate opacity. Console `hudopacity <echo|dark|scan> <visor|0..100>`. Original experience
   ignores them.
