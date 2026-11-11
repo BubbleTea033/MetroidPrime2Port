@@ -373,6 +373,12 @@ Controls > Controller settings:
   counts as full; the inner edge is the C-stick dead zone, round under flick stick.
 - `touch_flick_stick`: Touch controls > Flick stick (`MP2_TOUCH_FLICK_STICK`): the same for the
   touch twin-stick layout while touch is the last-used input.
+- `precise_stick_deadzones` (default off, env `MP2_PRECISE_STICK_DEADZONES`, issue #131): Sticks
+  and triggers > Precise stick deadzones. The Stick and C-stick deadzone sliders become the only
+  deadzone: tilt past a slider runs from zero (no jump at its edge), and each stick axis reaches
+  the game from 17 of 127 up, past the 15 its PADClamp drops (about 12% of the tilt on retail),
+  so movement and aim start at the first step past the slider. Twin-stick aim, flick stick and
+  every player's pad follow it; lower the sliders with it.
 - `steam_input_back_buttons`: Back buttons > Steam Input back buttons (default on, env
   `MP2_STEAM_INPUT_BACK_BUTTONS`; Linux only). Under Steam Input, Player 1 also gets the back
   buttons (SDL's paddles) of the physical controller behind its virtual pad, which Steam Input

@@ -344,6 +344,11 @@ void DrawControlsController() {
                        "real controllers only.");
   } else {
     PortControls::DrawDeadZones();
+    Changed(ImGui::Checkbox("Precise stick deadzones", &sPreciseStickDeadZones));
+    ItemHelp("Makes the Stick and C-stick deadzone sliders the only deadzone: the game also ignores "
+             "about the first 12% of each stick's tilt, which this offsets, and movement past a slider "
+             "starts from zero instead of jumping. Lower the sliders with it for tighter controls; at "
+             "0% any drift moves Samus.");
   }
 #if defined(__linux__) && !defined(__ANDROID__)
   // Under Steam Input: the back buttons of the physical controller behind Player 1's virtual pad

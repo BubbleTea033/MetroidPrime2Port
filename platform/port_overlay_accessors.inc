@@ -120,6 +120,7 @@ PORT_GET_INT_IN(PointerAimTurn, "MP2_POINTER_AIM_TURN", sPointerAimTurn, kPointe
 PORT_GET_BOOL(GyroAim, "MP2_GYRO_AIM", sGyroAim)
 PORT_GET_INT_IN(GyroSource, "MP2_GYRO_SOURCE", sGyroSource, 0, 2)
 PORT_GET_BOOL(SteamInputBackButtons, "MP2_STEAM_INPUT_BACK_BUTTONS", sSteamInputBackButtons)
+PORT_GET_BOOL(PreciseStickDeadZones, "MP2_PRECISE_STICK_DEADZONES", sPreciseStickDeadZones)
 PORT_GET_INT_IN(GyroAutoCalibrate, "MP2_GYRO_AUTO_CALIBRATE", sGyroAutoCalibrate, 0, 2)
 PORT_GET_FLOAT_IN(GyroSmoothing, "MP2_GYRO_SMOOTHING", sGyroSmoothing, 0.f, kGyroThresholdMax)
 PORT_GET_FLOAT_IN(GyroTightening, "MP2_GYRO_TIGHTENING", sGyroTightening, 0.f, kGyroThresholdMax)

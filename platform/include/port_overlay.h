@@ -535,6 +535,11 @@ int GyroSource();
 // Under Steam Input, read the back buttons (SDL's paddles) of the physical controller behind Player
 // 1's virtual pad, which has none (`MP2_STEAM_INPUT_BACK_BUTTONS`, default on; Linux only).
 bool SteamInputBackButtons();
+// Controller settings > Precise stick deadzones (`precise_stick_deadzones`, env
+// `MP2_PRECISE_STICK_DEADZONES`, default off, #131): the Stick / C-stick deadzone sliders are the
+// only deadzone. Tilt past a slider runs from zero, and the game's own PADClamp cut (15 of 127 per
+// axis) is offset away, so a stick moves Samus and the aim from its first step past the slider.
+bool PreciseStickDeadZones();
 int GyroSpace();
 int GyroAutoCalibrate();
 float GyroSmoothing();

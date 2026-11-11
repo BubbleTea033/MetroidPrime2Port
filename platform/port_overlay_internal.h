@@ -79,6 +79,7 @@ extern int sPointerAimTurn;
 extern bool sGyroAim;
 extern int sGyroSource;
 extern bool sSteamInputBackButtons;
+extern bool sPreciseStickDeadZones;
 extern int sGyroSpace;
 extern int sGyroAutoCalibrate;
 extern float sGyroSmoothing;

@@ -133,6 +133,7 @@ int sPointerAimTurn = PortOverlay::kPointerAimTurnDefault;
 bool sGyroAim = false;
 int sGyroSource = PortOverlay::kGyroSourceDefault;
 bool sSteamInputBackButtons = true;
+bool sPreciseStickDeadZones = false; // `precise_stick_deadzones` (#131)
 int sGyroSpace = PortOverlay::kGyroSpaceDefault;
 int sGyroAutoCalibrate = PortOverlay::kGyroAutoCalibrateDefault;
 float sGyroSmoothing = 0.f;

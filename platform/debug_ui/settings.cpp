@@ -450,6 +450,7 @@ const SettingKey kSettingKeys[] = {
     BoolKey< &sGyroAim >("gyro_aim"),
     IntKey< &sGyroSource, 0, 2 >("gyro_source", "0", "1"),
     BoolKey< &sSteamInputBackButtons >("steam_input_back_buttons"),
+    BoolKey< &sPreciseStickDeadZones >("precise_stick_deadzones"),
     IntKey< &sGyroSpace, 0, 4 >("gyro_space", "1", "2"),
     IntKey< &sGyroAutoCalibrate, 0, 2 >("gyro_auto_calibrate", "1", "2"),
     FloatKey< &sGyroSmoothing, 0, 50 >("gyro_smoothing", "0", "10"),

@@ -443,9 +443,25 @@ void BindPortControls(Profile& p) {
   }
 }
 
-float StickValue(s16 raw, u16 deadZone, bool useDeadZones) {
-  if (useDeadZones && std::abs(static_cast<int>(raw)) <= deadZone) return 0.f;
+// `rescale` (Precise stick deadzones, #131): tilt past the deadzone runs from 0, not from the
+// deadzone's edge, so the stick doesn't jump when it leaves it.
+float StickValue(s16 raw, u16 deadZone, bool useDeadZones, bool rescale = false) {
+  const int magnitude = std::abs(static_cast<int>(raw));
+  if (useDeadZones && magnitude <= deadZone) return 0.f;
+  if (useDeadZones && rescale) {
+    const float past = static_cast<float>(magnitude - deadZone) / static_cast<float>(std::max(32767 - deadZone, 1));
+    return std::copysign(std::min(past, 1.f), static_cast<float>(raw));
+  }
   return std::clamp(static_cast<float>(raw) / 32767.f, -1.f, 1.f);
+}
+
+// Precise stick deadzones (#131): the game's PADClamp drops the first 15 of 127 units of each
+// stick axis, and its integer scaling the 16th, before Samus moves or aims. A value past the
+// port's own deadzone reaches the game from 17 up instead, so the slider is the only deadzone.
+float PastGameClamp(float v) {
+  if (v == 0.f || !PortOverlay::PreciseStickDeadZones()) return v;
+  // StickX/StickY truncate v * 32767 / 256; the half unit keeps 17 and 127 exact.
+  return std::copysign((17.5f + std::min(std::fabs(v), 1.f) * 110.f) / 128.f, v);
 }
 
 uint16_t GameContexts(int player = 0);
@@ -484,13 +500,14 @@ void FillPadState(PortInput::RawState& raw, u32 port) {
     raw.padButtons = pad.buttons;
     const PADDeadZones* dz = PADGetDeadZones(port);
     const bool useDz = dz != nullptr && dz->useDeadzones;
+    const bool precise = PortOverlay::PreciseStickDeadZones();
     for (int a = 0; a < PAD_RAW_AXIS_COUNT; ++a) {
       if (a == SDL_GAMEPAD_AXIS_LEFT_TRIGGER || a == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) {
         raw.padAxes[a] = std::max(0.f, static_cast<float>(pad.axes[a]) / 32767.f);
       } else {
         const bool left = a == SDL_GAMEPAD_AXIS_LEFTX || a == SDL_GAMEPAD_AXIS_LEFTY;
         raw.padAxes[a] = StickValue(pad.axes[a], dz == nullptr ? 0 : left ? dz->stickDeadZone : dz->substickDeadZone,
-                                    useDz);
+                                    useDz, precise);
       }
     }
     // Flick stick turns by the right stick's angle: a dead zone per axis zeroes the minor axis
@@ -500,8 +517,12 @@ void FillPadState(PortInput::RawState& raw, u32 port) {
       const float y = static_cast<float>(pad.axes[SDL_GAMEPAD_AXIS_RIGHTY]);
       const float dzr = static_cast<float>(dz->substickDeadZone);
       const bool inside = x * x + y * y <= dzr * dzr;
-      raw.padAxes[SDL_GAMEPAD_AXIS_RIGHTX] = inside ? 0.f : StickValue(pad.axes[SDL_GAMEPAD_AXIS_RIGHTX], 0, false);
-      raw.padAxes[SDL_GAMEPAD_AXIS_RIGHTY] = inside ? 0.f : StickValue(pad.axes[SDL_GAMEPAD_AXIS_RIGHTY], 0, false);
+      // Rescaled, the tilt runs from the round dead zone's edge (PublishFlickStick then skips it).
+      const float length = std::sqrt(x * x + y * y);
+      const float scale = !inside && precise ? std::min((length - dzr) / std::max(32767.f - dzr, 1.f), 1.f) / length
+                                             : 1.f / 32767.f;
+      raw.padAxes[SDL_GAMEPAD_AXIS_RIGHTX] = inside ? 0.f : std::clamp(x * scale, -1.f, 1.f);
+      raw.padAxes[SDL_GAMEPAD_AXIS_RIGHTY] = inside ? 0.f : std::clamp(y * scale, -1.f, 1.f);
     }
   }
 }
@@ -1415,10 +1436,10 @@ static PADStatus SynthesizeStatus(const PortInput::Output& out, bool radial) {
     }
     return v;
   };
-  s.stickX = StickX(stick(Action::MainRight), stick(Action::MainLeft));
-  s.stickY = StickY(stick(Action::MainDown), stick(Action::MainUp));
-  s.substickX = StickX(stick(Action::CRight), stick(Action::CLeft));
-  s.substickY = StickY(stick(Action::CDown), stick(Action::CUp));
+  s.stickX = StickX(PastGameClamp(stick(Action::MainRight) - stick(Action::MainLeft)), 0.f);
+  s.stickY = StickY(PastGameClamp(stick(Action::MainDown) - stick(Action::MainUp)), 0.f);
+  s.substickX = StickX(PastGameClamp(stick(Action::CRight) - stick(Action::CLeft)), 0.f);
+  s.substickY = StickY(PastGameClamp(stick(Action::CDown) - stick(Action::CUp)), 0.f);
   if (radial && (PortRadial::Capturing() || sConsumeRadialPoll)) s.substickX = s.substickY = 0;
   s.triggerLeft = Trigger(std::max(out.Value(Action::LAnalog), out.Value(Action::MenuLAnalog)),
                           (s.button & PAD_TRIGGER_L) != 0);
@@ -1521,8 +1542,10 @@ static void PublishFlickStick(const PortInput::Output& out, int port) {
     return;
   }
   const PADDeadZones* zones = PADGetDeadZones(static_cast<u32>(port));
-  const float inner =
-      zones != nullptr && zones->useDeadzones ? static_cast<float>(zones->substickDeadZone) / 32767.f : 0.f;
+  // Precise stick deadzones already start the tilt at the dead zone's edge.
+  const float inner = zones != nullptr && zones->useDeadzones && !PortOverlay::PreciseStickDeadZones()
+                          ? static_cast<float>(zones->substickDeadZone) / 32767.f
+                          : 0.f;
   const float span = std::max(1.f - PortMouse::FlickOuterDeadZone() / 100.f - inner, 0.05f);
   const float scale = std::clamp((length - inner) / span, 0.f, 1.f) / length;
   PortMouse::SetFlickRawStick(port, x * scale, y * scale);
