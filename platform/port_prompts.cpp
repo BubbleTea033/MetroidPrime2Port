@@ -1479,8 +1479,8 @@ void Poll() {
   }
   const char* device = ActiveDevice();
   // Resolving every action's binding builds strings and rescans the bindings, so it runs when
-  // the device changes or the map opens or closes (the map rows name the sticks there), and
-  // otherwise a few times a second, which still follows a rebind.
+  // the device changes, the map opens or closes (the map rows name the sticks there) or the input
+  // contexts change, and otherwise a few times a second, which still follows a rebind.
   static std::string sLastDevice;
   static bool sLastMap = false;
   static uint64_t sLastResolveNs = 0;
@@ -1497,7 +1497,13 @@ void Poll() {
       }
     }
   }
-  const bool changed = sLastDevice != device || sLastMap != map;
+  // The bindings a prompt reads depend on the input contexts (the scan text takes the Menu A row,
+  // the Morph Ball its own rows), so a change resolves at once: on the timer alone the scan box
+  // opened on the gameplay button's icon for up to a quarter second (#127).
+  static uint16_t sLastContexts = 0;
+  const uint16_t contexts = PortInputDevices::PromptContexts();
+  const bool changed = sLastDevice != device || sLastMap != map || sLastContexts != contexts;
+  sLastContexts = contexts;
   if (!changed && sLastResolveNs != 0 && nowNs - sLastResolveNs < 250000000ull) {
     return;
   }

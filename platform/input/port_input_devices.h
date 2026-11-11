@@ -146,6 +146,8 @@ void BuildProfile(PortInput::Profile& out, int port = 0);
 // button or pushes a PAD axis from `family`, preferring one that applies in the current
 // context. False when none.
 bool PromptButtonInput(unsigned padButton, PortInput::Family family, PortInput::Input& out);
+// The contexts PromptButtonInput resolves against now: the prompts re-resolve when they change.
+uint16_t PromptContexts();
 // For the console's `prompticon`: the contexts in play and the single-input rows of a pad button's action.
 std::string DescribePromptBindings(unsigned padButton);
 bool PromptAxisInput(PADAxis axis, PortInput::Family family, PortInput::Input& out);

@@ -1369,6 +1369,8 @@ bool PromptButtonInput(unsigned padButton, PortInput::Family family, Input& out)
   return PromptInputFor({menu->menu, game}, family, out);
 }
 
+uint16_t PromptContexts() { return GameContexts(); }
+
 std::string DescribePromptBindings(unsigned padButton) {
   const Action game = PadBitAction(padButton);
   std::string out = "contexts " + PortInput::ContextsToText(GameContexts());
