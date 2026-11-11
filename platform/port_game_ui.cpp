@@ -272,10 +272,27 @@ bool FrameLoaded(CGuiFrame& frame) {
   return true;
 }
 
-// A frame whose element was freed before its assets were in: its fonts and textures load through
+// True once nothing loads into the frame's pool any more: its assets, its models' textures, and
+// every text pane's font and the images its text names (prompt button glyphs), which load lazily.
+bool PoolSettled(CGuiFrame& frame) {
+  if (!FrameLoaded(frame)) {
+    return false;
+  }
+  for (CGuiWidget* w : WidgetsOf(frame)) {
+    if (w->GetWidgetTypeID() == 'TXPN' &&
+        !static_cast< CGuiTextPane* >(w)->TextSupport().GetIsTextSupportFinishedLoading()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// A frame whose element was freed before its loads were in: its fonts and textures load through
 // the element's own pool, so the pool must outlive the loads (freed with them, the finished load
-// writes into it: a crash in CRasterFont's constructor). Held here until the frame is done
-// loading, then freed (ReapHeld, from every element's draw).
+// writes into it: a crash in CRasterFont's constructor). Cancelling a load does not save it:
+// CResFactory finds a pending load by tag alone, so with two pools loading one font a cancel can
+// drop the other pool's load and leave this one's running. Held here until PoolSettled, then
+// freed (ReapHeld, from every element's draw).
 struct HeldFrame {
   CGuiFrame* frame;
   std::unique_ptr< CSimplePool > pool;
@@ -289,7 +306,7 @@ std::vector< HeldFrame >& Held() {
 void ReapHeld() {
   std::vector< HeldFrame >& held = Held();
   for (size_t i = 0; i < held.size();) {
-    if (held[i].frame->GetIsFinishedLoading()) {
+    if (PoolSettled(*held[i].frame)) {
       // The frame's widgets hold tokens of the pool: the frame goes first.
       delete held[i].frame;
       held[i] = std::move(held.back());
@@ -335,7 +352,7 @@ struct Box::Impl {
   const StyleInfo& Style() const { return question ? kQuestion : Info(spec.style); }
 
   void Unload() {
-    if (frame != nullptr && !frame->GetIsFinishedLoading()) {
+    if (frame != nullptr && !PoolSettled(*frame)) {
       // Still loading into the pool: both kept until it is done (Held).
       Held().push_back({frame, std::move(pool)});
     } else {
