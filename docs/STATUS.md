@@ -15,7 +15,9 @@ appended, dated as in the heading there.
 - Checked: desktop repro under a read-only bwrap root (before: the reporter's exact line; after: `lazy, 1236 rows
   known; queued 810 global (pinned) and 273 frontend`), ctest 45/45. Not checked on an Android 10 device; the
   Poco (Android 16) never had the error. No reply posted.
-- Open in the same log: texture pressure flips between moderate and off around 1024 MiB of headroom.
+- The same log flips texture pressure between moderate and off 35 times around 1024 MiB of headroom. Harmless
+  there: the reporter has no texture pack (8 button icons), moderate frees only idle unheld replacements and
+  reloads nothing, and the Dawn heap release runs only after a free. Left as is.
 
 ## 2026-11-10: release 0.15.0
 
