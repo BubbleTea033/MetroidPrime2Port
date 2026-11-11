@@ -141,7 +141,14 @@ static void DrawUnlocksSection() {
   if (ImGui::Checkbox("Image galleries", &galleries)) {
     PortOverlay::SetUnlockGalleries(galleries);
   }
+  bool beamDoors = sBeamDoorsStayUnlocked;
+  if (ImGui::Checkbox("Unlock beam doors once opened", &beamDoors)) {
+    PortOverlay::SetBeamDoorsStayUnlocked(beamDoors);
+  }
   ImGui::EndDisabled();
+  ItemHelp("A Dark, Light or Annihilator door you have opened stays a blue door, on both sides and "
+           "on the map, when its room loads again. Kept in the save's opened doors, so it also "
+           "covers doors opened before this was on.");
 }
 
 void DrawCutscenesSection() {

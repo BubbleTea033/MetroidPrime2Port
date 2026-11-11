@@ -349,6 +349,7 @@ const SettingKey kSettingKeys[] = {
     RANGE_KEY("damage_dealt", sDamageDealtMult, PortOverlay::kDamageMultMin,
               PortOverlay::kDamageMultMax, "0.5", "3"),
     BoolKey< &sUnlockBeamDoors >("unlock_beam_doors"),
+    BoolKey< &sBeamDoorsStayUnlocked >("beam_doors_stay_unlocked"),
     BoolKey< &sStackBeams >("stack_beams"),
     BoolKey< &sStackBeamsSkipDark >("stack_beams_skip_dark"),
     BoolKey< &sFastMorph >("fast_morph"),
@@ -527,8 +528,8 @@ const SettingKey kSettingKeys[] = {
     BoolKey< &sDarkVisorFull >("dark_visor_full"),
     IntKey< &sDarkVisorStatic, 0, PortOverlay::kDarkVisorStaticMax >("dark_visor_static", "50", "100"),
     BoolKey< &sInfiniteBeamAmmo >("infinite_beam_ammo"),
-    BoolKey< &sDarkWorldLightMusic >("dark_world_light_music"),
     BoolKey< &sChargeOnlyBeamAmmo >("charge_only_beam_ammo"),
+    BoolKey< &sDarkWorldLightMusic >("dark_world_light_music"),
     IntKey< &sHudOpacityEcho, PortOverlay::kHudOpacityVisor, PortOverlay::kHudOpacityMax >(
         "hud_opacity_echo", "-1", "40"),
     IntKey< &sHudOpacityDark, PortOverlay::kHudOpacityVisor, PortOverlay::kHudOpacityMax >(

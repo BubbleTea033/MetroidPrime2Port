@@ -112,6 +112,7 @@ bool sUnlockGalleries = false;
 float sDamageTakenMult = 1.f;
 float sDamageDealtMult = 1.f;
 bool sUnlockBeamDoors = false;
+bool sBeamDoorsStayUnlocked = false;
 bool sStackBeams = false;
 bool sStackBeamsSkipDark = false;
 int sHintDelay = 0;
@@ -172,8 +173,8 @@ bool sBallBars = false; // `ball_bars`: the morph ball view's narrowed viewport
 bool sDarkVisorFull = false;
 int sDarkVisorStatic = PortOverlay::kDarkVisorStaticMax;
 bool sInfiniteBeamAmmo = false; // Enhancements; saved, unlike the sInfiniteAmmo cheat
-bool sDarkWorldLightMusic = false; // `dark_world_light_music` (#36)
 bool sChargeOnlyBeamAmmo = false; // `charge_only_beam_ammo` (#130)
+bool sDarkWorldLightMusic = false; // `dark_world_light_music` (#36)
 int sHudOpacityEcho = PortOverlay::kHudOpacityVisor;
 int sHudOpacityDark = PortOverlay::kHudOpacityVisor;
 int sHudOpacityScan = PortOverlay::kHudOpacityVisor;
@@ -1960,6 +1961,11 @@ bool UnlockGalleries() {
 bool UnlockBeamDoors() {
   ReadEnv();
   return EnvBool("MP2_UNLOCK_BEAM_DOORS", sUnlockBeamDoors) && !OriginalExperience();
+}
+
+bool BeamDoorsStayUnlocked() {
+  ReadEnv();
+  return EnvBool("MP2_BEAM_DOORS_STAY_UNLOCKED", sBeamDoorsStayUnlocked) && !OriginalExperience();
 }
 
 bool StackBeams() {

@@ -180,6 +180,13 @@ Game page:
   multiply the damage Samus takes (every type, Dark Aether's atmosphere included) and the damage she
   deals to enemies, at the points Hard mode uses, on top of a Hard file's own multipliers. Original
   experience reads 1.
+- `beam_doors_stay_unlocked`: Game > Unlocks > Unlock beam doors once opened (#129); env
+  `MP2_BEAM_DOORS_STAY_UNLOCKED`. Retail turns an opened Dark, Light or Annihilator door blue only
+  until its room reloads. With this on, a colour-locked door that was opened before (the save's
+  visited doors, which the map already keeps for both sides of a doorway) is reset to a blue door
+  when its room loads, and its map icon is blue. No extra save data: it covers doors opened before
+  it was turned on, and turning it off brings the colours back on the next room load. Missile-type
+  locks are not colour locks and stay. Off by default; Original experience greys it.
 - `unlock_beam_doors`: Debug > Cheats > Unlock beam doors; env `MP2_UNLOCK_BEAM_DOORS`.
   Colour-locked doors (the door's own vulnerability, or a damageable-trigger lock) open to any of
   the four beams; missile locks stay. Saved, not written into the save file; Original experience
@@ -541,6 +548,10 @@ Video > Display:
 - `infinite_beam_ammo` (default off, env `MP2_INFINITE_BEAM_AMMO`): Enhancements > Infinite Light
   and Dark Ammo; the beams spend no ammo and the HUD shows infinity. Saved, unlike the Infinite
   cheat. Original experience turns it off.
+- `charge_only_beam_ammo` (default off, env `MP2_CHARGE_ONLY_BEAM_AMMO`, issue #130):
+  Enhancements > Only charged shots use ammo; uncharged Dark, Light and Annihilator shots cost no
+  ammo and fire at full strength with none left. Charged shots (5) and combos keep their cost, and
+  a charge needs the ammo for it. Multiplayer too. Original experience turns it off.
 - `dark_world_light_music` (default off, env `MP2_DARK_WORLD_LIGHT_MUSIC`, issue #36):
   Enhancements > Music > Light world music in Dark Aether; each region's Dark Aether theme plays
   its light world theme (Temple Grounds, Agon, Torvus and its underground, Sanctuary, energy
@@ -548,10 +559,6 @@ Video > Display:
   unchanged. Takes effect at the next track start. Original experience turns it off.
 - `hud_opacity_echo`, `hud_opacity_dark`, `hud_opacity_scan` (`-1` = the game's Visor Opacity,
   default; else 0-100): HUD and view > Echo/Dark/Scan HUD opacity. Applies to that visor's HUD, its
-- `charge_only_beam_ammo` (default off, env `MP2_CHARGE_ONLY_BEAM_AMMO`, issue #130):
-  Enhancements > Only charged shots use ammo; uncharged Dark, Light and Annihilator shots cost no
-  ammo and fire at full strength with none left. Charged shots (5) and combos keep their cost, and
-  a charge needs the ammo for it. Multiplayer too. Original experience turns it off.
   visor/beam menu, the radar and the map; the energy readout is part of the HUD frame and has no
   separate opacity. Console `hudopacity <echo|dark|scan> <visor|0..100>`. Original experience
   ignores them.

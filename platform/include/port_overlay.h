@@ -400,6 +400,11 @@ void SetDamageDealtMultiplier(float m);
 // so stacked shots don't drain light beacons and crystals.
 bool UnlockBeamDoors();
 void SetUnlockBeamDoors(bool enabled);
+// Unlock beam doors once opened (F1 > Game > Unlocks, `beam_doors_stay_unlocked`, env
+// `MP2_BEAM_DOORS_STAY_UNLOCKED`): a colour-locked door that was opened once is a blue door again
+// when its room reloads (CScriptDoor::Think) and on the map. False while Original experience is on.
+bool BeamDoorsStayUnlocked();
+void SetBeamDoorsStayUnlocked(bool enabled);
 bool StackBeams();
 void SetStackBeams(bool enabled);
 bool StackBeamsSkipDark();
