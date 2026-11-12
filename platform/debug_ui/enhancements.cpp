@@ -9,6 +9,9 @@
 
 #include "MetroidPrime/Player/CGameOptions.hpp"
 #include "MetroidPrime/Player/CGameState.hpp"
+#include "MetroidPrime/Tweaks/CTweakBall.hpp"
+#include "MetroidPrime/CDamageInfo.hpp"
+#include "Kyoto/Math/CRelAngle.hpp"
 
 #include <imgui.h>
 
@@ -210,6 +213,30 @@ void DrawEnhancementsTab() {
   ImGui::EndDisabled();
   ImGui::EndDisabled();
   ImGui::EndDisabled();
+
+  // Diagnostic (not for upstream): the Screw Attack tweak as this disc has it, to port it into
+  // Prime 1 with Echoes' real numbers.
+  if (gpTweakBall.get() != nullptr && ImGui::TreeNode("Screw Attack tweak (diagnostic)")) {
+    const CTweakBall& t = *gpTweakBall;
+    const CDamageInfo damage = t.GetScrewAttackDamage();
+    ImGui::Text("Gravity %.3f", -t.GetScrewAttackGravity());
+    ImGui::Text("Initial drop limit %.3f", t.GetScrewAttackInitialDropLimit());
+    ImGui::Text("Final drop limit %.3f", t.GetScrewAttackFinalDropLimit());
+    ImGui::Text("Drop limit jump count %d", t.GetScrewAttackDropLimitJumpCount());
+    ImGui::Text("Vertical jump velocity %.3f", t.GetScrewAttackVerticalJumpVelocity());
+    ImGui::Text("Horizontal jump velocity %.3f", t.GetScrewAttackHorizontalJumpVelocity());
+    ImGui::Text("Max steering angle (deg) %.3f",
+                t.GetScrewAttackMaxSteeringAngle().AsRadians() * (180.f / 3.14159265f));
+    ImGui::Text("Wall jump vertical / horizontal %.3f / %.3f",
+                t.GetScrewAttackWallJumpVerticalVelocity(),
+                t.GetScrewAttackWallJumpHorizontalVelocity());
+    ImGui::Text("Wall jump gravity %.3f, max time %.3f", -t.GetScrewAttackWallJumpGravity(),
+                t.GetScrewAttackWallJumpMaxTime());
+    ImGui::Text("Damage %.3f, radius %.3f", damage.GetDamage(), damage.GetRadius());
+    ImGui::Text("Ball gravity %.3f, air friction %.3f, air top speed %.3f", -t.GetBallGravity(),
+                t.GetBallTranslationFriction(1), t.GetBallTranslationMaxSpeed(1));
+    ImGui::TreePop();
+  }
 
   ImGui::SeparatorText("Hints");
   // The game's own option, the same switch as the pause menu's Hint System and saved with the other
