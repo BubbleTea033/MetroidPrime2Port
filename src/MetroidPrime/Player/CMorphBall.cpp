@@ -68,6 +68,7 @@
 #include "rstl/math.hpp"
 #ifdef TARGET_PC
 #include "port_overlay.h"
+#include "port_screw_diag.h"
 #include "port_prime1_tweaks.h"
 #include "port_touch.h"
 #include <cstdio>
@@ -2419,6 +2420,10 @@ void CMorphBall::ApplyScrewAttackDamage(float dt, CStateManager& mgr) {
 }
 
 void CMorphBall::UpdateScrewAttackRecovery(float dt) {
+#ifdef TARGET_PC
+  PortScrewDiag::End(mPlayer.GetTranslation().GetX(), mPlayer.GetTranslation().GetY(),
+                     mPlayer.GetTranslation().GetZ());
+#endif
   if (mPendingRecoil) {
     const CVector3f recoilVelocity = 12.f * mScrewAttackDirection + 24.f * CVector3f::Up();
     mPlayer.SetVelocityWR(recoilVelocity);
@@ -2510,6 +2515,9 @@ void CMorphBall::ComputeScrewAttackMovement(const CFinalInput& input, CStateMana
                                               static_cast< float >(dropLimitJumpCount)) *
                                                  (finalDropLimit - initialDropLimit);
   const float drop = mPlayer.GetTranslation().GetZ() - mPlayer.GetLastSpaceJumpPosition().GetZ();
+#ifdef TARGET_PC
+  PortScrewDiag::Track(mPlayer.GetTranslation().GetZ());
+#endif
 
   bool jumpPressed = true;
   if (!mPlayer.JumpPressed(input) && !mForcedScrewJumpInput) {
@@ -2553,6 +2561,10 @@ void CMorphBall::ComputeScrewAttackMovement(const CFinalInput& input, CStateMana
         velocity += CVector3f(0.f, 0.f, verticalVelocity);
         mPlayer.SetVelocityWR(velocity);
         ++mScrewAttackJumpCount;
+#ifdef TARGET_PC
+        PortScrewDiag::Jump(mPlayer.GetTranslation().GetX(), mPlayer.GetTranslation().GetY(),
+                            mPlayer.GetTranslation().GetZ());
+#endif
         ++mWallJumpCount;
         cmdMgr.DeliverCmd(CPBCMorphToScrewAttackCmd(4, 1));
       } else if (mWallJumpInputPending) {
@@ -2589,6 +2601,10 @@ void CMorphBall::ComputeScrewAttackMovement(const CFinalInput& input, CStateMana
         velocity += CVector3f(0.f, 0.f, jumpSpeed);
         mPlayer.SetVelocityWR(velocity);
         ++mScrewAttackJumpCount;
+#ifdef TARGET_PC
+        PortScrewDiag::Jump(mPlayer.GetTranslation().GetX(), mPlayer.GetTranslation().GetY(),
+                            mPlayer.GetTranslation().GetZ());
+#endif
         cmdMgr.DeliverCmd(CPBCLocomotionCmd(moveDir, moveDir));
         startSfx = true;
         if (!mScrewAttackJumpFlashGen.get()) {

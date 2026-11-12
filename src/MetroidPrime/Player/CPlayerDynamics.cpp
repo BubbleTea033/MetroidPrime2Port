@@ -31,6 +31,7 @@
 #ifdef TARGET_PC
 #include "port_mouse.h"
 #include "port_overlay.h"
+#include "port_screw_diag.h"
 #include "port_touch.h"
 #endif
 
@@ -971,6 +972,10 @@ float CPlayer::JumpInput(const CFinalInput& input, CStateManager& mgr) {
             ApplyImpulseWR(impulse, CAxisAngle::Identity());
           }
           RequestScrewAttackTransition(kMS_Morphed);
+#ifdef TARGET_PC
+          PortScrewDiag::Trigger(GetTranslation().GetX(), GetTranslation().GetY(),
+                                 GetTranslation().GetZ());
+#endif
         }
       } else if (!IsGravityBoostActive() && GetFluidCount() != 0 &&
                  mPlayerState->HasPowerUp(CPlayerState::kIT_GravityBoost) && JumpHeld(input)) {

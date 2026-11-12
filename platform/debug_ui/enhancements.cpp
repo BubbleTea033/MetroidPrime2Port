@@ -6,6 +6,7 @@
 
 #include "port_overlay.h"
 #include "port_prime1_tweaks.h"
+#include "port_screw_diag.h"
 
 #include "MetroidPrime/Player/CGameOptions.hpp"
 #include "MetroidPrime/Player/CGameState.hpp"
@@ -235,6 +236,7 @@ void DrawEnhancementsTab() {
     ImGui::Text("Damage %.3f, radius %.3f", damage.GetDamage(), damage.GetRadius());
     ImGui::Text("Ball gravity %.3f, air friction %.3f, air top speed %.3f", -t.GetBallGravity(),
                 t.GetBallTranslationFriction(1), t.GetBallTranslationMaxSpeed(1));
+    ImGui::TextUnformatted(PortScrewDiag::Summary().c_str());
     ImGui::TreePop();
   }
 
